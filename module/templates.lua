@@ -433,4 +433,160 @@ skip:
   jmp NEXT
 ]]
 
+-- Is there a way up or down next to this tile: a ladder (its foot carries 0x800000) or a placed
+-- siege tower (0x10000000 and building type 69) on one of its eight neighbours?
+-- in: eax = tile. out: eax = 1 or 0. Keeps every other register.
+templates.nearAccess = [[
+  push ebx
+  push ecx
+  push edx
+  push esi
+  mov esi, eax
+  movzx ecx, word [TILE_Y + esi*2]
+  shl ecx, 5
+  add ecx, TMS
+  xor ebx, ebx
+next:
+  mov eax, [ecx + ebx*4]
+  add eax, esi
+  mov edx, [FLAGS + eax*4]
+  test edx, 0x800000
+  jnz yes
+  test edx, 0x10000000
+  jz skip
+  movzx edx, word [BUILDINGS + eax*2]
+  test edx, edx
+  jz skip
+  imul edx, edx, 0x32C
+  cmp word [TYPES + edx], 69
+  je yes
+skip:
+  inc ebx
+  cmp ebx, 8
+  jb next
+  xor eax, eax
+  jmp finish
+yes:
+  mov eax, 1
+finish:
+  pop esi
+  pop edx
+  pop ecx
+  pop ebx
+  ret
+]]
+
+-- The link builder, the tile itself (ebx = flags, ecx = tile): a raised crenellation part gets
+-- no links (the game's own test) unless a ladder or siege tower is next to it.
+templates.linkSelf = [[
+  test ebx, 0x400000
+  jz plain
+  push eax
+  mov eax, ecx
+  call ACCESS_TEST
+  test eax, eax
+  pop eax
+  jz closed
+plain:
+  jmp CONTINUE
+closed:
+  jmp NO_LINKS
+]]
+
+-- The link builder, a neighbour (eax = its flags, ecx = its tile): a raised part is no step to
+-- take (the game's own branch) unless a ladder or siege tower is next to it.
+templates.linkNeighbour = [[
+  test eax, 0x400000
+  jz plain
+  push eax
+  mov eax, ecx
+  call ACCESS_TEST
+  test eax, eax
+  pop eax
+  jnz plain
+  jmp RAISED
+plain:
+  jmp WALL
+]]
+
+-- updatePathLinkagesInAllEightDirections(y, tile): the game relinks the tile and its eight
+-- neighbours. A neighbour that is a raised crenellation part also gets its own neighbours
+-- relinked, so the wall beside it opens or closes its way onto it as a ladder or siege tower
+-- comes or goes. Then the areas are marked for an update, as placeWalls does.
+templates.relink = [[
+  push dword [esp + 8]
+  push dword [esp + 8]
+  call GAME_RELINK
+  pushad
+  mov esi, [esp + 0x28]
+  movzx edi, word [TILE_Y + esi*2]
+  shl edi, 5
+  add edi, TMS
+  xor ebp, ebp
+around:
+  mov eax, [edi + ebp*4]
+  add eax, esi
+  test dword [FLAGS + eax*4], 0x400000
+  jz further
+  push ebp
+  push edi
+  mov ebx, eax
+  movzx edi, word [TILE_Y + ebx*2]
+  shl edi, 5
+  add edi, TMS
+  xor ebp, ebp
+inner:
+  mov eax, [edi + ebp*4]
+  add eax, ebx
+  movzx ecx, word [TILE_Y + eax*2]
+  push eax
+  push ecx
+  mov ecx, PATHS
+  call BUILD_LINKS
+  inc ebp
+  cmp ebp, 8
+  jb inner
+  pop edi
+  pop ebp
+  mov dword [DIRTY_A], 1
+  mov dword [DIRTY_B], 1
+further:
+  inc ebp
+  cmp ebp, 8
+  jb around
+  popad
+  ret 8
+]]
+
+-- updatePathLinkagesInAllEightDirections, its first 7 bytes replayed.
+templates.relinkGame = [[
+  push ecx
+  mov eax, [esp + 0xC]
+  push ebx
+  push ebp
+  jmp RESUME
+]]
+
+-- A ladder goes up (or comes down): the flag on its foot is replayed, then the tiles around it
+-- are relinked. eax = the ladder's foot tile.
+templates.ladderSet = [[
+  or dword [eax*4 + FLAGS], 0x800000
+  jmp relink
+]]
+templates.ladderClear = [[
+  and dword [eax*4 + FLAGS], 0xFF7FFFFF
+  jmp relink
+]]
+templates.ladderRelink = [[
+relink:
+  pushad
+  movzx ecx, word [TILE_Y + eax*2]
+  push eax
+  push ecx
+  mov ecx, PATHS
+  call RELINK
+  popad
+  jmp RESUME
+]]
+
 return templates

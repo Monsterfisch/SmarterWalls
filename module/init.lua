@@ -20,9 +20,14 @@
      from the damage counter and the stairs next to them.
   4. Building a wall over a damaged crenellation repairs the crenellation. Only an intact
      crenellation is turned into wall, as before.
-  5. Troops can walk over the raised part of a crenellation (tile flag 0x400000). The game's
-     path link builder refuses those tiles in two tests; both are switched off, and the game
-     rebuilds every link when a map or save loads. A group ordered onto a wall spreads out
+  5. The raised part of a crenellation (tile flag 0x400000). The game's path link builder
+     keeps those tiles out of every route in two tests. Both are hooked: a raised part next
+     to a ladder's foot (0x800000) or a placed siege tower (type 69) is linked like a wall
+     tile, every other one stays out, so troops never idle or spread onto them (1.0.2-1.0.9
+     opened them everywhere, and every system that walks walls sent troops there). The game
+     relinks only the changed tile and its neighbours; the relink is wrapped so that a raised
+     neighbour also has its own neighbours relinked, and the ladder's flag changes, which
+     relink nothing, now relink their tile. The game rebuilds every link on load. A group ordered onto a wall spreads out
      over the tiles its search found (pathFindingResultBased, wall tiles, then any tile);
      raised parts are taken out of both picks. A unit that stops on one is moved to the
      nearest wall tile (never another crenellation: with only those in reach it stays),
@@ -44,8 +49,10 @@
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
      beside it; next to stairs only, by the step directly beside it - tall for steps 1-3,
      low from 4 on; next to crenellations only, as tall as they are. Repairing a crenellation uses the same rule.
-  7. Assassins. Their route search never climbs onto a raised crenellation part; with 5 on it
-     does. (Diagonal climbs are left alone: the game's walk back from the goal refuses them.)
+  7. Assassins are left exactly as the game has them: they climb onto plain wall and
+     crenellation tiles. (1.0.5-1.0.9 let their search climb onto raised parts and diagonally;
+     the step that carries a climb out and the walk back from the goal refuse both, and they
+     stood at the foot of the wall.)
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
   stairs only in straight steps (the game's stairs never step diagonally) and around every
   wall, since the game ends stairs at the first wall they meet. Each route step also lowers
@@ -134,11 +141,24 @@ local DAMAGE_FORGET_SIZE = 11
 
 -- The path link builder (updatePathLinkageLayerBasedOnBuildingsUnk): the tile's own test and
 -- the neighbours' test that keep a crenellation's raised part (flag 0x400000) out of every
--- route. Their 0x400000 immediates are set to 0.
+-- route. Both are hooked: a raised part next to a ladder or a placed siege tower is linked
+-- like any wall tile, every other one stays out of every route, as in the game.
 local AOB_LINK_SELF = "F7 C3 00 00 40 00 0F 85 ? ? ? ?"           -- test ebx, 0x400000 / jne
-local LINK_SELF_IMM = 2
+local LINK_SELF_SIZE = 12
 local AOB_LINK_NEIGHBOUR = "A9 00 00 40 00 74 0B 02 96 ? ? ? ?"   -- test eax, 0x400000 / je
-local LINK_NEIGHBOUR_IMM = 1
+local LINK_NEIGHBOUR_SIZE = 7
+local LINK_BUILDER_FROM_SELF = 0xE0                               -- the builder's start
+-- PathFindingState::updatePathLinkagesInAllEightDirections(y, tile), its start (7 bytes).
+local AOB_RELINK = "51 8B 44 24 0C 53 55 8B 6C 24 10"
+local RELINK_SIZE = 7
+-- The ladder's flag on its foot: UpdateLadderman_SetClimbData sets it, DetachLadderman clears
+-- it, neither relinks.
+local AOB_LADDER_SET = "81 0C 85 ? ? ? ? 00 00 80 00"
+local AOB_LADDER_CLEAR = "81 24 85 ? ? ? ? FF FF 7F FF"
+local LADDER_SITE_SIZE = 11
+-- placeWalls' end marks the areas for an update: mov [a], eax / mov [b], eax (eax = 1).
+local PLACE_DIRTY = { 0x533, { 0xA3 } }
+local PLACE_DIRTY_2 = { 0x538, { 0xA3 } }
 -- Ladders: getOrientationThatIsWallTowerOrGatehouse (UpdateLadderman's choice of the wall tile
 -- to lean on) skips a neighbour with 0x400002 (raised part or stockpile); 0x2 is kept.
 local AOB_LADDER_WALL = "F7 C2 02 00 40 00 74 10"              -- test edx, 0x400002 / je
@@ -167,17 +187,6 @@ local FREE_TILE_NAVIGATE = 0x67                                 -- call canNavig
 local FREE_TILE_TYPES = { 0x21A, { 0x66, 0x83, 0xB8 } }         -- cmp word [eax+type], 0x43
 local SIEGE_BLOCKED = 0x4A5014B1
 local U_OWNER = 0x96
-
--- Assassins: pathFindingWithBuildingsIncluded, the route search for a group of assassins.
--- A step between two tiles without a path link is a climb (onto a wall from the ground or
--- down again), never onto a tile with any of 0x4A5014B1, which includes a crenellation's
--- raised part. It climbs only in the four straight directions, and so does the walk back
--- that turns the search into steps (traceAndCommitPathPlan, mode 3): a diagonal climb in
--- the search alone leaves a route that cannot be walked back, and the assassin goes nowhere
--- (1.0.5/1.0.6). Diagonal walls need no diagonal climb - they always have a straight side.
-local AOB_ASSASSIN_SEARCH = "51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57"
-local ASSASSIN_TARGET = { 0x203, 0x307, 0x409, 0x50E }       -- test edi, 0x4A5014B1
-local ASSASSIN_TARGET_BYTES = { 0xF7, 0xC7, 0xB1, 0x14, 0x50, 0x4A, 0x0F, 0x85 }
 
 -- Spreading a group out on a wall: the pick of wall tiles (test [esi*4+flags], 0x10000100,
 -- two movsx, je skip) and its any-tile fallback (cmp ebp, 0xFA0 / jl take).
@@ -1043,12 +1052,47 @@ local function enable(self, config)
 
   m.tms = core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
 
-  -- 5. The raised part of a crenellation can be walked over, but not stood on.
+  -- 5. The raised part of a crenellation: ladders and siege towers can use it, and only there
+  -- may troops step on it.
   if options.walkableCrenellations then
+    local search = scan(AOB_FREE_TILE, "where a siege tower docks")
+    m.tileY = m.tileY or readOperand(search, FREE_TILE_Y, "the tile rows")
+    m.buildingTypes = m.buildingTypes or readOperand(search, FREE_TILE_TYPES, "the building types")
+    m.pathFinding = m.pathFinding or readOperand(search, FREE_TILE_PF, "the path finder")
+    local near = assemble(templates.nearAccess, {
+      TILE_Y = m.tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, BUILDINGS = m.tms + TMS_BUILDINGS,
+      TYPES = m.buildingTypes,
+    })
     local linkSelf = scan(AOB_LINK_SELF, "the path link test for crenellations")
     local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
-    core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
-    core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+    jumpTo(linkSelf, assemble(templates.linkSelf, {
+      ACCESS_TEST = near, CONTINUE = linkSelf + LINK_SELF_SIZE,
+      NO_LINKS = linkSelf + LINK_SELF_SIZE + core.readInteger(linkSelf + 8),
+    }), LINK_SELF_SIZE)
+    jumpTo(neighbour, assemble(templates.linkNeighbour, {
+      ACCESS_TEST = near, RAISED = neighbour + LINK_NEIGHBOUR_SIZE,
+      WALL = neighbour + LINK_NEIGHBOUR_SIZE + (core.readByte(neighbour + 6) & 0xFF),
+    }), LINK_NEIGHBOUR_SIZE)
+
+    -- relinking: when links around a tile change, raised parts beside it pass it on
+    local builder = linkSelf - LINK_BUILDER_FROM_SELF
+    expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
+    local relinkAt = scan(AOB_RELINK, "where the game relinks a tile")
+    local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
+    jumpTo(relinkAt, assemble(templates.relink, {
+      GAME_RELINK = relinkGame, TILE_Y = m.tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS,
+      PATHS = m.pathFinding, BUILD_LINKS = builder,
+      DIRTY_A = readOperand(place, PLACE_DIRTY, "the area update flag"),
+      DIRTY_B = readOperand(place, PLACE_DIRTY_2, "the area update flag"),
+    }), RELINK_SIZE)
+    for _, site in ipairs({ { AOB_LADDER_SET, templates.ladderSet }, { AOB_LADDER_CLEAR, templates.ladderClear } }) do
+      local at = scan(site[1], "where a ladder goes up or comes down")
+      jumpTo(at, assemble(site[2] .. templates.ladderRelink, {
+        FLAGS = m.tms + TMS_FLAGS, TILE_Y = m.tileY, PATHS = m.pathFinding, RELINK = relinkAt,
+        RESUME = at + LADDER_SITE_SIZE,
+      }), LADDER_SITE_SIZE)
+    end
+
     -- a group spreading out on a wall is never given one as its place
     local spreadWall = scan(AOB_SPREAD_WALL, "where a group spreads out on a wall")
     local spreadAny = scan(AOB_SPREAD_ANY, "where a group spreads out")
@@ -1104,17 +1148,6 @@ local function enable(self, config)
     jumpTo(search, assemble(templates.freeTile, {
       STATE = data, GAME_SEARCH = game, DIAGONAL = diagonal,
     }), FREE_TILE_SIZE)
-  end
-
-  -- 7. Assassins climb onto a crenellation's raised part.
-  if options.walkableCrenellations then
-    local search = scan(AOB_ASSASSIN_SEARCH, "the assassins' route search")
-    for _, at in ipairs(ASSASSIN_TARGET) do
-      expectBytes(search + at, ASSASSIN_TARGET_BYTES, "the assassins' climb test")
-    end
-    for _, at in ipairs(ASSASSIN_TARGET) do
-      core.writeCode(search + at + 2, { core.itob(SIEGE_BLOCKED & ~F_RAISED) })
-    end
   end
 
   -- 8. A new crenellation is as tall as the wall (or stairs) it is attached to.

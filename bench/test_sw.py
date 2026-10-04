@@ -352,11 +352,42 @@ def suite(ext, config):
         H.put32(FLAGS + 4 * tile(x, y), 0x300); H.put8(LIVE + tile(x, y), 106)
     for x in range(248, 253):
         H.put32(FLAGS + 4 * tile(x, 251), 0x100); H.put8(LIVE + tile(x, 251), 98)
-    H.put8(LINKS + m, 0x55)
-    H.run(links_of, regs=dict(ecx=0x12345678), stack=[250, m])
-    check(tag + ' I raised part linked', H.m.read(LINKS + m, 1)[0] != 0, walkable)
-    H.run(links_of, regs=dict(ecx=0x12345678), stack=[250, tile(249, 250)])
-    check(tag + ' I neighbour links to it', bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), walkable)
+    TYPES = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x21D)
+    PF_ = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x5B)
+    foot = tile(250, 249)                    # the ground just outside the raised part
+
+    def links(t, y):
+        H.put8(LINKS + t, 0x55)
+        H.run(links_of, regs=dict(ecx=PF_), stack=[y, t])
+        return H.m.read(LINKS + t, 1)[0]
+    check(tag + ' I raised part closed', links(m, 250), 0)
+    check(tag + ' I neighbour no way onto it', bool(links(tile(249, 250), 250) & 0x04), False)
+    H.put32(FLAGS + 4 * foot, 0x800000)      # a ladder stands there
+    check(tag + ' I beside a ladder: open', links(m, 250) != 0, walkable)
+    check(tag + ' I beside a ladder: way onto it', bool(links(tile(249, 250), 250) & 0x04), walkable)
+    H.put32(FLAGS + 4 * foot, 0x10000000); H.put16(BID + 2 * foot, 9)
+    H.put16(TYPES + 9 * 0x32C, 69)            # a placed siege tower
+    check(tag + ' I beside a siege tower: open', links(m, 250) != 0, walkable)
+    H.put16(TYPES + 9 * 0x32C, 74)            # an ordinary tower
+    check(tag + ' I beside a tower: closed', links(m, 250), 0)
+    H.put32(FLAGS + 4 * foot, 0); H.put16(BID + 2 * foot, 0)
+
+    # the ladder going up and coming down relinks the wall around it
+    ladder_set = f('81 0C 85 ? ? ? ? 00 00 80 00')
+    ladder_clear = f('81 24 85 ? ? ? ? FF FF 7F FF')
+    relink_fn = f('51 8B 44 24 0C 53 55 8B 6C 24 10')
+    stubbed = H.cpu.hooks.pop(relink_fn, None)      # the placeWalls tests stub the relink out
+    H.put8(LINKS + tile(249, 250), 0); H.put8(LINKS + m, 0)
+    H.run(ladder_set, until=ladder_set + 11, regs=dict(eax=foot))
+    check(tag + ' I ladder up: flag', H.u32(FLAGS + 4 * foot) & 0x800000, 0x800000)
+    check(tag + ' I ladder up: the wall opens onto it',
+          (bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), H.m.read(LINKS + m, 1)[0] != 0),
+          (walkable, walkable))
+    H.run(ladder_clear, until=ladder_clear + 11, regs=dict(eax=foot))
+    check(tag + ' I ladder down: closed again',
+          (bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), H.m.read(LINKS + m, 1)[0]), (False, 0))
+    if stubbed:
+        H.cpu.hooks[relink_fn] = stubbed
 
     # J. a unit that stops on it is moved to the nearest wall tile, and does not walk back
     if walkable:
@@ -514,8 +545,7 @@ def suite(ext, config):
     for at in (0x2F5, 0x4FC):
         check(tag + ' N straight climbs only %X' % at, H.m.read(asearch + at + 4, 1)[0], 1)
     for at in (0x203, 0x307, 0x409, 0x50E):
-        check(tag + ' N climb target %X' % at, H.u32(asearch + at + 2),
-              0x4A1014B1 if walkable else 0x4A5014B1)
+        check(tag + ' N climb target %X' % at, H.u32(asearch + at + 2), 0x4A5014B1)
     PF = E.u32(search + 0x5B)
     LINKS = TMS + 0x38B2F0
 
@@ -529,7 +559,7 @@ def suite(ext, config):
     check(tag + ' N straight climb', assassin_route(100, 99, 100, 100), 1)
     check(tag + ' N no diagonal climb', assassin_route(101, 99, 100, 100), 0)
     H.put32(FLAGS + 4 * tile(101, 100), 0x400300)
-    check(tag + ' N onto a raised part', assassin_route(102, 100, 101, 100), 1 if walkable else 0)
+    check(tag + ' N never onto a raised part', assassin_route(102, 100, 101, 100), 0)
 
     # the whole route as the game makes it: the search, then the walk back from the goal that
     # turns it into steps (traceAndCommitPathPlan, mode 3 for assassins)

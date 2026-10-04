@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.9
+**Version**: 1.0.10
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -37,25 +37,15 @@ used when it touches nothing else. Next to stairs, the step right beside it deci
 lower one if it touches two): the top three steps get tall crenellations, step 4 and lower
 low ones. Repairing a crenellation uses the same rule.
 
-## Troops can walk over crenellations
+## Ladders and siege towers can use every crenellation
 
-Troops can now walk over the raised parts of crenellations instead of going the long way
-round. A group you send onto a wall never picks a raised part as a place to stand when it
-spreads out. They cannot stay on them: anyone who stops on one is moved to the nearest wall tile
-straight away, and does not try to walk back onto it. They are never moved onto another
-crenellation: if only crenellations are nearby, they stay where they are. Troops waiting there for their turn
-to climb down a ladder get more time (10 seconds, adjustable in the settings) before they
-are moved; after that they carry on to where they were going.
-
-Ladders and siege towers can now attach to every part of a crenellation, raised parts
-included, and troops climbing up can get off onto them. Assassins can climb onto them too.
-
-## Ladders and siege towers attack diagonal walls
-
-Laddermen and siege towers can now attack walls and crenellations that run diagonally.
-Laddermen lean their ladder against the diagonal wall, and a siege tower parks with one
-corner against it, since it needs a 3 by 3 space to set up. Before, diagonal walls could
-not be climbed at all.
+Ladders and siege towers can attach to the raised parts of crenellations as well. Troops
+step onto a raised part only right next to a ladder or a siege tower, to get on or off it;
+everywhere else the raised parts stay out of their way as before, so nobody idles or spreads
+out onto them. Anyone who still ends up standing on one is moved to the nearest wall tile
+(never onto another crenellation; with only those nearby they stay put). Troops waiting
+there for their turn on a ladder get more time first (10 seconds, adjustable in the
+settings); after that they carry on to where they were going.
 
 ## Repairing stairs keeps their height
 
