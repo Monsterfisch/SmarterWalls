@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.8
+**Version**: 1.0.9
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -33,13 +33,15 @@ The preview, the cost and the wall that gets built always match.
 
 A new crenellation is built a little taller than the tallest wall right next to it, so it
 fits walls on hills, in dips and low walls alike. Other crenellations next to it are only
-used when it touches nothing else. Next to stairs, the step right beside it decides: the
-top three steps get tall crenellations, step 4 and lower low ones. Repairing a crenellation uses the same rule.
+used when it touches nothing else. Next to stairs, the step right beside it decides (the
+lower one if it touches two): the top three steps get tall crenellations, step 4 and lower
+low ones. Repairing a crenellation uses the same rule.
 
 ## Troops can walk over crenellations
 
 Troops can now walk over the raised parts of crenellations instead of going the long way
-round. They cannot stay on them: anyone who stops on one is moved to the nearest wall tile
+round. A group you send onto a wall never picks a raised part as a place to stand when it
+spreads out. They cannot stay on them: anyone who stops on one is moved to the nearest wall tile
 straight away, and does not try to walk back onto it. They are never moved onto another
 crenellation: if only crenellations are nearby, they stay where they are. Troops waiting there for their turn
 to climb down a ladder get more time (10 seconds, adjustable in the settings) before they

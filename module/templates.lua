@@ -408,4 +408,29 @@ vanilla:
   jmp AFTER_CALL
 ]]
 
+-- A group ordered onto a wall spreads out over the tiles its search found: pathFindingResultBased
+-- takes wall tiles (test [tile flags], 0x10000100 / je skip). esi = tile. A raised crenellation
+-- part answers "not a wall" so nobody is sent to stand on one. edx is free here.
+templates.spreadWall = [[
+  mov edx, [esi*4 + FLAGS]
+  test edx, 0x400000
+  jnz raised
+  test edx, 0x10000100
+  jmp RESUME
+raised:
+  xor edx, edx
+  jmp RESUME
+]]
+
+-- Its fallback when no wall tile is left (findNextTileInExistingSearchThatIsModuloDistanceAway)
+-- takes any tile: cmp ebp, 0xFA0 / jl take. edi = tile. Raised parts are skipped there too.
+templates.spreadAny = [[
+  test dword [edi*4 + FLAGS], 0x400000
+  jnz skip
+  cmp ebp, 0xFA0
+  jl TAKE
+skip:
+  jmp NEXT
+]]
+
 return templates

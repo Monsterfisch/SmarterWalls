@@ -22,7 +22,9 @@
      crenellation is turned into wall, as before.
   5. Troops can walk over the raised part of a crenellation (tile flag 0x400000). The game's
      path link builder refuses those tiles in two tests; both are switched off, and the game
-     rebuilds every link when a map or save loads. A unit that stops on one is moved to the
+     rebuilds every link when a map or save loads. A group ordered onto a wall spreads out
+     over the tiles its search found (pathFindingResultBased, wall tiles, then any tile);
+     raised parts are taken out of both picks. A unit that stops on one is moved to the
      nearest wall tile (never another crenellation: with only those in reach it stays),
      checked once every 16 ticks per unit from updateUnits; one waiting
      for a ladder or still walking gets ladderWait seconds first and is then sent on to where
@@ -176,6 +178,13 @@ local U_OWNER = 0x96
 local AOB_ASSASSIN_SEARCH = "51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57"
 local ASSASSIN_TARGET = { 0x203, 0x307, 0x409, 0x50E }       -- test edi, 0x4A5014B1
 local ASSASSIN_TARGET_BYTES = { 0xF7, 0xC7, 0xB1, 0x14, 0x50, 0x4A, 0x0F, 0x85 }
+
+-- Spreading a group out on a wall: the pick of wall tiles (test [esi*4+flags], 0x10000100,
+-- two movsx, je skip) and its any-tile fallback (cmp ebp, 0xFA0 / jl take).
+local AOB_SPREAD_WALL = "F7 04 B5 ? ? ? ? 00 01 00 10 0F BF 3C 75 ? ? ? ? 0F BF 2C 75 ? ? ? ? 74 4A"
+local SPREAD_WALL_SIZE = 11
+local AOB_SPREAD_ANY = "81 FD A0 0F 00 00 7C 1E"
+local SPREAD_ANY_SIZE = 8
 
 -- updateUnits, a live unit about to be updated: add edx, 1 / mov [esi], edx.
 local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00"
@@ -652,8 +661,8 @@ end
 --   walls first (all eight neighbours): the tallest wall beside it (its height before any
 --   damage) plus 8, low (flag 0x10000) when that wall is a low one, such as a wood wall;
 --   else stairs: the step directly beside it (straight neighbours; diagonal ones only when
---   there is none) - steps 1 to 3 counted down from the wall give a tall crenellation, 4 and
---   lower a low one. A crenellation beside step 4 also touches step 3 diagonally, which is
+--   there is none), the lowest one when it touches several - steps 1 to 3 counted down from
+--   the wall give a tall crenellation, 4 and lower a low one. A crenellation beside step 4 also touches step 3 diagonally, which is
 --   why only the straight neighbour counts;
 --   else crenellations: as tall as the tallest one beside it.
 -- Towers and gatehouses do not count. Nothing to go by: nil, and the game decides.
@@ -720,7 +729,7 @@ local function makeCrenelHeight(m)
       local best, bestHeight
       for _, d in ipairs(ring) do
         local flags, height = piece(tms, x + d[1], y + d[2])
-        if flags ~= nil and flags & F_STAIRS ~= 0 and (best == nil or height > bestHeight) then
+        if flags ~= nil and flags & F_STAIRS ~= 0 and (best == nil or height < bestHeight) then
           best, bestHeight = d, height
         end
       end
@@ -1040,6 +1049,16 @@ local function enable(self, config)
     local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
     core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
     core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+    -- a group spreading out on a wall is never given one as its place
+    local spreadWall = scan(AOB_SPREAD_WALL, "where a group spreads out on a wall")
+    local spreadAny = scan(AOB_SPREAD_ANY, "where a group spreads out")
+    jumpTo(spreadWall, assemble(templates.spreadWall, {
+      FLAGS = m.tms + TMS_FLAGS, RESUME = spreadWall + SPREAD_WALL_SIZE,
+    }), SPREAD_WALL_SIZE)
+    jumpTo(spreadAny, assemble(templates.spreadAny, {
+      FLAGS = m.tms + TMS_FLAGS, TAKE = spreadAny + SPREAD_ANY_SIZE + 0x1E,
+      NEXT = spreadAny + SPREAD_ANY_SIZE,
+    }), SPREAD_ANY_SIZE)
     -- ladders and siege towers may set up against them too
     core.writeCode(scan(AOB_LADDER_WALL, "where a ladder is leant against a wall") + LADDER_WALL_IMM,
       { 0x02, 0, 0, 0 })

@@ -429,6 +429,29 @@ def suite(ext, config):
         H.run(tick_site, until=tick_site + 5, regs=regs)
         check(tag + ' J not its turn', moved, [])
 
+    # P. a group spreading out on a wall never picks a raised part
+    pick_wall = f('F7 04 B5 ? ? ? ? 00 01 00 10 0F BF 3C 75 ? ? ? ? 0F BF 2C 75 ? ? ? ? 74 4A') - 0x32
+    pick_any = f('81 FD A0 0F 00 00 7C 1E') - 0x7B
+    RESULT_INDEX = E.u32(pick_wall + 0x14)
+    FLAGMAP = E.u32(pick_wall + 0xD)
+    DISTMAP = E.u32(pick_wall + 0x49)
+    PFS = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x5B)
+
+    def pick(fn, queue, args):
+        for i, t in enumerate(queue):
+            H.put32(PFS + 0x1BB40 + 4 * i, t)
+            H.put16(PFS + 0x6A380 + 2 * i, t // 400)
+            H.put16(FLAGMAP + 2 * t, 5); H.put16(DISTMAP + 2 * t, 1)
+        H.put32(PFS + 0x1BB40 + 4 * len(queue), 0)
+        H.put32(RESULT_INDEX, 0)
+        cpu = H.run(fn, regs=dict(ecx=PFS), stack=args)
+        return queue[H.u32(RESULT_INDEX)] if cpu.r['eax'] or fn == pick_any else None
+    reset()
+    merlon, plain = tile(60, 70), tile(61, 70)
+    H.put32(FLAGS + 4 * merlon, 0x400300); H.put32(FLAGS + 4 * plain, 0x100)
+    check(tag + ' P wall pick', pick(pick_wall, [merlon, plain], [1, 60, 70, 50]), plain if walkable else merlon)
+    check(tag + ' P any-tile pick', pick(pick_any, [merlon, plain], [1, 60, 70]), plain if walkable else merlon)
+
     # K. a ladder may lean against it; troops sent at a wall may pick it
     orient = f('F7 C2 02 00 40 00 74 10') - 0x5F      # the file, not the patched memory
     check(tag + ' K ladder function', H.m.read(orient, 4), bytes([0x8B, 0x44, 0x24, 0x04]))
@@ -580,6 +603,10 @@ def suite(ext, config):
     # the same on a hill: steps are counted, not guessed from the height
     hill = [((50, 60), 0x100, 160)] + [((51 + i, 60), 0x900, 144 - 16 * i) for i in range(5)]
     check(tag + ' O step 4 on a hill', crenel_at(54, 59, hill), want(76, True, (106, False, 0x300)))
+    # in the corner of a turning staircase it touches steps 3 and 4 directly: the lower wins
+    turn = [((50, 60), 0x100, 98)] + [((51 + i, 60), 0x900, 82 - 16 * i) for i in range(3)] + [((53, 61), 0x900, 34)]
+    check(tag + ' O lower step wins', crenel_at(52, 61, turn),
+          want(76, True, (106, False, 0x300)))
 
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
