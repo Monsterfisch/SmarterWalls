@@ -21,15 +21,15 @@
   4. Building a wall over a damaged crenellation repairs the crenellation. Only an intact
      crenellation is turned into wall, as before.
   5. The raised part of a crenellation (tile flag 0x400000). The game's path link builder
-     keeps those tiles out of every route in two tests. Both are hooked: a raised part next
-     to a ladder's foot (0x800000) or a placed siege tower (type 69) is linked like a wall
-     tile, every other one stays out, so troops never idle or spread onto them (1.0.2-1.0.9
-     opened them everywhere, and every system that walks walls sent troops there). The game
-     relinks only the changed tile and its neighbours; the relink is wrapped so that a raised
-     neighbour also has its own neighbours relinked, and the ladder's flag changes, which
-     relink nothing, now relink their tile. The game rebuilds every link on load. A group ordered onto a wall spreads out
-     over the tiles its search found (pathFindingResultBased, wall tiles, then any tile);
-     raised parts are taken out of both picks. A unit that stops on one is moved to the
+     keeps those tiles out of every route in two tests; both are switched off, so troops on
+     ladders and siege towers, assassins and everyone else may cross them (the game rebuilds
+     every link on load). No unit is ever sent to stand on one: setDestinationForUnit moves a
+     target on a raised part to the wall tile beside it - one place for every order, formation,
+     idle unit and patrol (1.0.10 opened raised parts only next to ladders and siege towers;
+     the area map follows link changes only every 200 ticks, so ladders led nowhere for a while
+     and nobody crossed crenellations anywhere else). A group spreading out on a wall skips
+     them too (pathFindingResultBased, then any tile). A unit that still stops on one is moved
+     to the
      nearest wall tile (never another crenellation: with only those in reach it stays),
      checked once every 16 ticks per unit from updateUnits; one waiting
      for a ladder or still walking gets ladderWait seconds first and is then sent on to where
@@ -141,24 +141,19 @@ local DAMAGE_FORGET_SIZE = 11
 
 -- The path link builder (updatePathLinkageLayerBasedOnBuildingsUnk): the tile's own test and
 -- the neighbours' test that keep a crenellation's raised part (flag 0x400000) out of every
--- route. Both are hooked: a raised part next to a ladder or a placed siege tower is linked
--- like any wall tile, every other one stays out of every route, as in the game.
+-- route. Their 0x400000 immediates are set to 0, so any route may cross a raised part.
 local AOB_LINK_SELF = "F7 C3 00 00 40 00 0F 85 ? ? ? ?"           -- test ebx, 0x400000 / jne
-local LINK_SELF_SIZE = 12
+local LINK_SELF_IMM = 2
 local AOB_LINK_NEIGHBOUR = "A9 00 00 40 00 74 0B 02 96 ? ? ? ?"   -- test eax, 0x400000 / je
-local LINK_NEIGHBOUR_SIZE = 7
-local LINK_BUILDER_FROM_SELF = 0xE0                               -- the builder's start
--- PathFindingState::updatePathLinkagesInAllEightDirections(y, tile), its start (7 bytes).
-local AOB_RELINK = "51 8B 44 24 0C 53 55 8B 6C 24 10"
-local RELINK_SIZE = 7
--- The ladder's flag on its foot: UpdateLadderman_SetClimbData sets it, DetachLadderman clears
--- it, neither relinks.
-local AOB_LADDER_SET = "81 0C 85 ? ? ? ? 00 00 80 00"
-local AOB_LADDER_CLEAR = "81 24 85 ? ? ? ? FF FF 7F FF"
-local LADDER_SITE_SIZE = 11
--- placeWalls' end marks the areas for an update: mov [a], eax / mov [b], eax (eax = 1).
-local PLACE_DIRTY = { 0x533, { 0xA3 } }
-local PLACE_DIRTY_2 = { 0x538, { 0xA3 } }
+local LINK_NEIGHBOUR_IMM = 1
+-- ... but no unit is ever sent to stand on one: setDestinationForUnit, after its first checks,
+-- movzx eax, word [esi+0x6D8] with ebp = target x, edi = target y (its start is patched by
+-- other modules; this is 0x8B in).
+local AOB_DESTINATION = "0F B7 86 D8 06 00 00 0F BF C8"
+local DESTINATION_SIZE = 7
+local DESTINATION_STEPS = { { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 0 },
+  { 1, -1 }, { 1, 1 }, { -1, 1 }, { -1, -1 } }
+
 -- Ladders: getOrientationThatIsWallTowerOrGatehouse (UpdateLadderman's choice of the wall tile
 -- to lean on) skips a neighbour with 0x400002 (raised part or stockpile); 0x2 is kept.
 local AOB_LADDER_WALL = "F7 C2 02 00 40 00 74 10"              -- test edx, 0x400002 / je
@@ -1052,46 +1047,23 @@ local function enable(self, config)
 
   m.tms = core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
 
-  -- 5. The raised part of a crenellation: ladders and siege towers can use it, and only there
-  -- may troops step on it.
+  -- 5. The raised part of a crenellation: any route may cross it, nobody is sent to stand on it.
   if options.walkableCrenellations then
-    local search = scan(AOB_FREE_TILE, "where a siege tower docks")
-    m.tileY = m.tileY or readOperand(search, FREE_TILE_Y, "the tile rows")
-    m.buildingTypes = m.buildingTypes or readOperand(search, FREE_TILE_TYPES, "the building types")
-    m.pathFinding = m.pathFinding or readOperand(search, FREE_TILE_PF, "the path finder")
-    local near = assemble(templates.nearAccess, {
-      TILE_Y = m.tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, BUILDINGS = m.tms + TMS_BUILDINGS,
-      TYPES = m.buildingTypes,
-    })
     local linkSelf = scan(AOB_LINK_SELF, "the path link test for crenellations")
     local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
-    jumpTo(linkSelf, assemble(templates.linkSelf, {
-      ACCESS_TEST = near, CONTINUE = linkSelf + LINK_SELF_SIZE,
-      NO_LINKS = linkSelf + LINK_SELF_SIZE + core.readInteger(linkSelf + 8),
-    }), LINK_SELF_SIZE)
-    jumpTo(neighbour, assemble(templates.linkNeighbour, {
-      ACCESS_TEST = near, RAISED = neighbour + LINK_NEIGHBOUR_SIZE,
-      WALL = neighbour + LINK_NEIGHBOUR_SIZE + (core.readByte(neighbour + 6) & 0xFF),
-    }), LINK_NEIGHBOUR_SIZE)
+    core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
+    core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
 
-    -- relinking: when links around a tile change, raised parts beside it pass it on
-    local builder = linkSelf - LINK_BUILDER_FROM_SELF
-    expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
-    local relinkAt = scan(AOB_RELINK, "where the game relinks a tile")
-    local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
-    jumpTo(relinkAt, assemble(templates.relink, {
-      GAME_RELINK = relinkGame, TILE_Y = m.tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS,
-      PATHS = m.pathFinding, BUILD_LINKS = builder,
-      DIRTY_A = readOperand(place, PLACE_DIRTY, "the area update flag"),
-      DIRTY_B = readOperand(place, PLACE_DIRTY_2, "the area update flag"),
-    }), RELINK_SIZE)
-    for _, site in ipairs({ { AOB_LADDER_SET, templates.ladderSet }, { AOB_LADDER_CLEAR, templates.ladderClear } }) do
-      local at = scan(site[1], "where a ladder goes up or comes down")
-      jumpTo(at, assemble(site[2] .. templates.ladderRelink, {
-        FLAGS = m.tms + TMS_FLAGS, TILE_Y = m.tileY, PATHS = m.pathFinding, RELINK = relinkAt,
-        RESUME = at + LADDER_SITE_SIZE,
-      }), LADDER_SITE_SIZE)
+    local destination = scan(AOB_DESTINATION, "where a unit is given a destination")
+    local steps = core.allocate(8 * #DESTINATION_STEPS, true)
+    for i, d in ipairs(DESTINATION_STEPS) do
+      core.writeInteger(steps + 8 * (i - 1), d[1])
+      core.writeInteger(steps + 8 * (i - 1) + 4, d[2])
     end
+    jumpTo(destination, assemble(templates.destination, {
+      ROWS = m.rows, VALID = m.valid, FLAGS = m.tms + TMS_FLAGS, LINKS = m.tms + TMS_LINKS,
+      DIRECTIONS = steps, RESUME = destination + DESTINATION_SIZE,
+    }), DESTINATION_SIZE)
 
     -- a group spreading out on a wall is never given one as its place
     local spreadWall = scan(AOB_SPREAD_WALL, "where a group spreads out on a wall")

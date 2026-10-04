@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.10
+**Version**: 1.0.11
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -37,15 +37,15 @@ used when it touches nothing else. Next to stairs, the step right beside it deci
 lower one if it touches two): the top three steps get tall crenellations, step 4 and lower
 low ones. Repairing a crenellation uses the same rule.
 
-## Ladders and siege towers can use every crenellation
+## Troops can cross every crenellation
 
-Ladders and siege towers can attach to the raised parts of crenellations as well. Troops
-step onto a raised part only right next to a ladder or a siege tower, to get on or off it;
-everywhere else the raised parts stay out of their way as before, so nobody idles or spreads
-out onto them. Anyone who still ends up standing on one is moved to the nearest wall tile
-(never onto another crenellation; with only those nearby they stay put). Troops waiting
-there for their turn on a ladder get more time first (10 seconds, adjustable in the
-settings); after that they carry on to where they were going.
+Troops can walk across the raised parts of crenellations: troops coming up a ladder or a
+siege tower, assassins, and anyone else passing by. Ladders and siege towers can attach to
+them too. But nobody is ever sent to stand on one - an order, a group spreading out, an idle
+unit making room or a patrol always picks the wall tile next to it instead. Anyone who still
+ends up standing on one is moved to the nearest wall tile (never onto another crenellation;
+with only those nearby they stay put). Troops waiting there for their turn on a ladder get
+more time first (10 seconds, adjustable in the settings).
 
 ## Repairing stairs keeps their height
 

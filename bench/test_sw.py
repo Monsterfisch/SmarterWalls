@@ -352,42 +352,43 @@ def suite(ext, config):
         H.put32(FLAGS + 4 * tile(x, y), 0x300); H.put8(LIVE + tile(x, y), 106)
     for x in range(248, 253):
         H.put32(FLAGS + 4 * tile(x, 251), 0x100); H.put8(LIVE + tile(x, 251), 98)
-    TYPES = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x21D)
     PF_ = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x5B)
-    foot = tile(250, 249)                    # the ground just outside the raised part
 
     def links(t, y):
         H.put8(LINKS + t, 0x55)
         H.run(links_of, regs=dict(ecx=PF_), stack=[y, t])
         return H.m.read(LINKS + t, 1)[0]
-    check(tag + ' I raised part closed', links(m, 250), 0)
-    check(tag + ' I neighbour no way onto it', bool(links(tile(249, 250), 250) & 0x04), False)
-    H.put32(FLAGS + 4 * foot, 0x800000)      # a ladder stands there
-    check(tag + ' I beside a ladder: open', links(m, 250) != 0, walkable)
-    check(tag + ' I beside a ladder: way onto it', bool(links(tile(249, 250), 250) & 0x04), walkable)
-    H.put32(FLAGS + 4 * foot, 0x10000000); H.put16(BID + 2 * foot, 9)
-    H.put16(TYPES + 9 * 0x32C, 69)            # a placed siege tower
-    check(tag + ' I beside a siege tower: open', links(m, 250) != 0, walkable)
-    H.put16(TYPES + 9 * 0x32C, 74)            # an ordinary tower
-    check(tag + ' I beside a tower: closed', links(m, 250), 0)
-    H.put32(FLAGS + 4 * foot, 0); H.put16(BID + 2 * foot, 0)
+    check(tag + ' I raised part crossable', links(m, 250) != 0, walkable)
+    check(tag + ' I neighbour links to it', bool(links(tile(249, 250), 250) & 0x04), walkable)
 
-    # the ladder going up and coming down relinks the wall around it
-    ladder_set = f('81 0C 85 ? ? ? ? 00 00 80 00')
-    ladder_clear = f('81 24 85 ? ? ? ? FF FF 7F FF')
-    relink_fn = f('51 8B 44 24 0C 53 55 8B 6C 24 10')
-    stubbed = H.cpu.hooks.pop(relink_fn, None)      # the placeWalls tests stub the relink out
-    H.put8(LINKS + tile(249, 250), 0); H.put8(LINKS + m, 0)
-    H.run(ladder_set, until=ladder_set + 11, regs=dict(eax=foot))
-    check(tag + ' I ladder up: flag', H.u32(FLAGS + 4 * foot) & 0x800000, 0x800000)
-    check(tag + ' I ladder up: the wall opens onto it',
-          (bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), H.m.read(LINKS + m, 1)[0] != 0),
-          (walkable, walkable))
-    H.run(ladder_clear, until=ladder_clear + 11, regs=dict(eax=foot))
-    check(tag + ' I ladder down: closed again',
-          (bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), H.m.read(LINKS + m, 1)[0]), (False, 0))
-    if stubbed:
-        H.cpu.hooks[relink_fn] = stubbed
+    # Q. nobody is sent to stand on it: the destination moves to the wall tile beside it
+    dest_site = f('0F B7 86 D8 06 00 00 0F BF C8')
+    for x in range(248, 253):
+        H.put8(LINKS + tile(x, 251), 0xFF)
+    H.put8(LINKS + tile(249, 250), 0x55); H.put8(LINKS + tile(251, 250), 0x55)
+
+    def destination(x, y):
+        cpu = H.run(dest_site, until=dest_site + 7,
+                    regs=dict(ebp=x, edi=y, esi=0x1000, ebx=0xB0, ecx=0xC0, edx=0xD0))
+        return (cpu.r['ebp'], cpu.r['edi']), (cpu.r['ebx'], cpu.r['ecx'], cpu.r['edx'])
+    got, kept = destination(250, 250)
+    check(tag + ' Q raised target moved', got, (250, 251) if walkable else (250, 250))
+    check(tag + ' Q registers kept', kept, (0xB0, 0xC0, 0xD0))
+    check(tag + ' Q plain wall target kept', destination(250, 251)[0], (250, 251))
+    check(tag + ' Q ground target kept', destination(240, 240)[0], (240, 240))
+    # no plain wall beside it: a plain crenellation tile will do
+    for x in range(248, 253):
+        H.put32(FLAGS + 4 * tile(x, 251), 0x300)
+    check(tag + ' Q else a plain crenellation', destination(250, 250)[0], (251, 250) if walkable else (250, 250))
+    # with only raised parts around it there is nowhere better: the target stays
+    for x in range(248, 253):
+        H.put32(FLAGS + 4 * tile(x, 251), 0x400300)
+    H.put32(FLAGS + 4 * tile(249, 250), 0x400300); H.put32(FLAGS + 4 * tile(251, 250), 0x400300)
+    check(tag + ' Q nowhere better: kept', destination(250, 250)[0], (250, 250))
+    for x in range(248, 253):
+        H.put32(FLAGS + 4 * tile(x, 251), 0x100)
+    for x in (249, 251):
+        H.put32(FLAGS + 4 * tile(x, 250), 0x300)
 
     # J. a unit that stops on it is moved to the nearest wall tile, and does not walk back
     if walkable:

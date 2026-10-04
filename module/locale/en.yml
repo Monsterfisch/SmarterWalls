@@ -21,12 +21,12 @@ cren_heights_tooltip: |
   on hills and low walls. Other crenellations next to it only count when it touches nothing
   else. Next to stairs, the step right beside it decides (the lower one if it touches
   two): the top three steps get tall crenellations, step 4 and lower low ones.
-walkable: Ladders and siege towers can use every crenellation
+walkable: Troops can cross every crenellation
 walkable_tooltip: |
-  Ladders and siege towers can attach to the raised parts of crenellations too, and troops
-  step onto those parts only to get on or off them. Nobody idles, spreads out or stands on
-  them otherwise: anyone who stops on one is moved to the nearest wall tile - never onto
-  another crenellation; with only those nearby they stay put.
+  Troops can walk across the raised parts of crenellations - coming up a ladder or a siege
+  tower, assassins, anyone passing - and ladders and siege towers can attach to them. Nobody
+  is ever sent to stand on one: an order, a formation or an idle unit making room picks the
+  wall tile beside it instead, and anyone who still stops on one is moved there.
   Everyone in a multiplayer game needs the same setting.
 ladder_wait: Seconds troops may wait on a crenellation for a ladder
 ladder_wait_tooltip: |
