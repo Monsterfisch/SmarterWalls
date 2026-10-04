@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.1
+**Version**: 1.0.2
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -19,14 +19,21 @@ where you let go. Before, the whole wall turned red and could not be placed.
 
 ## Walls flow around other walls
 
-A new wall also goes around your undamaged walls, stairs and crenellations instead of
+A new wall or crenellation also goes around your undamaged walls, stairs and crenellations instead of
 running over them. It can still start or end on one to join onto it, and it still goes over
 damaged walls, so dragging a wall along a damaged one repairs it. This needs "Walls flow
 around buildings" to be on.
 
-Crenellations do the same: drag them along a wall and they follow its shape.
+Crenellations and stairs do the same: drag crenellations along a wall and they follow its
+shape; stairs go around buildings and walls in straight steps, as stairs always do.
 
 The preview, the cost and the wall that gets built always match.
+
+## Troops can walk over crenellations
+
+Troops can now walk over the raised parts of crenellations instead of going the long way
+round. They cannot stay on them: anyone who stops on one is moved to the nearest wall tile
+straight away.
 
 ## Repairing stairs keeps their height
 

@@ -20,6 +20,14 @@
      from the damage counter and the stairs next to them.
   4. Building a wall over a damaged crenellation repairs the crenellation. Only an intact
      crenellation is turned into wall, as before.
+  5. Troops can walk over the raised part of a crenellation (tile flag 0x400000). The game's
+     path link builder refuses those tiles in two tests; both are switched off, and the game
+     rebuilds every link when a map or save loads. A unit that stops on one is moved to the
+     nearest wall tile, checked once every 16 ticks per unit from updateUnits.
+  Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
+  stairs only in straight steps (the game's stairs never step diagonally) and around every
+  wall, since the game ends stairs at the first wall they meet. Each route step also lowers
+  the stairs by 16, as the game's own step does.
 
   Every address is found by pattern scan or read out of the instruction that uses it, so the
   module runs on Stronghold Crusader.exe and Stronghold_Crusader_Extreme.exe alike.
@@ -30,7 +38,7 @@ local templates = require("templates")
 local MODULE_NAME = "smarter-walls"
 
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
-  crenellations = true }
+  crenellations = true, walkableCrenellations = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -88,6 +96,39 @@ local DAMAGE_RECORD_SIZE = 6
 local AOB_DAMAGE_FORGET = "81 A4 9F 60 51 16 00 FF F4 BE FF"
 local DAMAGE_FORGET_SIZE = 11
 
+-- The path link builder (updatePathLinkageLayerBasedOnBuildingsUnk): the tile's own test and
+-- the neighbours' test that keep a crenellation's raised part (flag 0x400000) out of every
+-- route. Their 0x400000 immediates are set to 0.
+local AOB_LINK_SELF = "F7 C3 00 00 40 00 0F 85 ? ? ? ?"           -- test ebx, 0x400000 / jne
+local LINK_SELF_IMM = 2
+local AOB_LINK_NEIGHBOUR = "A9 00 00 40 00 74 0B 02 96 ? ? ? ?"   -- test eax, 0x400000 / je
+local LINK_NEIGHBOUR_IMM = 1
+
+-- updateUnits, a live unit about to be updated: add edx, 1 / mov [esi], edx.
+local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00"
+local UNIT_TICK_SIZE = 5
+-- The game tick counter, read in updateUnits' notice-frequency test (mov edx, [ticks]).
+local AOB_TICKS = "8B 87 50 0A 00 00 8B 8F 98 09 00 00 8B 15"
+local TICKS_OPERAND = 14
+-- UnitsState::setPositionOfUnit(unit, x, y, height).
+local AOB_SET_POSITION = "53 8B 5C 24 0C 81 FB 8F 01 00 00 55 8B E9 0F 87"
+-- The tile flags (one dword per tile), the first array of TileMapState that has a global.
+local AOB_TILE_FLAGS = "F7 04 9D ? ? ? ? 00 01 00 00"
+local TILE_FLAGS_OPERAND = 3
+
+-- Unit layout.
+local UNIT_SIZE = 0x490
+local UNITS_FROM_STATE = 0x614
+local U_X = 0xC4
+local U_Y = 0xC6
+local U_GOAL_X = 0xC8
+local U_GOAL_Y = 0xCA
+local U_TILE = 0xD4
+local U_GOAL_TILE = 0xD8
+local U_DEST_X = 0xEC
+local U_DEST_Y = 0xEE
+local PUSH_RADIUS = 4
+
 -- TileMapState layout (OpenSHC, the same in both exes).
 local TMS_FLAGS = 0x165160
 local TMS_TREES = 0x1DB590
@@ -95,6 +136,8 @@ local TMS_BUILDINGS = 0x2029B0
 local TMS_LIVE = 0x29FA30
 local TMS_BASE = 0x2B3440
 local TMS_DAMAGE = 0x3290A0
+local TMS_AREAS = 0x363ED0
+local TMS_LINKS = 0x38B2F0
 
 -- Tile flags.
 local F_STOCKPILE = 0x2
@@ -102,12 +145,14 @@ local F_WALL = 0x100
 local F_CRENEL = 0x200
 local F_STAIRS = 0x800
 local F_LOW = 0x10000
+local F_RAISED = 0x400000    -- the raised part of a crenellation
 local F_TREE = 0x3000
 -- What validateWallBuildPath refuses outright.
 local F_BLOCKED = { 0x14, 0x70000401, 0x300000, 0x80 }
 
 local M_WALL = 0x19
 local M_CRENEL = 0x1A
+local M_STAIRS = 0x1B
 local M_WOODWALL = 0x2E
 
 local MAP_SIZE = 400
@@ -129,6 +174,9 @@ local D_R_HEIGHT = 0x6C
 local D_R_X = 0x70
 local D_R_Y = 0x74
 local D_LAST = 0x78            -- the crenellation repaired last in this placeWalls call
+local D_STAIRS = 0x7C          -- the drag is stairs
+local D_UNIT = 0x80            -- the unit to push off a crenellation, and UnitsState
+local D_UNITS_STATE = 0x84
 local D_PATH = 0x100
 local DATA_SIZE = D_PATH + 4 * MAX_PATH
 
@@ -291,6 +339,43 @@ local function heapPop(heap)
 end
 
 local NEIGHBOURS = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } }
+-- Stairs only ever step straight, never diagonally.
+local NEIGHBOURS4 = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
+
+-- A straight line of tiles that only steps along x or y, for stairs: each step takes the axis
+-- that keeps the tile closer to the line.
+local function straightLine4(x1, y1, x2, y2)
+  local tiles = { { x1, y1 } }
+  local dx, dy = x2 - x1, y2 - y1
+  local sx, sy = dx < 0 and -1 or 1, dy < 0 and -1 or 1
+  local x, y = x1, y1
+  while x ~= x2 or y ~= y2 do
+    local ex = math.abs(dx * (y - y1) - dy * (x + sx - x1))
+    local ey = math.abs(dx * (y + sy - y1) - dy * (x - x1))
+    if y == y2 or (x ~= x2 and (ex < ey or (ex == ey and math.abs(x2 - x) >= math.abs(y2 - y)))) then
+      x = x + sx
+    else
+      y = y + sy
+    end
+    tiles[#tiles + 1] = { x, y }
+  end
+  return tiles
+end
+
+-- The game's own stairs walk: along x while x is further off, then along y.
+local function gameLine4(x1, y1, x2, y2)
+  local tiles = { { x1, y1 } }
+  local x, y = x1, y1
+  while x ~= x2 or y ~= y2 do
+    if math.abs(x2 - x) > math.abs(y2 - y) then
+      x = x + (x < x2 and 1 or -1)
+    else
+      y = y + (y < y2 and 1 or -1)
+    end
+    tiles[#tiles + 1] = { x, y }
+  end
+  return tiles
+end
 
 local function makeRouter(m, options)
   local enclosed = core.exposeCode(m.enclosed, 3, 1)
@@ -313,7 +398,7 @@ local function makeRouter(m, options)
   end
 
   local function avoidsWalls(mapper)
-    return options.aroundWalls and mapper ~= M_CRENEL
+    return options.aroundWalls and mapper ~= M_STAIRS
   end
 
   -- A diagonal step squeezing between two undamaged wall tiles would cross that wall.
@@ -339,7 +424,10 @@ local function makeRouter(m, options)
         if kind < 0 or kind > 14 or kind == 10 then return nil end
       end
     end
-    if not isEnd and avoidsWalls(mapper) and flags & F_WALL ~= 0
+    if mapper == M_STAIRS then
+      -- the game's stairs end at the first wall they meet, so they go around every wall
+      if not isEnd and flags & F_WALL ~= 0 then return nil end
+    elseif not isEnd and avoidsWalls(mapper) and flags & F_WALL ~= 0
         and byte(tms + TMS_DAMAGE + tile) == 0 then
       return nil
     end
@@ -394,7 +482,7 @@ local function makeRouter(m, options)
         expanded = expanded + 1
         if expanded > MAX_NODES then return nil end
         local x, y = id % MAP_SIZE, id // MAP_SIZE
-        for _, n in ipairs(NEIGHBOURS) do
+        for _, n in ipairs(mapper == M_STAIRS and NEIGHBOURS4 or NEIGHBOURS) do
           local nx, ny = x + n[1], y + n[2]
           if nx >= minX and nx <= maxX and ny >= minY and ny <= maxY then
             local nid = ny * MAP_SIZE + nx
@@ -421,7 +509,12 @@ local function makeRouter(m, options)
 
   local function route(r)
     local x1, y1, x2, y2 = r.x1, r.y1, r.x2, r.y2
-    local line = options.anyAngle and straightLine(x1, y1, x2, y2) or gameLine(x1, y1, x2, y2)
+    local line
+    if r.mapper == M_STAIRS then
+      line = options.anyAngle and straightLine4(x1, y1, x2, y2) or gameLine4(x1, y1, x2, y2)
+    else
+      line = options.anyAngle and straightLine(x1, y1, x2, y2) or gameLine(x1, y1, x2, y2)
+    end
     if not options.flow or allFree(r.tms, r.mapper, line) then
       return options.anyAngle and line or nil
     end
@@ -436,7 +529,8 @@ local function makeRouter(m, options)
     for _, v in ipairs({ r.x1, r.y1, r.x2, r.y2 }) do
       if v < 0 or v >= MAP_SIZE then return end
     end
-    if r.mapper ~= M_WALL and r.mapper ~= M_WOODWALL and r.mapper ~= M_CRENEL then return end
+    if r.mapper ~= M_WALL and r.mapper ~= M_WOODWALL and r.mapper ~= M_CRENEL
+        and r.mapper ~= M_STAIRS then return end
     local tiles = route(r)
     if tiles == nil or #tiles == 0 or #tiles > MAX_PATH then return end
     for i, t in ipairs(tiles) do
@@ -522,6 +616,72 @@ local function makeRestore(m, options)
 end
 
 ---------------------------------------------------------------------------------------
+-- Nobody stays on the raised part of a crenellation
+---------------------------------------------------------------------------------------
+
+-- Offsets around a tile, nearest first.
+local function nearestFirst(radius)
+  local offsets = {}
+  for dy = -radius, radius do
+    for dx = -radius, radius do
+      if dx ~= 0 or dy ~= 0 then
+        offsets[#offsets + 1] = { dx, dy, dx * dx + dy * dy }
+      end
+    end
+  end
+  table.sort(offsets, function(a, b)
+    if a[3] ~= b[3] then return a[3] < b[3] end
+    if a[2] ~= b[2] then return a[2] < b[2] end
+    return a[1] < b[1]
+  end)
+  return offsets
+end
+
+local function makePushOff(m)
+  local setPosition = core.exposeCode(m.setPosition, 5, 1)
+  local offsets = nearestFirst(PUSH_RADIUS)
+  local tms = m.tms
+
+  -- A wall tile a unit can stand on: wall, not raised, not a stockpile, linked to the map.
+  local function safe(x, y, area)
+    if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return nil end
+    if byte(m.valid + y * MAP_SIZE + x) == 0 then return nil end
+    local tile = core.readInteger(m.rows + 12 * y) + x
+    local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
+    if flags & F_WALL == 0 or flags & (F_RAISED | F_STOCKPILE) ~= 0 then return nil end
+    if byte(tms + TMS_LINKS + tile) == 0 then return nil end
+    if area ~= nil and word(tms + TMS_AREAS + 2 * tile) ~= area then return nil end
+    return tile
+  end
+
+  return function()
+    local unit = core.readInteger(m.data + D_UNIT)
+    local state = core.readInteger(m.data + D_UNITS_STATE)
+    local base = state + UNITS_FROM_STATE + unit * UNIT_SIZE
+    local x, y = signedWord(base + U_X), signedWord(base + U_Y)
+    local here = core.readInteger(base + U_TILE)
+    if here < 0 or here >= TILES then return end
+    local area = word(tms + TMS_AREAS + 2 * here)
+    for _, sameArea in ipairs(area ~= 0 and { true, false } or { false }) do
+      for _, o in ipairs(offsets) do
+        local nx, ny = x + o[1], y + o[2]
+        local tile = safe(nx, ny, sameArea and area or nil)
+        if tile ~= nil then
+          setPosition(state, unit, nx, ny, byte(tms + TMS_LIVE + tile))
+          -- it has arrived there, so it does not walk back
+          core.writeSmallInteger(base + U_GOAL_X, nx)
+          core.writeSmallInteger(base + U_GOAL_Y, ny)
+          core.writeSmallInteger(base + U_DEST_X, nx)
+          core.writeSmallInteger(base + U_DEST_Y, ny)
+          core.writeInteger(base + U_GOAL_TILE, tile)
+          return
+        end
+      end
+    end
+  end
+end
+
+---------------------------------------------------------------------------------------
 -- Enable
 ---------------------------------------------------------------------------------------
 
@@ -532,7 +692,7 @@ local function enable(self, config)
   end
   local routing = options.anyAngle or options.flow
   local restoring = options.stairs or options.crenellations
-  if not routing and not restoring then return end
+  if not routing and not restoring and not options.walkableCrenellations then return end
 
   local starts = {}
   for name, f in pairs(FUNCTIONS) do
@@ -553,6 +713,25 @@ local function enable(self, config)
   m.enclosed = validate + VALIDATE_ENCLOSED + 5 + core.readInteger(validate + VALIDATE_ENCLOSED + 1)
   -- isTileEnclosedByWalls: mov eax, [esp+8] / push esi / shl eax, 5
   expectBytes(m.enclosed, { 0x8B, 0x44, 0x24, 0x08, 0x56, 0xC1, 0xE0, 0x05 }, "the crenellation test")
+
+  m.tms = core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
+
+  -- 5. The raised part of a crenellation can be walked over, but not stood on.
+  if options.walkableCrenellations then
+    local linkSelf = scan(AOB_LINK_SELF, "the path link test for crenellations")
+    local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
+    core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
+    core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+
+    m.setPosition = scan(AOB_SET_POSITION, "where a unit is put down")
+    local tick = scan(AOB_UNIT_TICK, "the unit update loop")
+    local pushOff = luaFunction("moving a unit off a crenellation", makePushOff(m))
+    jumpTo(tick, assemble(templates.unitTick, {
+      STATE = data, TICKS = core.readInteger(scan(AOB_TICKS, "the tick counter") + TICKS_OPERAND),
+      UNITS_OFF = UNITS_FROM_STATE, TILES = TILES, FLAGS = m.tms + TMS_FLAGS, PUSH_OFF = pushOff,
+      RESUME = tick + UNIT_TICK_SIZE,
+    }), UNIT_TICK_SIZE)
+  end
 
   -- 1 and 2. The route of a dragged wall.
   if routing then

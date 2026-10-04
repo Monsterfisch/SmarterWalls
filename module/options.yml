@@ -29,6 +29,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.walkableCrenellations
+    name: smarter-walls-walkable-crenellations
+    text: '{{walkable}}'
+    tooltip: '{{walkable_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.stairs
     name: smarter-walls-stairs
     text: '{{stairs}}'

@@ -11,13 +11,17 @@ templates.entry = [[
   xor eax, eax
   mov [ebx + ACTIVE], eax
   mov [ebx + IDX], eax
+  mov [ebx + 0x7C], eax
   movzx eax, word [esp + 0x38]
   cmp eax, 0x19
   je wanted
   cmp eax, 0x2E
   je wanted
   cmp eax, 0x1A
+  je wanted
+  cmp eax, 0x1B
   jne skip
+  mov dword [ebx + 0x7C], 1
 wanted:
   mov [ebx + 0x10], eax
   mov eax, [esp + 0x24]
@@ -97,7 +101,11 @@ compute:
   ret
 ]]
 
--- validateWallBuildPath's step to the next tile: edi = x, esi = y, [esp+0x14] = row pointer.
+-- The three steps below also lower the stairs' height by 16 a tile, as the game's own steps
+-- do, when the drag is stairs ([STATE+0x7C] set by the entry hook).
+
+-- validateWallBuildPath's step to the next tile: edi = x, esi = y, [esp+0x14] = row pointer,
+-- [esp+0x24] = the stairs' height.
 templates.validateStep = [[
   cmp dword [STATE + ACTIVE], 0
   je vanilla
@@ -111,6 +119,12 @@ templates.validateStep = [[
   lea eax, [esi + esi*2]
   lea eax, [ROWS + eax*4]
   mov [esp + 0x14], eax
+  cmp dword [STATE + 0x7C], 0
+  je go
+  cmp dword [esp + 0x24], 0x10
+  jle go
+  sub dword [esp + 0x24], 0x10
+go:
   jmp TOP
 finished:
   jmp DONE
@@ -120,7 +134,8 @@ vanilla:
   jmp RESUME
 ]]
 
--- placeWalls' step: [esp+0x20] = x (also esi), [esp+0x44] = y, [esp+0x14] = row pointer.
+-- placeWalls' step: [esp+0x20] = x (also esi), [esp+0x44] = y, [esp+0x14] = row pointer,
+-- [esp+0x24] = the stairs' height.
 templates.placeStep = [[
   cmp dword [STATE + ACTIVE], 0
   je vanilla
@@ -136,6 +151,12 @@ templates.placeStep = [[
   lea ecx, [ecx + ecx*2]
   lea ecx, [ROWS + ecx*4]
   mov [esp + 0x14], ecx
+  cmp dword [STATE + 0x7C], 0
+  je go
+  cmp dword [esp + 0x24], 0x10
+  jl go
+  sub dword [esp + 0x24], 0x10
+go:
   jmp TOP
 finished:
   jmp DONE
@@ -146,7 +167,7 @@ vanilla:
 ]]
 
 -- renderWallDragPreview's step: ebx = [esp+0x1C] = x, edi = y, [esp+0x10] = row pointer,
--- ecx = TileMapState and must survive.
+-- [esp+0x20] = the stairs' height, ecx = TileMapState and must survive.
 templates.previewStep = [[
   cmp dword [STATE + ACTIVE], 0
   je vanilla
@@ -161,6 +182,12 @@ templates.previewStep = [[
   lea eax, [edi + edi*2]
   lea eax, [ROWS + eax*4]
   mov [esp + 0x10], eax
+  cmp dword [STATE + 0x7C], 0
+  je go
+  cmp dword [esp + 0x20], 0x10
+  jle go
+  sub dword [esp + 0x20], 0x10
+go:
   jmp TOP
 finished:
   jmp DONE
@@ -249,6 +276,37 @@ done:
 templates.forget = [[
   mov byte [ebx + RECORD], 0
   and dword [edi + ebx*4 + FLAGS_OFF], 0xFFBEF4FF
+  jmp RESUME
+]]
+
+-- updateUnits, every live unit before its update: edx = unit id, esi = UnitsState.
+-- A unit standing still (move status +0xF6 = 0) on the raised part of a crenellation is
+-- handed to lua, which moves it to the nearest wall tile. Each unit is looked at once every
+-- 16 ticks. Replays add edx, 1 / mov [esi], edx.
+templates.unitTick = [[
+  pushad
+  mov eax, [TICKS]
+  add eax, edx
+  test eax, 15
+  jnz done
+  imul eax, edx, 0x490
+  lea edi, [esi + eax + UNITS_OFF]
+  cmp word [edi + 0xF6], 0
+  jne done
+  mov ecx, [edi + 0xD4]
+  cmp ecx, TILES
+  jae done
+  mov eax, [FLAGS + ecx*4]
+  and eax, 0x400100
+  cmp eax, 0x400100
+  jne done
+  mov [STATE + 0x80], edx
+  mov [STATE + 0x84], esi
+  call PUSH_OFF
+done:
+  popad
+  add edx, 1
+  mov [esi], edx
   jmp RESUME
 ]]
 

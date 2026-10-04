@@ -54,6 +54,32 @@ def game_line(x1, y1, x2, y2):
         if y != y2: y += 1 if y < y2 else -1
 
 
+def line4(x1, y1, x2, y2):
+    out, x, y = [(x1, y1)], x1, y1
+    dx, dy = x2 - x1, y2 - y1
+    sx, sy = (-1 if dx < 0 else 1), (-1 if dy < 0 else 1)
+    while (x, y) != (x2, y2):
+        ex = abs(dx * (y - y1) - dy * (x + sx - x1))
+        ey = abs(dx * (y + sy - y1) - dy * (x - x1))
+        if y == y2 or (x != x2 and (ex < ey or (ex == ey and abs(x2 - x) >= abs(y2 - y)))):
+            x += sx
+        else:
+            y += sy
+        out.append((x, y))
+    return out
+
+
+def game_line4(x1, y1, x2, y2):
+    out, x, y = [(x1, y1)], x1, y1
+    while (x, y) != (x2, y2):
+        if abs(x2 - x) > abs(y2 - y):
+            x += 1 if x < x2 else -1
+        else:
+            y += 1 if y < y2 else -1
+        out.append((x, y))
+    return out
+
+
 def suite(ext, config):
     tag = ('EXT' if ext else 'VAN') + ' ' + ','.join('%s=%s' % kv for kv in sorted(config.items()))
     print(tag)
@@ -92,6 +118,8 @@ def suite(ext, config):
         for site, ret in ((0x275, 0x10), (0x2B6, 0x1C), (0x2D1, 0), (0x2E3, 0x10), (0x30D, 0x1C),
                           (0x324, 0x10), (0x342, 0xC)):
             H.stub(call(v + site), 0, ret)
+        H.stub(call(v + 0xFB), 1, 8)                  # isTileEnclosedByWallsOrGates (stairs start)
+        H.stub(call(v + 0x10C), 98, 8)                # getMaxWallHeightInBrushArea
         p = place
         H.stub(call(p + 0x55), 5000, 8)              # getWallTilesThatCanBeBuilt
         for site, ret in ((0x3A3, 8), (0x3AB, 4), (0x3C1, 0xC), (0x523, 0x10), (0x53D, 4)):
@@ -124,7 +152,10 @@ def suite(ext, config):
     def tile(x, y):
         return y * 400 + x
 
+    DATA = [x for x, n in H.allocations if n == 0x100 + 4 * 2048][0]
+
     def reset():
+        H.put32(DATA + 0x20, MASK)        # the cached drag: the map changes under it here
         H.m.write(FLAGS, b'\0' * 4 * TILES)
         H.m.write(BID, b'\0' * 2 * TILES)
         H.m.write(LIVE, b'\x08' * TILES)
@@ -261,6 +292,99 @@ def suite(ext, config):
     check(tag + ' G damaged wall repaired', H.m.read(LIVE + tile(106, 102), 1)[0], 98)
     check(tag + ' G straight through it', max(abs(y - 102) for x, y in walls() - old), 0)
 
+    # H. stairs: straight steps, 16 lower each, around what is in the way
+    reset()
+    H.put32(TMS + 0x554984, 5000)
+    for y in range(290, 311):
+        H.put32(FLAGS + 4 * tile(300, y), 0x100); H.put8(LIVE + tile(300, y), 98)
+    st = (301, 300, 306, 303)
+
+    def stairs_placed():
+        data = H.m.read(FLAGS, 4 * TILES)
+        return {(t % 400, t // 400) for t in range(TILES) if data[4 * t + 1] & 8}
+
+    def check_stairs(label, expect_line, blocked=()):
+        check(tag + label + ' valid', run_validate(*st, mapper=0x1B), True)
+        H.m.write(GFX, b'\0' * 2 * TILES)
+        H.run(preview, until=preview + 0x3D4, regs=dict(ecx=TMS), stack=[1, *st, 0x1B])
+        gfx = H.m.read(GFX, 2 * TILES)
+        drawn = {(t % 400, t // 400) for t in range(TILES) if gfx[2 * t] or gfx[2 * t + 1]}
+        run_place(*st, mapper=0x1B)
+        got = stairs_placed()
+        if expect_line is not None:
+            check(tag + label + ' tiles', got, set(expect_line[:len(got)]))
+        check(tag + label + ' five steps', len(got), 5)
+        check(tag + label + ' preview = stairs', drawn, got)
+        check(tag + label + ' nothing on the building', got & set(blocked), set())
+        # straight steps only, each 16 lower than the one before
+        order = sorted(got, key=lambda t: -H.m.read(LIVE + tile(*t), 1)[0])
+        check(tag + label + ' first step', order[0], (301, 300))
+        check(tag + label + ' straight steps', all(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1
+                                                   for a, b in zip(order, order[1:])), True)
+        check(tag + label + ' heights', [H.m.read(LIVE + tile(*t), 1)[0] for t in order], [82, 66, 50, 34, 18])
+
+    check_stairs(' H stairs', line4(*st) if any_angle else game_line4(*st))
+    if flow:
+        reset()
+        H.put32(TMS + 0x554984, 5000)
+        for y in range(290, 311):
+            H.put32(FLAGS + 4 * tile(300, y), 0x100); H.put8(LIVE + tile(300, y), 98)
+        line = line4(*st) if any_angle else game_line4(*st)
+        blocked = [line[2]]
+        for x, y in blocked:
+            H.put16(BID + 2 * tile(x, y), 9)
+        H.put32(DATA + 0x20, MASK)
+        check_stairs(' H stairs around', None, blocked)
+
+    # I. the raised part of a crenellation gets path links
+    walkable = config.get('walkableCrenellations', True)
+    link_self = f('F7 C3 00 00 40 00 0F 85 ? ? ? ?')
+    links_of = link_self - 0xE0
+    LINKS = TMS + 0x38B2F0
+    reset()
+    m = tile(250, 250)
+    H.put32(FLAGS + 4 * m, 0x400300); H.put8(LIVE + m, 106)
+    for x, y in ((249, 250), (251, 250)):
+        H.put32(FLAGS + 4 * tile(x, y), 0x300); H.put8(LIVE + tile(x, y), 106)
+    for x in range(248, 253):
+        H.put32(FLAGS + 4 * tile(x, 251), 0x100); H.put8(LIVE + tile(x, 251), 98)
+    H.put8(LINKS + m, 0x55)
+    H.run(links_of, regs=dict(ecx=0x12345678), stack=[250, m])
+    check(tag + ' I raised part linked', H.m.read(LINKS + m, 1)[0] != 0, walkable)
+    H.run(links_of, regs=dict(ecx=0x12345678), stack=[250, tile(249, 250)])
+    check(tag + ' I neighbour links to it', bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), walkable)
+
+    # J. a unit that stops on it is moved to the nearest wall tile
+    if walkable:
+        tick_site = f('83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00')
+        TICKS = E.u32(f('8B 87 50 0A 00 00 8B 8F 98 09 00 00 8B 15') + 14)
+        set_pos = f('53 8B 5C 24 0C 81 FB 8F 01 00 00 55 8B E9 0F 87')
+        STATE = 0x145CA28 if ext else 0x1387F38
+        AREAS = TMS + 0x363ED0
+        u = STATE + 0x614 + 5 * 0x490
+        moved = []
+        H.exposed[set_pos] = lambda *a: moved.append(a) or 1
+        for x in range(248, 253):
+            H.put8(LINKS + tile(x, 251), 0xFF); H.put16(AREAS + 2 * tile(x, 251), 3)
+        H.put16(AREAS + 2 * m, 3); H.put8(LINKS + tile(249, 250), 0)
+        H.put32(u + 0xD4, m); H.put16(u + 0xC4, 250); H.put16(u + 0xC6, 250); H.put16(u + 0xF6, 0)
+        H.put32(TICKS, 11)                      # 11 + 5 = 16: this unit's turn
+        regs = dict(eax=0xA1, ebx=0xB2, ecx=0xC3, edx=5, esi=STATE, edi=0xD4, ebp=0xE5)
+        cpu = H.run(tick_site, until=tick_site + 5, regs=regs)
+        check(tag + ' J moved', moved, [(STATE, 5, 250, 251, 98)])
+        check(tag + ' J registers', [cpu.r[r] for r in ('eax', 'ebx', 'ecx', 'edx', 'edi', 'ebp')],
+              [0xA1, 0xB2, 0xC3, 6, 0xD4, 0xE5])
+        check(tag + ' J cursor', H.u32(STATE), 6)
+        check(tag + ' J stays there', (H.u16(u + 0xEC), H.u16(u + 0xEE), H.u16(u + 0xC8), H.u16(u + 0xCA),
+                                       H.u32(u + 0xD8)), (250, 251, 250, 251, tile(250, 251)))
+        moved.clear()
+        H.put16(u + 0xF6, 2)
+        H.run(tick_site, until=tick_site + 5, regs=regs)
+        check(tag + ' J walking over it', moved, [])
+        H.put16(u + 0xF6, 0); H.put32(TICKS, 12)
+        H.run(tick_site, until=tick_site + 5, regs=regs)
+        check(tag + ' J not its turn', moved, [])
+
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
     cren_on = config.get('crenellations', True)
@@ -327,7 +451,8 @@ def suite(ext, config):
 
 
 if __name__ == '__main__':
-    configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False}, {'stairs': False, 'crenellations': False},
+    configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False},
+               {'walkableCrenellations': False}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

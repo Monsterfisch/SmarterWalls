@@ -54,9 +54,11 @@ class Host:
         self.calls = []
         c[b'exposeCode'] = lambda a, n, cc: (lambda *args: self.call_exposed(int(a), [int(x) for x in args]))
 
+        code = [(vs, vs + max(vsz, rsz)) for vs, vsz, po, rsz, n in self.E.secs if n == '.text']
+
         def data_only(name, write):
             def guarded(a, v=None):
-                if int(a) < HEAP:
+                if int(a) < 0x400000 or any(lo <= int(a) < hi for lo, hi in code):
                     raise AssertionError('%s wrote to the game image at %08X' % (name, int(a)))
                 return write(a, v)
             return guarded
