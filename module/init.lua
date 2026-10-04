@@ -23,7 +23,10 @@
   5. Troops can walk over the raised part of a crenellation (tile flag 0x400000). The game's
      path link builder refuses those tiles in two tests; both are switched off, and the game
      rebuilds every link when a map or save loads. A unit that stops on one is moved to the
-     nearest wall tile, checked once every 16 ticks per unit from updateUnits.
+     nearest wall tile, checked once every 16 ticks per unit from updateUnits. Ladders may be
+     leant against them (UpdateLadderman's wall test) and siege towers and ladders sent at a
+     wall may pick them (the wall/free-tile pair search); a siege tower's own wall search
+     already takes any wall tile, and its links now meet links coming back.
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
   stairs only in straight steps (the game's stairs never step diagonally) and around every
   wall, since the game ends stairs at the first wall they meet. Each route step also lowers
@@ -103,6 +106,15 @@ local AOB_LINK_SELF = "F7 C3 00 00 40 00 0F 85 ? ? ? ?"           -- test ebx, 0
 local LINK_SELF_IMM = 2
 local AOB_LINK_NEIGHBOUR = "A9 00 00 40 00 74 0B 02 96 ? ? ? ?"   -- test eax, 0x400000 / je
 local LINK_NEIGHBOUR_IMM = 1
+-- Ladders: getOrientationThatIsWallTowerOrGatehouse (UpdateLadderman's choice of the wall tile
+-- to lean on) skips a neighbour with 0x400002 (raised part or stockpile); 0x2 is kept.
+local AOB_LADDER_WALL = "F7 C2 02 00 40 00 74 10"              -- test edx, 0x400002 / je
+local LADDER_WALL_IMM = 2
+-- Siege towers and ladders sent at a wall (giveTribeAnInstruction ->
+-- populateDestinationsArrayWithWallTileAndFreeTilePairInSameArea): the free tile beside an
+-- enemy wall or crenellation, which skips raised parts.
+local AOB_WALL_PAIR = "F7 C2 00 00 40 00 75 13"                -- test edx, 0x400000 / jne
+local WALL_PAIR_IMM = 2
 
 -- updateUnits, a live unit about to be updated: add edx, 1 / mov [esi], edx.
 local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00"
@@ -722,6 +734,10 @@ local function enable(self, config)
     local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
     core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
     core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+    -- ladders and siege towers may set up against them too
+    core.writeCode(scan(AOB_LADDER_WALL, "where a ladder is leant against a wall") + LADDER_WALL_IMM,
+      { 0x02, 0, 0, 0 })
+    core.writeCode(scan(AOB_WALL_PAIR, "where troops are sent to a wall") + WALL_PAIR_IMM, { 0, 0, 0, 0 })
 
     m.setPosition = scan(AOB_SET_POSITION, "where a unit is put down")
     local tick = scan(AOB_UNIT_TICK, "the unit update loop")

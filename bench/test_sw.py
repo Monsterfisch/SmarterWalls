@@ -385,6 +385,19 @@ def suite(ext, config):
         H.run(tick_site, until=tick_site + 5, regs=regs)
         check(tag + ' J not its turn', moved, [])
 
+    # K. a ladder may lean against it; troops sent at a wall may pick it
+    orient = f('F7 C2 02 00 40 00 74 10') - 0x5F      # the file, not the patched memory
+    check(tag + ' K ladder function', H.m.read(orient, 4), bytes([0x8B, 0x44, 0x24, 0x04]))
+    reset()
+    H.put32(FLAGS + 4 * m, 0x400300)
+    cpu = H.run(orient, regs=dict(ecx=TMS), stack=[250, 251])
+    check(tag + ' K ladder against the raised part', cpu.r['eax'] != 0xF, walkable)
+    H.put32(FLAGS + 4 * m, 0x400302)
+    cpu = H.run(orient, regs=dict(ecx=TMS), stack=[250, 251])
+    check(tag + ' K never against a stockpile', cpu.r['eax'], 0xF)
+    pair = f('F7 C2 00 00 40 00 75 13')
+    check(tag + ' K wall pair test', H.m.read(pair + 2, 4), bytes([0, 0, 0, 0]) if walkable else bytes([0, 0, 0x40, 0]))
+
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
     cren_on = config.get('crenellations', True)

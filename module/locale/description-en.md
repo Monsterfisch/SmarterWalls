@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.2
+**Version**: 1.0.3
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -34,6 +34,9 @@ The preview, the cost and the wall that gets built always match.
 Troops can now walk over the raised parts of crenellations instead of going the long way
 round. They cannot stay on them: anyone who stops on one is moved to the nearest wall tile
 straight away.
+
+Ladders and siege towers can now attach to every part of a crenellation, raised parts
+included, and troops climbing up can get off onto them.
 
 ## Repairing stairs keeps their height
 
