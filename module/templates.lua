@@ -371,4 +371,41 @@ templates.freeTileGame = [[
   jmp RESUME
 ]]
 
+-- placeWalls, a new crenellation: replaces call hasOnlyTowerNeighborsNoWalls(tile, y), whose two
+-- arguments are already pushed. esi = tile, edi = TileMapState, [esp+0x20] = x, [esp+0x44] = y
+-- once the arguments are dropped. Lua works out the height; 0 = the game's own choice.
+templates.crenelHeight = [[
+  add esp, 8
+  push eax
+  push ecx
+  push edx
+  mov [STATE + 0x98], esi
+  mov [STATE + 0x9C], edi
+  mov eax, [esp + 0x2C]
+  mov [STATE + 0xA0], eax
+  mov eax, [esp + 0x50]
+  mov [STATE + 0xA4], eax
+  mov dword [STATE + 0xA8], 0
+  mov dword [STATE + 0xAC], 0
+  call HEIGHT
+  pop edx
+  pop ecx
+  pop eax
+  mov eax, [STATE + 0xA8]
+  test eax, eax
+  jz vanilla
+  mov [esi + edi + LIVE_OFF], al
+  cmp dword [STATE + 0xAC], 0
+  je tall
+  mov dword [esp + 0x34], 1
+tall:
+  jmp PARITY
+vanilla:
+  push dword [STATE + 0xA4]
+  push esi
+  mov ecx, edi
+  call TOWERS_ONLY
+  jmp AFTER_CALL
+]]
+
 return templates

@@ -500,6 +500,31 @@ def suite(ext, config):
     H.put32(FLAGS + 4 * tile(101, 100), 0x400300)
     check(tag + ' N onto a raised part', assassin_route(102, 100, 101, 100), 1 if walkable else 0)
 
+    # O. crenellation heights from the wall, stairs or crenellations beside them
+    heights = config.get('crenellationHeights', True)
+
+    def crenel_at(x, y, setup):
+        reset()
+        for (sx, sy), flags, live in setup:
+            H.put32(FLAGS + 4 * tile(sx, sy), flags); H.put8(LIVE + tile(sx, sy), live)
+        run_place(x, y, x, y, mapper=0x1A)
+        t = tile(x, y)
+        return H.m.read(LIVE + t, 1)[0], bool(H.u32(FLAGS + 4 * t) & 0x10000), H.u32(FLAGS + 4 * t) & 0x300
+
+    want = lambda h, low, game: (h, low, 0x300) if heights else game
+    check(tag + ' O stone wall', crenel_at(300, 300, [((300, 301), 0x100, 98)]), want(106, False, (106, False, 0x300)))
+    check(tag + ' O wall on a hill', crenel_at(300, 300, [((300, 301), 0x100, 130)]), want(138, False, (106, False, 0x300)))
+    check(tag + ' O tallest wall wins', crenel_at(300, 300, [((300, 301), 0x100, 98), ((301, 301), 0x100, 120)]),
+          want(128, False, (106, False, 0x300)))
+    check(tag + ' O wood wall', crenel_at(300, 300, [((300, 301), 0x10100, 68)]), want(76, True, (76, True, 0x300)))
+    check(tag + ' O crenellations ignored next to a wall',
+          crenel_at(300, 300, [((300, 301), 0x100, 98), ((301, 300), 0x300, 140)]), want(106, False, (106, False, 0x300)))
+    check(tag + ' O only crenellations', crenel_at(300, 300, [((300, 301), 0x300, 100)]), want(100, False, (106, False, 0x300)))
+    check(tag + ' O stairs step 2', crenel_at(300, 300, [((300, 301), 0x900, 66)]), want(106, False, (106, False, 0x300)))
+    check(tag + ' O stairs step 3', crenel_at(300, 300, [((300, 301), 0x900, 50)]), want(106, False, (106, False, 0x300)))
+    check(tag + ' O stairs step 4', crenel_at(300, 300, [((300, 301), 0x900, 34)]), want(76, True, (106, False, 0x300)))
+    check(tag + ' O stairs step 5', crenel_at(300, 300, [((300, 301), 0x900, 18)]), want(76, True, (106, False, 0x300)))
+
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
     cren_on = config.get('crenellations', True)
@@ -567,7 +592,8 @@ def suite(ext, config):
 
 if __name__ == '__main__':
     configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False},
-               {'walkableCrenellations': False}, {'diagonalSiege': False}, {'ladderWait': 2}, {'stairs': False, 'crenellations': False},
+               {'walkableCrenellations': False}, {'diagonalSiege': False}, {'ladderWait': 2},
+               {'crenellationHeights': False}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

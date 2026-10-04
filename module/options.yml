@@ -29,6 +29,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.crenellationHeights
+    name: smarter-walls-crenellation-heights
+    text: '{{cren_heights}}'
+    tooltip: '{{cren_heights_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.walkableCrenellations
     name: smarter-walls-walkable-crenellations
     text: '{{walkable}}'

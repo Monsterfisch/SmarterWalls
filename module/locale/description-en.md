@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.5
+**Version**: 1.0.6
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -28,6 +28,13 @@ Crenellations and stairs do the same: drag crenellations along a wall and they f
 shape; stairs go around buildings and walls in straight steps, as stairs always do.
 
 The preview, the cost and the wall that gets built always match.
+
+## Crenellations match the wall they are on
+
+A new crenellation is built a little taller than the tallest wall right next to it, so it
+fits walls on hills, in dips and low walls alike. Other crenellations next to it are only
+used when it touches nothing else. Next to stairs, the top three steps get tall
+crenellations and the lower steps low ones. Repairing a crenellation uses the same rule.
 
 ## Troops can walk over crenellations
 

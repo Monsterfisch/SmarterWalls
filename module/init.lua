@@ -36,6 +36,11 @@
      climbs diagonally). A siege tower only ever docked two tiles straight out from a wall
      that runs straight past it; where the game finds no such spot, the tower docks with
      the corner of its 3x3 against a diagonal wall, which the path links already join.
+  8. Crenellation heights. The game makes a crenellation 0x62 above the ground, or 0x44 (and
+     flag 0x10000) when its straight neighbours are only low walls - so it is 8 above a stone
+     or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
+     beside it; next to stairs only, tall for steps 1-3 and low for 4-6; next to crenellations
+     only, as tall as they are. Repairing a crenellation uses the same rule.
   7. Assassins. Their route search climbs only in the four straight directions and never
      onto a raised crenellation part; with 6 on they climb diagonally too, with 5 on onto
      raised parts.
@@ -53,7 +58,8 @@ local templates = require("templates")
 local MODULE_NAME = "smarter-walls"
 
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
-  crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10 }
+  crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
+  crenellationHeights = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -103,6 +109,19 @@ local PLACE_UNDAMAGED = { 0x199, { 0x85, 0xED, 0x74, 0x32 } }
 local PLACE_DAMAGED = { 0x19D, { 0x85, 0xED, 0x8A, 0x8C } }
 local PLACE_COUNTED = { 0x2AC, { 0x8B, 0x84, 0xB7, 0x60, 0x51, 0x16, 0x00 } }
 local PLACE_FREE = { 0x398, { 0x8B, 0x4C, 0x24, 0x44, 0x56, 0x51 } }
+-- placeWalls, a new crenellation: call hasOnlyTowerNeighborsNoWalls(tile, y), the game's whole
+-- height rule (low, +0x44 and flag 0x10000, when its straight neighbours are only wood walls
+-- or low crenellations; tall, +0x62, otherwise). After the call: test eax, eax; after the
+-- height: the row/column parity test that raises every other crenellation tile.
+local PLACE_CRENEL_CALL = { 0x20E, { 0xE8 } }
+local PLACE_CRENEL_AFTER = { 0x213, { 0x85, 0xC0, 0x74, 0x12 } }
+local PLACE_CRENEL_PARITY = { 0x231, { 0x8B, 0x44, 0x24, 0x20, 0x83, 0xE0, 0x01 } }
+local CRENEL_ABOVE_WALL = 8        -- a crenellation stands this much above its wall
+local CRENEL_TALL = 0x62           -- the game's two crenellation heights above the ground
+local CRENEL_LOW = 0x44
+local STONE_WALL = 0x5A            -- a stone wall's height above the ground
+local STAIR_STEP = 16
+local STAIRS_TALL_UP_TO = 3        -- stairs steps 1-3 get tall crenellations, 4-6 low ones
 
 -- processDamageToBuilding, wall branch: mov edx, [global] before the first hit takes the
 -- top off, and the line that clears the wall bits once the wall is gone.
@@ -246,6 +265,12 @@ local D_DOCK_UNIT = 0x88       -- findFreeTileNearby's unit and wall tile, and l
 local D_DOCK_WALL = 0x8C
 local D_DOCK_RESULT = 0x90
 local D_PATIENCE = 0x94        -- 1: the unit simply stopped there; more: ladder or walking
+local D_CREN_TILE = 0x98       -- a new crenellation: tile, TileMapState, x, y; lua's height, low
+local D_CREN_TMS = 0x9C
+local D_CREN_X = 0xA0
+local D_CREN_Y = 0xA4
+local D_CREN_HEIGHT = 0xA8
+local D_CREN_LOW = 0xAC
 local D_PATH = 0x100
 local DATA_SIZE = D_PATH + 4 * MAX_PATH
 
@@ -620,10 +645,64 @@ local function makeRouter(m, options)
 end
 
 ---------------------------------------------------------------------------------------
+-- How tall a crenellation is
+---------------------------------------------------------------------------------------
+
+-- A crenellation's height from what it stands next to (all eight neighbours):
+--   walls first: the tallest wall beside it (its height before any damage) plus 8, low (flag
+--   0x10000) when that wall is a low one, such as a wood wall;
+--   else stairs: the highest stairs beside it - steps 1 to 3 down from the wall give a tall
+--   crenellation, steps 4 to 6 a low one;
+--   else crenellations: as tall as the tallest one beside it.
+-- Towers and gatehouses do not count. Nothing to go by: nil, and the game decides.
+local function makeCrenelHeight(m)
+  return function(tms, x, y)
+    local here = core.readInteger(m.rows + 12 * y) + x
+    local base = byte(tms + TMS_BASE + here)
+    local wall, wallLow, stairs, crenel, crenelLow
+    for _, n in ipairs(NEIGHBOURS) do
+      local nx, ny = x + n[1], y + n[2]
+      if nx >= 0 and ny >= 0 and nx < MAP_SIZE and ny < MAP_SIZE
+          and byte(m.valid + ny * MAP_SIZE + nx) ~= 0 then
+        local tile = core.readInteger(m.rows + 12 * ny) + nx
+        local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
+        if flags & F_WALL ~= 0 and flags & F_STOCKPILE == 0
+            and word(tms + TMS_BUILDINGS + 2 * tile) == 0 then
+          local height = byte(tms + TMS_LIVE + tile) + byte(tms + TMS_DAMAGE + tile)
+          if flags & F_STAIRS ~= 0 then
+            local rel = height - byte(tms + TMS_BASE + tile)
+            if stairs == nil or rel > stairs then stairs = rel end
+          elseif flags & F_CRENEL ~= 0 then
+            if crenel == nil or height > crenel then
+              crenel, crenelLow = height, flags & F_LOW ~= 0
+            end
+          elseif wall == nil or height > wall then
+            wall, wallLow = height, flags & F_LOW ~= 0
+          end
+        end
+      end
+    end
+    if wall ~= nil then
+      return math.min(255, wall + CRENEL_ABOVE_WALL), wallLow
+    elseif stairs ~= nil then
+      local step = math.max(1, (STONE_WALL - stairs + STAIR_STEP - 1) // STAIR_STEP)
+      if step <= STAIRS_TALL_UP_TO then
+        return math.min(255, base + CRENEL_TALL), false
+      end
+      return math.min(255, base + CRENEL_LOW), true
+    elseif crenel ~= nil then
+      return crenel, crenelLow
+    end
+    return nil
+  end
+end
+
+---------------------------------------------------------------------------------------
 -- Putting damaged stairs and crenellations back
 ---------------------------------------------------------------------------------------
 
 local function makeRestore(m, options)
+  local crenelHeight = options.crenellationHeights and makeCrenelHeight(m) or nil
   -- The stairs' height before they were damaged, for stairs damaged before this module
   -- saw them: the damage counter gives back what was knocked off one point at a time; the
   -- first hit on tall stairs also took 20 off without counting it. Stairs step by 16, so a
@@ -663,8 +742,13 @@ local function makeRestore(m, options)
     local height, result
     if flags & F_CRENEL ~= 0 then
       if not options.crenellations then return end
-      -- the game's own crenellation heights: low between towers, tall otherwise
-      height = base + ((flags & F_LOW ~= 0) and 0x44 or 0x62)
+      -- the game's own crenellation heights: low next to low walls, tall otherwise - or, with
+      -- crenellationHeights on, the height its neighbours give it
+      height = base + ((flags & F_LOW ~= 0) and CRENEL_LOW or CRENEL_TALL)
+      if crenelHeight ~= nil then
+        height = crenelHeight(tms, core.readInteger(m.data + D_R_X),
+          core.readInteger(m.data + D_R_Y)) or height
+      end
       if damage == 0 and live >= height then
         -- intact: turned into wall, unless it was repaired a moment ago in this same wall
         if core.readInteger(m.data + D_LAST) == tile then
@@ -884,7 +968,7 @@ local function enable(self, config)
   local routing = options.anyAngle or options.flow
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
-      and not options.diagonalSiege then return end
+      and not options.diagonalSiege and not options.crenellationHeights then return end
 
   local starts = {}
   for name, f in pairs(FUNCTIONS) do
@@ -980,6 +1064,27 @@ local function enable(self, config)
         core.writeCode(search + at + 2, { core.itob(SIEGE_BLOCKED & ~F_RAISED) })
       end
     end
+  end
+
+  -- 8. A new crenellation is as tall as the wall (or stairs) it is attached to.
+  if options.crenellationHeights then
+    local site = checked(place, PLACE_CRENEL_CALL, "the crenellation height test")
+    local towersOnly = site + 5 + core.readInteger(site + 1)
+    expectBytes(towersOnly, { 0x8B, 0x44, 0x24, 0x08, 0xC1, 0xE0, 0x05 }, "the crenellation height test")
+    local rule = makeCrenelHeight(m)
+    local height = luaFunction("working out a crenellation's height", function()
+      local h, low = rule(core.readInteger(m.data + D_CREN_TMS), core.readInteger(m.data + D_CREN_X),
+        core.readInteger(m.data + D_CREN_Y))
+      if h ~= nil and h > 0 then
+        core.writeInteger(m.data + D_CREN_HEIGHT, h)
+        core.writeInteger(m.data + D_CREN_LOW, low and 1 or 0)
+      end
+    end)
+    jumpTo(site, assemble(templates.crenelHeight, {
+      STATE = data, HEIGHT = height, LIVE_OFF = TMS_LIVE, TOWERS_ONLY = towersOnly,
+      AFTER_CALL = checked(place, PLACE_CRENEL_AFTER, "the crenellation height test"),
+      PARITY = checked(place, PLACE_CRENEL_PARITY, "the crenellation pattern"),
+    }), 5)
   end
 
   -- 1 and 2. The route of a dragged wall.

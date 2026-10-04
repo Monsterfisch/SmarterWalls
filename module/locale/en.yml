@@ -15,6 +15,12 @@ around_walls_tooltip: |
   A new wall or crenellation also goes around your undamaged walls, stairs and crenellations instead of
   running over them. It can still start or end on one to join it, and it still goes over
   damaged walls so it repairs them. Needs "Walls flow around buildings".
+cren_heights: Crenellations match the wall they are on
+cren_heights_tooltip: |
+  A crenellation is built a little taller than the tallest wall beside it, so it fits walls
+  on hills and low walls. Other crenellations next to it only count when it touches nothing
+  else. Next to stairs, the top three steps get tall crenellations and the lower steps low
+  ones.
 walkable: Troops can walk over crenellations
 walkable_tooltip: |
   Troops can walk over the raised parts of crenellations, so they no longer have to go the
