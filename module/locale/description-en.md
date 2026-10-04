@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.6
+**Version**: 1.0.7
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -51,8 +51,8 @@ included, and troops climbing up can get off onto them. Assassins can climb onto
 
 Laddermen and siege towers can now attack walls and crenellations that run diagonally.
 Laddermen lean their ladder against the diagonal wall, and a siege tower parks with one
-corner against it, since it needs a 3 by 3 space to set up. Assassins climb diagonal walls
-too. Before, diagonal walls could not be climbed at all.
+corner against it, since it needs a 3 by 3 space to set up. Before, diagonal walls could
+not be climbed at all.
 
 ## Repairing stairs keeps their height
 

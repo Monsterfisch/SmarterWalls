@@ -41,9 +41,8 @@
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
      beside it; next to stairs only, tall for steps 1-3 and low for 4-6; next to crenellations
      only, as tall as they are. Repairing a crenellation uses the same rule.
-  7. Assassins. Their route search climbs only in the four straight directions and never
-     onto a raised crenellation part; with 6 on they climb diagonally too, with 5 on onto
-     raised parts.
+  7. Assassins. Their route search never climbs onto a raised crenellation part; with 5 on it
+     does. (Diagonal climbs are left alone: the game's walk back from the goal refuses them.)
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
   stairs only in straight steps (the game's stairs never step diagonally) and around every
   wall, since the game ends stairs at the first wall they meet. Each route step also lowers
@@ -168,12 +167,12 @@ local U_OWNER = 0x96
 
 -- Assassins: pathFindingWithBuildingsIncluded, the route search for a group of assassins.
 -- A step between two tiles without a path link is a climb (onto a wall from the ground or
--- down again), which it takes only in the four straight directions - the two diagonal
--- blocks of its unrolled loop skip it with test byte [esp+0x2C], 1 (always odd) - and never
--- onto a tile with any of 0x4A5014B1, which includes a crenellation's raised part.
+-- down again), never onto a tile with any of 0x4A5014B1, which includes a crenellation's
+-- raised part. It climbs only in the four straight directions, and so does the walk back
+-- that turns the search into steps (traceAndCommitPathPlan, mode 3): a diagonal climb in
+-- the search alone leaves a route that cannot be walked back, and the assassin goes nowhere
+-- (1.0.5/1.0.6). Diagonal walls need no diagonal climb - they always have a straight side.
 local AOB_ASSASSIN_SEARCH = "51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57"
-local ASSASSIN_DIAGONAL = { 0x2F5, 0x4FC }                    -- test byte [esp+0x2C], 1
-local ASSASSIN_DIAGONAL_BYTES = { 0xF6, 0x44, 0x24, 0x2C, 0x01, 0x0F, 0x85 }
 local ASSASSIN_TARGET = { 0x203, 0x307, 0x409, 0x50E }       -- test edi, 0x4A5014B1
 local ASSASSIN_TARGET_BYTES = { 0xF7, 0xC7, 0xB1, 0x14, 0x50, 0x4A, 0x0F, 0x85 }
 
@@ -1045,24 +1044,14 @@ local function enable(self, config)
     }), FREE_TILE_SIZE)
   end
 
-  -- 7. Assassins climb diagonal walls and onto a crenellation's raised part.
-  if options.diagonalSiege or options.walkableCrenellations then
+  -- 7. Assassins climb onto a crenellation's raised part.
+  if options.walkableCrenellations then
     local search = scan(AOB_ASSASSIN_SEARCH, "the assassins' route search")
-    for _, at in ipairs(ASSASSIN_DIAGONAL) do
-      expectBytes(search + at, ASSASSIN_DIAGONAL_BYTES, "the assassins' climb test")
-    end
     for _, at in ipairs(ASSASSIN_TARGET) do
       expectBytes(search + at, ASSASSIN_TARGET_BYTES, "the assassins' climb test")
     end
-    if options.diagonalSiege then
-      for _, at in ipairs(ASSASSIN_DIAGONAL) do
-        core.writeCode(search + at + 4, { 0x00 })
-      end
-    end
-    if options.walkableCrenellations then
-      for _, at in ipairs(ASSASSIN_TARGET) do
-        core.writeCode(search + at + 2, { core.itob(SIEGE_BLOCKED & ~F_RAISED) })
-      end
+    for _, at in ipairs(ASSASSIN_TARGET) do
+      core.writeCode(search + at + 2, { core.itob(SIEGE_BLOCKED & ~F_RAISED) })
     end
   end
 
