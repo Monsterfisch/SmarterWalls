@@ -310,4 +310,36 @@ done:
   jmp RESUME
 ]]
 
+-- UnitsState::findFreeTileNearby(unit, wallTile), the spot a siege tower docks on: the game's
+-- own search first; when it finds nothing, lua tries the diagonal spots.
+templates.freeTile = [[
+  push dword [esp + 8]
+  push dword [esp + 8]
+  call GAME_SEARCH
+  test eax, eax
+  jnz done
+  push ecx
+  push edx
+  mov eax, [esp + 0xC]
+  mov [STATE + 0x88], eax
+  mov eax, [esp + 0x10]
+  mov [STATE + 0x8C], eax
+  mov dword [STATE + 0x90], 0
+  call DIAGONAL
+  pop edx
+  pop ecx
+  mov eax, [STATE + 0x90]
+done:
+  ret 8
+]]
+
+-- The game's findFreeTileNearby, its first 9 bytes replayed.
+templates.freeTileGame = [[
+  sub esp, 0x10
+  push ebx
+  push ebp
+  mov ebp, [esp + 0x1C]
+  jmp RESUME
+]]
+
 return templates

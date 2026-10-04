@@ -2,6 +2,7 @@
 code (validateWallBuildPath, renderWallDragPreview, placeWalls). Addresses are found here
 independently of the module."""
 import sys
+import struct
 import harness
 from harness import Host, SENTINEL, MASK
 
@@ -110,6 +111,9 @@ def suite(ext, config):
     for y in range(400):
         H.put32(ROWS + 12 * y, y * 400)
     H.m.write(VALID, b'\x01' * TILES)
+    # the tile -> row table, also filled at map load
+    YCOMP = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x2E)
+    H.m.write(YCOMP, b''.join(struct.pack('<H', t // 400) for t in range(TILES)))
     H.m.write(BASE, b'\x08' * TILES)
     H.m.write(LIVE, b'\x08' * TILES)
 
@@ -398,6 +402,50 @@ def suite(ext, config):
     pair = f('F7 C2 00 00 40 00 75 13')
     check(tag + ' K wall pair test', H.m.read(pair + 2, 4), bytes([0, 0, 0, 0]) if walkable else bytes([0, 0, 0x40, 0]))
 
+    # M. diagonal walls: troops look all round; siege towers dock with a corner
+    diagonal = config.get('diagonalSiege', True)
+    pair_start = f('B9 ? ? ? ? 8B 41 04 03 C7')
+    table = H.u32(pair_start + 1)
+    if diagonal:
+        dirs = [(H.m.s32(table + 8 * i), H.m.s32(table + 8 * i + 4)) for i in range(8)]
+        check(tag + ' M eight directions', sorted(dirs), sorted([(1, 0), (-1, 0), (0, 1), (0, -1),
+                                                                 (1, 1), (1, -1), (-1, 1), (-1, -1)]))
+        check(tag + ' M table end', H.u32(f('81 F9 ? ? ? ? 7C B8') + 2), table + 64)
+    else:
+        check(tag + ' M game table', table, E.u32(pair_start + 1))
+    search = f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00')
+    check(tag + ' M dock hook', H.m.read(search, 1)[0] == 0xE9, diagonal)
+    STATE = 0x145CA28 if ext else 0x1387F38
+    nav = call(search + 0x67)
+    H.stub(nav, 1, 0x10)
+    H.exposed[nav] = lambda *a: 1
+    H.stub(call(search + 0x44E), 0, 0x10)          # setAxisBasedDistanceResult
+    reset()
+    line = [(150 + i, 160 - i) for i in range(-6, 7)]
+    for x, y in line:
+        H.put32(FLAGS + 4 * tile(x, y), 0x100)
+    u = STATE + 0x614 + 7 * 0x490
+    H.put16(u + 0x96, 2); H.put32(u + 0xD4, tile(140, 150)); H.put16(u + 0xC4, 140); H.put16(u + 0xC6, 150)
+    cpu = H.run(search, regs=dict(ecx=STATE, ebx=0x11, esi=0x22, edi=0x33, ebp=0x44), stack=[7, tile(150, 160)])
+    check(tag + ' M diagonal dock', cpu.r['eax'], tile(148, 158) if diagonal else 0)
+    check(tag + ' M registers', [cpu.r[r] for r in ('ebx', 'esi', 'edi', 'ebp')], [0x11, 0x22, 0x33, 0x44])
+    check(tag + ' M stack', cpu.r['esp'], harness.STACK_TOP)
+    # the other side when the unit is there
+    H.put32(u + 0xD4, tile(160, 170)); H.put16(u + 0xC4, 160); H.put16(u + 0xC6, 170)
+    cpu = H.run(search, regs=dict(ecx=STATE), stack=[7, tile(150, 160)])
+    check(tag + ' M nearest side', cpu.r['eax'], tile(152, 162) if diagonal else 0)
+    # something in the way of the 3x3
+    H.put16(BID + 2 * tile(153, 163), 5)
+    cpu = H.run(search, regs=dict(ecx=STATE), stack=[7, tile(150, 160)])
+    check(tag + ' M blocked side skipped', cpu.r['eax'], tile(148, 158) if diagonal else 0)
+    # a straight wall is still the game's own choice
+    reset()
+    for x in range(140, 161):
+        H.put32(FLAGS + 4 * tile(x, 160), 0x100)
+    H.put32(u + 0xD4, tile(150, 150)); H.put16(u + 0xC4, 150); H.put16(u + 0xC6, 150)
+    cpu = H.run(search, regs=dict(ecx=STATE), stack=[7, tile(150, 160)])
+    check(tag + ' M straight wall', cpu.r['eax'], tile(150, 158))
+
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
     cren_on = config.get('crenellations', True)
@@ -465,7 +513,7 @@ def suite(ext, config):
 
 if __name__ == '__main__':
     configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False},
-               {'walkableCrenellations': False}, {'stairs': False, 'crenellations': False},
+               {'walkableCrenellations': False}, {'diagonalSiege': False}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

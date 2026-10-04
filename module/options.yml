@@ -37,6 +37,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.diagonalSiege
+    name: smarter-walls-diagonal-siege
+    text: '{{diagonal_siege}}'
+    tooltip: '{{diagonal_siege_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.stairs
     name: smarter-walls-stairs
     text: '{{stairs}}'
