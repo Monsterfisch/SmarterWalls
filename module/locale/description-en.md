@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.4
+**Version**: 1.0.5
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -33,17 +33,19 @@ The preview, the cost and the wall that gets built always match.
 
 Troops can now walk over the raised parts of crenellations instead of going the long way
 round. They cannot stay on them: anyone who stops on one is moved to the nearest wall tile
-straight away.
+straight away, and does not try to walk back onto it. Troops waiting there for their turn
+to climb down a ladder get more time (10 seconds, adjustable in the settings) before they
+are moved; after that they carry on to where they were going.
 
 Ladders and siege towers can now attach to every part of a crenellation, raised parts
-included, and troops climbing up can get off onto them.
+included, and troops climbing up can get off onto them. Assassins can climb onto them too.
 
 ## Ladders and siege towers attack diagonal walls
 
 Laddermen and siege towers can now attack walls and crenellations that run diagonally.
 Laddermen lean their ladder against the diagonal wall, and a siege tower parks with one
-corner against it, since it needs a 3 by 3 space to set up. Before, diagonal walls could
-not be climbed at all.
+corner against it, since it needs a 3 by 3 space to set up. Assassins climb diagonal walls
+too. Before, diagonal walls could not be climbed at all.
 
 ## Repairing stairs keeps their height
 

@@ -19,13 +19,20 @@ walkable: Troops can walk over crenellations
 walkable_tooltip: |
   Troops can walk over the raised parts of crenellations, so they no longer have to go the
   long way round. They cannot stay there: anyone who stops on one is moved to the nearest
-  wall tile. Ladders and siege towers can attach to every part of a crenellation too.
+  wall tile. Ladders, siege towers and assassins can get onto every part of a crenellation
+  too.
   Everyone in a multiplayer game needs the same setting.
+ladder_wait: Seconds troops may wait on a crenellation for a ladder
+ladder_wait_tooltip: |
+  Troops waiting on a raised part of a crenellation to climb down a ladder may stay there
+  this long before they are moved to the nearest wall tile; they then carry on to where
+  they were going. Troops that simply stop there are moved at once.
 diagonal_siege: Ladders and siege towers attack diagonal walls
 diagonal_siege_tooltip: |
   Ladders and siege towers can attack walls and crenellations that run diagonally. A siege
   tower sets its corner against the diagonal wall. Before, diagonal walls could not be
-  climbed at all. Everyone in a multiplayer game needs the same setting.
+  climbed at all. Assassins can climb diagonal walls too.
+  Everyone in a multiplayer game needs the same setting.
 stairs: Repairing stairs keeps their height
 stairs_tooltip: |
   Building a wall over damaged stairs puts the stairs back the way they were. Before, they

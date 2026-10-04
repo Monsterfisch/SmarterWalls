@@ -280,26 +280,55 @@ templates.forget = [[
 ]]
 
 -- updateUnits, every live unit before its update: edx = unit id, esi = UnitsState.
--- A unit standing still (move status +0xF6 = 0) on the raised part of a crenellation is
--- handed to lua, which moves it to the nearest wall tile. Each unit is looked at once every
--- 16 ticks. Replays add edx, 1 / mov [esi], edx.
+-- Every 16 ticks per unit: a unit on the raised part of a crenellation has its checks on that
+-- tile counted (COUNTS / LAST per unit id). A unit standing still (move status +0xF6 = 0)
+-- with no climb on its route (+0x294) is handed to lua at the first check; one using a
+-- ladder or still walking only after LONG checks, so troops queueing for a ladder down get
+-- time. Replays add edx, 1 / mov [esi], edx.
 templates.unitTick = [[
   pushad
+  cmp edx, MAX_UNITS
+  jae done
   mov eax, [TICKS]
   add eax, edx
   test eax, 15
   jnz done
   imul eax, edx, 0x490
   lea edi, [esi + eax + UNITS_OFF]
-  cmp word [edi + 0xF6], 0
-  jne done
   mov ecx, [edi + 0xD4]
   cmp ecx, TILES
-  jae done
+  jae off
   mov eax, [FLAGS + ecx*4]
   and eax, 0x400100
   cmp eax, 0x400100
-  jne done
+  je raised
+off:
+  mov byte [COUNTS + edx], 0
+  jmp done
+raised:
+  cmp [LAST + edx*4], ecx
+  je same
+  mov [LAST + edx*4], ecx
+  mov byte [COUNTS + edx], 0
+same:
+  movzx eax, byte [COUNTS + edx]
+  cmp eax, 255
+  jae counted
+  inc eax
+  mov [COUNTS + edx], al
+counted:
+  mov ebx, 1
+  cmp word [edi + 0x294], 0
+  jne slow
+  cmp word [edi + 0xF6], 0
+  je limit
+slow:
+  mov ebx, LONG
+limit:
+  cmp eax, ebx
+  jb done
+  mov byte [COUNTS + edx], 0
+  mov [STATE + 0x94], ebx
   mov [STATE + 0x80], edx
   mov [STATE + 0x84], esi
   call PUSH_OFF

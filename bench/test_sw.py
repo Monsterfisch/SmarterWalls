@@ -358,22 +358,36 @@ def suite(ext, config):
     H.run(links_of, regs=dict(ecx=0x12345678), stack=[250, tile(249, 250)])
     check(tag + ' I neighbour links to it', bool(H.m.read(LINKS + tile(249, 250), 1)[0] & 0x04), walkable)
 
-    # J. a unit that stops on it is moved to the nearest wall tile
+    # J. a unit that stops on it is moved to the nearest wall tile, and does not walk back
     if walkable:
         tick_site = f('83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00')
         TICKS = E.u32(f('8B 87 50 0A 00 00 8B 8F 98 09 00 00 8B 15') + 14)
         set_pos = f('53 8B 5C 24 0C 81 FB 8F 01 00 00 55 8B E9 0F 87')
+        set_dest = f('8B 6C 24 18 56 8D 34 0A 0F BF 96 A2 06 00 00') - 0x11
         STATE = 0x145CA28 if ext else 0x1387F38
         AREAS = TMS + 0x363ED0
         u = STATE + 0x614 + 5 * 0x490
-        moved = []
+        moved, sent = [], []
         H.exposed[set_pos] = lambda *a: moved.append(a) or 1
+        H.exposed[set_dest] = lambda *a: sent.append(a) or 1
+        wait = min(255, max(1, (min(60, max(1, config.get('ladderWait', 10))) * 40 + 15) // 16))
         for x in range(248, 253):
             H.put8(LINKS + tile(x, 251), 0xFF); H.put16(AREAS + 2 * tile(x, 251), 3)
         H.put16(AREAS + 2 * m, 3); H.put8(LINKS + tile(249, 250), 0)
-        H.put32(u + 0xD4, m); H.put16(u + 0xC4, 250); H.put16(u + 0xC6, 250); H.put16(u + 0xF6, 0)
-        H.put32(TICKS, 11)                      # 11 + 5 = 16: this unit's turn
+
+        def place_unit(move_state, climb, goal):
+            H.put32(u + 0xD4, m); H.put16(u + 0xC4, 250); H.put16(u + 0xC6, 250)
+            H.put16(u + 0xF6, move_state); H.put16(u + 0x294, climb)
+            H.put16(u + 0xC8, goal[0]); H.put16(u + 0xCA, goal[1])
+            H.put16(u + 0xEC, goal[0]); H.put16(u + 0xEE, goal[1])
+            H.put16(u + 0xF0, 250); H.put16(u + 0xF2, 250)        # back here after a fight
+            H.put16(u + 0x2DC, 250); H.put16(u + 0x2DE, 250)      # its place in the formation
+            H.put16(u + 0xD8, 0)
+            moved.clear(); sent.clear()
+
         regs = dict(eax=0xA1, ebx=0xB2, ecx=0xC3, edx=5, esi=STATE, edi=0xD4, ebp=0xE5)
+        H.put32(TICKS, 11)                      # 11 + 5 = 16: this unit's turn
+        place_unit(0, 0, (250, 250))
         cpu = H.run(tick_site, until=tick_site + 5, regs=regs)
         check(tag + ' J moved', moved, [(STATE, 5, 250, 251, 98)])
         check(tag + ' J registers', [cpu.r[r] for r in ('eax', 'ebx', 'ecx', 'edx', 'edi', 'ebp')],
@@ -381,11 +395,29 @@ def suite(ext, config):
         check(tag + ' J cursor', H.u32(STATE), 6)
         check(tag + ' J stays there', (H.u16(u + 0xEC), H.u16(u + 0xEE), H.u16(u + 0xC8), H.u16(u + 0xCA),
                                        H.u32(u + 0xD8)), (250, 251, 250, 251, tile(250, 251)))
-        moved.clear()
-        H.put16(u + 0xF6, 2)
+        check(tag + ' J forgets the raised tile', (H.u16(u + 0xF0), H.u16(u + 0xF2), H.u16(u + 0x2DC),
+                                                   H.u16(u + 0x2DE)), (250, 251, 250, 251))
+        check(tag + ' J not sent anywhere', sent, [])
+        # walking over it, and waiting for a ladder down: time first, then on to the goal
+        for label, move_state, climb in (('walking', 2, 0), ('ladder', 0, 3)):
+            place_unit(move_state, climb, (240, 252))
+            for i in range(wait - 1):
+                H.run(tick_site, until=tick_site + 5, regs=regs)
+            check(tag + ' J %s: waits' % label, moved, [])
+            H.run(tick_site, until=tick_site + 5, regs=regs)
+            check(tag + ' J %s: then moved' % label, moved, [(STATE, 5, 250, 251, 98)])
+            check(tag + ' J %s: carries on' % label, sent, [(STATE, 5, 240, 252, 0)])
+            check(tag + ' J %s: forgets the raised tile' % label, (H.u16(u + 0xF2), H.u16(u + 0x2DE)), (251, 251))
+        # a new tile starts the count again
+        place_unit(2, 0, (240, 252))
+        for i in range(wait - 1):
+            H.run(tick_site, until=tick_site + 5, regs=regs)
+        H.put32(u + 0xD4, tile(251, 250)); H.put32(FLAGS + 4 * tile(251, 250), 0x400300)
         H.run(tick_site, until=tick_site + 5, regs=regs)
-        check(tag + ' J walking over it', moved, [])
-        H.put16(u + 0xF6, 0); H.put32(TICKS, 12)
+        check(tag + ' J next tile: count again', moved, [])
+        H.put32(FLAGS + 4 * tile(251, 250), 0x300)
+        place_unit(0, 0, (250, 250))
+        H.put32(TICKS, 12)
         H.run(tick_site, until=tick_site + 5, regs=regs)
         check(tag + ' J not its turn', moved, [])
 
@@ -445,6 +477,28 @@ def suite(ext, config):
     H.put32(u + 0xD4, tile(150, 150)); H.put16(u + 0xC4, 150); H.put16(u + 0xC6, 150)
     cpu = H.run(search, regs=dict(ecx=STATE), stack=[7, tile(150, 160)])
     check(tag + ' M straight wall', cpu.r['eax'], tile(150, 158))
+
+    # N. assassins climb diagonally and onto raised parts
+    asearch = f('51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57')
+    for at in (0x2F5, 0x4FC):
+        check(tag + ' N diagonal climb %X' % at, H.m.read(asearch + at + 4, 1)[0], 0 if diagonal else 1)
+    for at in (0x203, 0x307, 0x409, 0x50E):
+        check(tag + ' N climb target %X' % at, H.u32(asearch + at + 2),
+              0x4A1014B1 if walkable else 0x4A5014B1)
+    PF = E.u32(search + 0x5B)
+    LINKS = TMS + 0x38B2F0
+
+    def assassin_route(x1, y1, x2, y2):
+        cpu = H.run(asearch, regs=dict(ecx=PF), stack=[x1, y1, x2, y2, 0x186A0, 0])
+        return cpu.r['eax']
+    reset()
+    H.m.write(LINKS, b'\0' * TILES)
+    for i in range(-5, 6):
+        H.put32(FLAGS + 4 * tile(100 + i, 100 + i), 0x100)
+    check(tag + ' N straight climb', assassin_route(100, 99, 100, 100), 1)
+    check(tag + ' N diagonal climb', assassin_route(101, 99, 100, 100), 1 if diagonal else 0)
+    H.put32(FLAGS + 4 * tile(101, 100), 0x400300)
+    check(tag + ' N onto a raised part', assassin_route(102, 100, 101, 100), 1 if walkable else 0)
 
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
@@ -513,7 +567,7 @@ def suite(ext, config):
 
 if __name__ == '__main__':
     configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False},
-               {'walkableCrenellations': False}, {'diagonalSiege': False}, {'stairs': False, 'crenellations': False},
+               {'walkableCrenellations': False}, {'diagonalSiege': False}, {'ladderWait': 2}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

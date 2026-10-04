@@ -23,7 +23,11 @@
   5. Troops can walk over the raised part of a crenellation (tile flag 0x400000). The game's
      path link builder refuses those tiles in two tests; both are switched off, and the game
      rebuilds every link when a map or save loads. A unit that stops on one is moved to the
-     nearest wall tile, checked once every 16 ticks per unit from updateUnits. Ladders may be
+     nearest wall tile, checked once every 16 ticks per unit from updateUnits; one waiting
+     for a ladder or still walking gets ladderWait seconds first and is then sent on to where
+     it was going. Whatever it remembered of the raised tile (destination, the place it goes
+     back to after a fight, its place in the formation) is moved to the new tile, so it does
+     not walk back. Ladders may be
      leant against them (UpdateLadderman's wall test) and siege towers and ladders sent at a
      wall may pick them (the wall/free-tile pair search); a siege tower's own wall search
      already takes any wall tile, and its links now meet links coming back.
@@ -32,6 +36,9 @@
      climbs diagonally). A siege tower only ever docked two tiles straight out from a wall
      that runs straight past it; where the game finds no such spot, the tower docks with
      the corner of its 3x3 against a diagonal wall, which the path links already join.
+  7. Assassins. Their route search climbs only in the four straight directions and never
+     onto a raised crenellation part; with 6 on they climb diagonally too, with 5 on onto
+     raised parts.
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
   stairs only in straight steps (the game's stairs never step diagonally) and around every
   wall, since the game ends stairs at the first wall they meet. Each route step also lowers
@@ -46,7 +53,7 @@ local templates = require("templates")
 local MODULE_NAME = "smarter-walls"
 
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
-  crenellations = true, walkableCrenellations = true, diagonalSiege = true }
+  crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10 }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -140,6 +147,17 @@ local FREE_TILE_TYPES = { 0x21A, { 0x66, 0x83, 0xB8 } }         -- cmp word [eax
 local SIEGE_BLOCKED = 0x4A5014B1
 local U_OWNER = 0x96
 
+-- Assassins: pathFindingWithBuildingsIncluded, the route search for a group of assassins.
+-- A step between two tiles without a path link is a climb (onto a wall from the ground or
+-- down again), which it takes only in the four straight directions - the two diagonal
+-- blocks of its unrolled loop skip it with test byte [esp+0x2C], 1 (always odd) - and never
+-- onto a tile with any of 0x4A5014B1, which includes a crenellation's raised part.
+local AOB_ASSASSIN_SEARCH = "51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57"
+local ASSASSIN_DIAGONAL = { 0x2F5, 0x4FC }                    -- test byte [esp+0x2C], 1
+local ASSASSIN_DIAGONAL_BYTES = { 0xF6, 0x44, 0x24, 0x2C, 0x01, 0x0F, 0x85 }
+local ASSASSIN_TARGET = { 0x203, 0x307, 0x409, 0x50E }       -- test edi, 0x4A5014B1
+local ASSASSIN_TARGET_BYTES = { 0xF7, 0xC7, 0xB1, 0x14, 0x50, 0x4A, 0x0F, 0x85 }
+
 -- updateUnits, a live unit about to be updated: add edx, 1 / mov [esi], edx.
 local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00"
 local UNIT_TICK_SIZE = 5
@@ -163,7 +181,18 @@ local U_TILE = 0xD4
 local U_GOAL_TILE = 0xD8
 local U_DEST_X = 0xEC
 local U_DEST_Y = 0xEE
+local U_RESUME_X = 0xF0       -- where a unit goes back to after a fight
+local U_RESUME_Y = 0xF2
+local U_PLANNED_X = 0x2DC     -- its place in its group's formation
+local U_PLANNED_Y = 0x2DE
 local PUSH_RADIUS = 4
+local MAX_UNITS = 4096
+local TICKS_PER_SECOND = 40   -- at the default game speed
+local CHECK_TICKS = 16        -- each unit is looked at once in this many ticks
+-- UnitsState::setDestinationForUnit(unit, x, y, flag); its first bytes are patched by other
+-- modules, so the pattern starts 0x11 in.
+local AOB_SET_DESTINATION = "8B 6C 24 18 56 8D 34 0A 0F BF 96 A2 06 00 00"
+local SET_DESTINATION_START = 0x11
 
 -- TileMapState layout (OpenSHC, the same in both exes).
 local TMS_FLAGS = 0x165160
@@ -216,6 +245,7 @@ local D_UNITS_STATE = 0x84
 local D_DOCK_UNIT = 0x88       -- findFreeTileNearby's unit and wall tile, and lua's answer
 local D_DOCK_WALL = 0x8C
 local D_DOCK_RESULT = 0x90
+local D_PATIENCE = 0x94        -- 1: the unit simply stopped there; more: ladder or walking
 local D_PATH = 0x100
 local DATA_SIZE = D_PATH + 4 * MAX_PATH
 
@@ -278,6 +308,15 @@ end
 
 local function byte(address)
   return core.readByte(address) & 0xFF
+end
+
+-- A whole number setting, kept within low..high.
+local function number(config, name, low, high)
+  local value = DEFAULTS[name]
+  if type(config) == "table" and tonumber(config[name]) ~= nil then
+    value = math.tointeger(math.floor(tonumber(config[name]))) or value
+  end
+  return math.max(low, math.min(high, value))
 end
 
 local function word(address)
@@ -678,19 +717,42 @@ end
 
 local function makePushOff(m)
   local setPosition = core.exposeCode(m.setPosition, 5, 1)
+  local setDestination = core.exposeCode(m.setDestination, 5, 1)
   local offsets = nearestFirst(PUSH_RADIUS)
   local tms = m.tms
 
-  -- A wall tile a unit can stand on: wall, not raised, not a stockpile, linked to the map.
-  local function safe(x, y, area)
+  local function tileAt(x, y)
     if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return nil end
     if byte(m.valid + y * MAP_SIZE + x) == 0 then return nil end
-    local tile = core.readInteger(m.rows + 12 * y) + x
+    return core.readInteger(m.rows + 12 * y) + x
+  end
+
+  local function raised(x, y)
+    local tile = tileAt(x, y)
+    return tile ~= nil and core.readInteger(tms + TMS_FLAGS + 4 * tile) & F_RAISED ~= 0
+  end
+
+  -- A wall tile a unit can stand on: wall, not raised, not a stockpile, linked to the map.
+  local function safe(x, y, area)
+    local tile = tileAt(x, y)
+    if tile == nil then return nil end
     local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
     if flags & F_WALL == 0 or flags & (F_RAISED | F_STOCKPILE) ~= 0 then return nil end
     if byte(tms + TMS_LINKS + tile) == 0 then return nil end
     if area ~= nil and word(tms + TMS_AREAS + 2 * tile) ~= area then return nil end
     return tile
+  end
+
+  -- Every remembered place that is the raised tile now points at the new one, so nothing
+  -- the game does on its own sends the unit back.
+  local function forget(base, x, y, nx, ny)
+    for _, pair in ipairs({ { U_GOAL_X, U_GOAL_Y }, { U_DEST_X, U_DEST_Y },
+        { U_RESUME_X, U_RESUME_Y }, { U_PLANNED_X, U_PLANNED_Y } }) do
+      if signedWord(base + pair[1]) == x and signedWord(base + pair[2]) == y then
+        core.writeSmallInteger(base + pair[1], nx)
+        core.writeSmallInteger(base + pair[2], ny)
+      end
+    end
   end
 
   return function()
@@ -700,6 +762,10 @@ local function makePushOff(m)
     local x, y = signedWord(base + U_X), signedWord(base + U_Y)
     local here = core.readInteger(base + U_TILE)
     if here < 0 or here >= TILES then return end
+    -- where it was going, if that is somewhere else it can still get to
+    local goalX, goalY = signedWord(base + U_GOAL_X), signedWord(base + U_GOAL_Y)
+    local onward = core.readInteger(m.data + D_PATIENCE) > 1
+      and (goalX ~= x or goalY ~= y) and tileAt(goalX, goalY) ~= nil and not raised(goalX, goalY)
     local area = word(tms + TMS_AREAS + 2 * here)
     for _, sameArea in ipairs(area ~= 0 and { true, false } or { false }) do
       for _, o in ipairs(offsets) do
@@ -707,12 +773,20 @@ local function makePushOff(m)
         local tile = safe(nx, ny, sameArea and area or nil)
         if tile ~= nil then
           setPosition(state, unit, nx, ny, byte(tms + TMS_LIVE + tile))
-          -- it has arrived there, so it does not walk back
-          core.writeSmallInteger(base + U_GOAL_X, nx)
-          core.writeSmallInteger(base + U_GOAL_Y, ny)
-          core.writeSmallInteger(base + U_DEST_X, nx)
-          core.writeSmallInteger(base + U_DEST_Y, ny)
-          core.writeInteger(base + U_GOAL_TILE, tile)
+          if onward then
+            -- on its way down a ladder or somewhere else: carry on from the new tile
+            forget(base, x, y, nx, ny)
+            setDestination(state, unit, goalX, goalY, 0)
+          else
+            -- it has arrived there, so it does not walk back
+            forget(base, x, y, nx, ny)
+            forget(base, goalX, goalY, nx, ny)
+            core.writeSmallInteger(base + U_GOAL_X, nx)
+            core.writeSmallInteger(base + U_GOAL_Y, ny)
+            core.writeSmallInteger(base + U_DEST_X, nx)
+            core.writeSmallInteger(base + U_DEST_Y, ny)
+            core.writeInteger(base + U_GOAL_TILE, tile)
+          end
           return
         end
       end
@@ -806,6 +880,7 @@ local function enable(self, config)
   for name in pairs(DEFAULTS) do
     options[name] = setting(config, name)
   end
+  options.ladderWait = number(config, "ladderWait", 1, 60)
   local routing = options.anyAngle or options.flow
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
@@ -845,11 +920,16 @@ local function enable(self, config)
     core.writeCode(scan(AOB_WALL_PAIR, "where troops are sent to a wall") + WALL_PAIR_IMM, { 0, 0, 0, 0 })
 
     m.setPosition = scan(AOB_SET_POSITION, "where a unit is put down")
+    m.setDestination = scan(AOB_SET_DESTINATION, "the unit route search") - SET_DESTINATION_START
     local tick = scan(AOB_UNIT_TICK, "the unit update loop")
     local pushOff = luaFunction("moving a unit off a crenellation", makePushOff(m))
+    local counts = core.allocate(MAX_UNITS * 5, true)
+    local long = math.min(255, math.max(1,
+      (options.ladderWait * TICKS_PER_SECOND + CHECK_TICKS - 1) // CHECK_TICKS))
     jumpTo(tick, assemble(templates.unitTick, {
       STATE = data, TICKS = core.readInteger(scan(AOB_TICKS, "the tick counter") + TICKS_OPERAND),
       UNITS_OFF = UNITS_FROM_STATE, TILES = TILES, FLAGS = m.tms + TMS_FLAGS, PUSH_OFF = pushOff,
+      MAX_UNITS = MAX_UNITS, COUNTS = counts, LAST = counts + MAX_UNITS, LONG = long,
       RESUME = tick + UNIT_TICK_SIZE,
     }), UNIT_TICK_SIZE)
   end
@@ -879,6 +959,27 @@ local function enable(self, config)
     jumpTo(search, assemble(templates.freeTile, {
       STATE = data, GAME_SEARCH = game, DIAGONAL = diagonal,
     }), FREE_TILE_SIZE)
+  end
+
+  -- 7. Assassins climb diagonal walls and onto a crenellation's raised part.
+  if options.diagonalSiege or options.walkableCrenellations then
+    local search = scan(AOB_ASSASSIN_SEARCH, "the assassins' route search")
+    for _, at in ipairs(ASSASSIN_DIAGONAL) do
+      expectBytes(search + at, ASSASSIN_DIAGONAL_BYTES, "the assassins' climb test")
+    end
+    for _, at in ipairs(ASSASSIN_TARGET) do
+      expectBytes(search + at, ASSASSIN_TARGET_BYTES, "the assassins' climb test")
+    end
+    if options.diagonalSiege then
+      for _, at in ipairs(ASSASSIN_DIAGONAL) do
+        core.writeCode(search + at + 4, { 0x00 })
+      end
+    end
+    if options.walkableCrenellations then
+      for _, at in ipairs(ASSASSIN_TARGET) do
+        core.writeCode(search + at + 2, { core.itob(SIEGE_BLOCKED & ~F_RAISED) })
+      end
+    end
   end
 
   -- 1 and 2. The route of a dragged wall.
