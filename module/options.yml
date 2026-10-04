@@ -1,0 +1,39 @@
+options:
+- display: GroupBox
+  category: [Smarter Walls]
+  header: '{{group}}'
+  text: '{{group_descr}}'
+  hasHeader: true
+  children:
+  - url: smarter-walls.anyAngle
+    name: smarter-walls-any-angle
+    text: '{{any_angle}}'
+    tooltip: '{{any_angle_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
+  - url: smarter-walls.flow
+    name: smarter-walls-flow
+    text: '{{flow}}'
+    tooltip: '{{flow_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
+  - url: smarter-walls.stairs
+    name: smarter-walls-stairs
+    text: '{{stairs}}'
+    tooltip: '{{stairs_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
+  - url: smarter-walls.crenellations
+    name: smarter-walls-crenellations
+    text: '{{crenellations}}'
+    tooltip: '{{crenellations_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true

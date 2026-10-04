@@ -1,0 +1,20 @@
+group: Smarter walls
+group_descr: |
+  Draw walls the way you mean them, and repair stairs and crenellations properly.
+any_angle: Walls at any angle
+any_angle_tooltip: |
+  A wall you drag goes in a straight line from where you start to where you let go, at any
+  angle. Before, walls could only run straight or at 45 degrees, with a bend in between.
+flow: Walls flow around buildings
+flow_tooltip: |
+  When something is in the way - a building, a tree, rocks - the wall goes around it,
+  hugging its shape, and carries on instead of turning red. Crenellations follow the wall
+  you drag them along.
+stairs: Repairing stairs keeps their height
+stairs_tooltip: |
+  Building a wall over damaged stairs puts the stairs back the way they were. Before, they
+  turned into a block as tall as a wall.
+crenellations: Repairing crenellations keeps them
+crenellations_tooltip: |
+  Building a wall over a damaged crenellation repairs the crenellation. Only an undamaged
+  crenellation is turned into wall when you build a wall over it, as before.
