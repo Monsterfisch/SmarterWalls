@@ -29,7 +29,8 @@ local templates = require("templates")
 
 local MODULE_NAME = "smarter-walls"
 
-local DEFAULTS = { anyAngle = true, flow = true, stairs = true, crenellations = true }
+local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
+  crenellations = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -301,7 +302,28 @@ local function makeRouter(m, options)
   -- Can a wall of this kind go on (x, y)? Only what stays put counts - units, enemy range
   -- and the like are left to the game's own check, so the route does not jump about.
   -- Returns the step cost, or nil if not.
-  local function cost(tms, mapper, x, y)
+  -- An undamaged wall, stairs or crenellation: a new wall goes around it. Damaged ones are
+  -- walked over, so the new wall repairs them.
+  local function intactWall(tms, x, y)
+    if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return false end
+    if byte(m.valid + y * MAP_SIZE + x) == 0 then return false end
+    local tile = tileOf(x, y)
+    local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
+    return flags & F_WALL ~= 0 and flags & F_STOCKPILE == 0 and byte(tms + TMS_DAMAGE + tile) == 0
+  end
+
+  local function avoidsWalls(mapper)
+    return options.aroundWalls and mapper ~= M_CRENEL
+  end
+
+  -- A diagonal step squeezing between two undamaged wall tiles would cross that wall.
+  local function crossesWall(tms, mapper, x, y, nx, ny)
+    return avoidsWalls(mapper) and nx ~= x and ny ~= y
+      and intactWall(tms, nx, y) and intactWall(tms, x, ny)
+  end
+
+  -- isEnd: the first or last tile, which may join an existing wall.
+  local function cost(tms, mapper, x, y, isEnd)
     if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return nil end
     if byte(m.valid + y * MAP_SIZE + x) == 0 then return nil end
     local tile = tileOf(x, y)
@@ -317,6 +339,10 @@ local function makeRouter(m, options)
         if kind < 0 or kind > 14 or kind == 10 then return nil end
       end
     end
+    if not isEnd and avoidsWalls(mapper) and flags & F_WALL ~= 0
+        and byte(tms + TMS_DAMAGE + tile) == 0 then
+      return nil
+    end
     if mapper == M_CRENEL then
       if enclosed(tms, tile, y) == 0 then return nil end
       -- along the wall, not over it
@@ -326,8 +352,10 @@ local function makeRouter(m, options)
   end
 
   local function allFree(tms, mapper, tiles)
-    for _, t in ipairs(tiles) do
-      if cost(tms, mapper, t[1], t[2]) == nil then return false end
+    for i, t in ipairs(tiles) do
+      if cost(tms, mapper, t[1], t[2], i == 1 or i == #tiles) == nil then return false end
+      local p = tiles[i - 1]
+      if p and crossesWall(tms, mapper, p[1], p[2], t[1], t[2]) then return false end
     end
     return true
   end
@@ -372,6 +400,7 @@ local function makeRouter(m, options)
             local nid = ny * MAP_SIZE + nx
             if not closed[nid] then
               local c = (nid == goal) and 1 or cost(tms, mapper, nx, ny)
+              if c ~= nil and crossesWall(tms, mapper, x, y, nx, ny) then c = nil end
               if c ~= nil then
                 local off = math.abs(dx * (ny - y1) - dy * (nx - x1))
                 local g = best[id] + step * c + off

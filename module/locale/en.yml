@@ -10,6 +10,11 @@ flow_tooltip: |
   When something is in the way - a building, a tree, rocks - the wall goes around it,
   hugging its shape, and carries on instead of turning red. Crenellations follow the wall
   you drag them along.
+around_walls: Walls flow around other walls
+around_walls_tooltip: |
+  A new wall also goes around your undamaged walls, stairs and crenellations instead of
+  running over them. It can still start or end on one to join it, and it still goes over
+  damaged walls so it repairs them. Needs "Walls flow around buildings".
 stairs: Repairing stairs keeps their height
 stairs_tooltip: |
   Building a wall over damaged stairs puts the stairs back the way they were. Before, they

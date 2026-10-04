@@ -219,6 +219,48 @@ def suite(ext, config):
         check(tag + ' D crenellation beside the wall', cren & set(bent), set())
         check(tag + ' D crenellation follows', len(cren) >= 15, True)
 
+    # G. an undamaged wall in the way is gone around, a damaged one is walked over
+    around = config.get('aroundWalls', True) and flow
+    reset()
+    old = {(106, y) for y in range(96, 109)}
+    for x, y in old:
+        H.put32(FLAGS + 4 * tile(x, y), 0x100); H.put8(LIVE + tile(x, y), 98)
+    g = (100, 102, 112, 102)
+    run_validate(*g)
+    run_place(*g)
+    got = walls() - old
+    if around:
+        check(tag + ' G new wall', len(got) > 10, True)
+        check(tag + ' G old wall untouched', all(H.m.read(LIVE + tile(x, y), 1)[0] == 98 for x, y in old), True)
+        check(tag + ' G goes around the end', any(y in (95, 109) for _, y in got), True)
+    else:
+        want = set(bresenham(*g) if any_angle else game_line(*g)) - old
+        check(tag + ' G crosses the wall', got, want)
+    # a diagonal wall may not be squeezed through
+    reset()
+    diag = {(105 + i, 98 + i) for i in range(10)}
+    for x, y in diag:
+        H.put32(FLAGS + 4 * tile(x, y), 0x100)
+    g = (106, 104, 112, 102)   # from below the diagonal to above it
+    run_place(*g)
+    got = walls() - diag
+    if around:
+        data = [x for x, n in H.allocations if n == 0x100 + 4 * 2048][0]
+        route = [(H.u16(data + 0x100 + 4 * i), H.u16(data + 0x102 + 4 * i)) for i in range(H.u32(data + 0x40))]
+        check(tag + ' G route ends', (route[0], route[-1]), ((106, 104), (112, 102)))
+        cross = any(q[0] != p[0] and q[1] != p[1] and (q[0], p[1]) in diag and (p[0], q[1]) in diag
+                    for p, q in zip(route, route[1:]))
+        check(tag + ' G no squeeze through a diagonal', cross, False)
+        check(tag + ' G route is the wall', set(route) - diag, got)
+    # a damaged wall is walked over and repaired
+    reset()
+    for x, y in old:
+        H.put32(FLAGS + 4 * tile(x, y), 0x100); H.put8(LIVE + tile(x, y), 60); H.put8(DMG + tile(x, y), 38)
+    g = (100, 102, 112, 102)
+    run_place(*g)
+    check(tag + ' G damaged wall repaired', H.m.read(LIVE + tile(106, 102), 1)[0], 98)
+    check(tag + ' G straight through it', max(abs(y - 102) for x, y in walls() - old), 0)
+
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
     cren_on = config.get('crenellations', True)
@@ -285,7 +327,7 @@ def suite(ext, config):
 
 
 if __name__ == '__main__':
-    configs = [{}, {'anyAngle': False}, {'flow': False}, {'stairs': False, 'crenellations': False},
+    configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

@@ -21,6 +21,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.aroundWalls
+    name: smarter-walls-around-walls
+    text: '{{around_walls}}'
+    tooltip: '{{around_walls_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.stairs
     name: smarter-walls-stairs
     text: '{{stairs}}'
