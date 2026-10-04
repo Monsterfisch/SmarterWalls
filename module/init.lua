@@ -23,7 +23,8 @@
   5. Troops can walk over the raised part of a crenellation (tile flag 0x400000). The game's
      path link builder refuses those tiles in two tests; both are switched off, and the game
      rebuilds every link when a map or save loads. A unit that stops on one is moved to the
-     nearest wall tile, checked once every 16 ticks per unit from updateUnits; one waiting
+     nearest wall tile (never another crenellation: with only those in reach it stays),
+     checked once every 16 ticks per unit from updateUnits; one waiting
      for a ladder or still walking gets ladderWait seconds first and is then sent on to where
      it was going. Whatever it remembered of the raised tile (destination, the place it goes
      back to after a fight, its place in the formation) is moved to the new tile, so it does
@@ -39,8 +40,8 @@
   8. Crenellation heights. The game makes a crenellation 0x62 above the ground, or 0x44 (and
      flag 0x10000) when its straight neighbours are only low walls - so it is 8 above a stone
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
-     beside it; next to stairs only, tall for steps 1-3 and low for 4-6; next to crenellations
-     only, as tall as they are. Repairing a crenellation uses the same rule.
+     beside it; next to stairs only, by the step directly beside it - tall for steps 1-3,
+     low from 4 on; next to crenellations only, as tall as they are. Repairing a crenellation uses the same rule.
   7. Assassins. Their route search never climbs onto a raised crenellation part; with 5 on it
      does. (Diagonal climbs are left alone: the game's walk back from the goal refuses them.)
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
@@ -647,49 +648,90 @@ end
 -- How tall a crenellation is
 ---------------------------------------------------------------------------------------
 
--- A crenellation's height from what it stands next to (all eight neighbours):
---   walls first: the tallest wall beside it (its height before any damage) plus 8, low (flag
---   0x10000) when that wall is a low one, such as a wood wall;
---   else stairs: the highest stairs beside it - steps 1 to 3 down from the wall give a tall
---   crenellation, steps 4 to 6 a low one;
+-- A crenellation's height from what it stands next to:
+--   walls first (all eight neighbours): the tallest wall beside it (its height before any
+--   damage) plus 8, low (flag 0x10000) when that wall is a low one, such as a wood wall;
+--   else stairs: the step directly beside it (straight neighbours; diagonal ones only when
+--   there is none) - steps 1 to 3 counted down from the wall give a tall crenellation, 4 and
+--   lower a low one. A crenellation beside step 4 also touches step 3 diagonally, which is
+--   why only the straight neighbour counts;
 --   else crenellations: as tall as the tallest one beside it.
 -- Towers and gatehouses do not count. Nothing to go by: nil, and the game decides.
+local STRAIGHT = { { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 0 } }
+local DIAGONAL_ONLY = { { 1, -1 }, { 1, 1 }, { -1, 1 }, { -1, -1 } }
+
 local function makeCrenelHeight(m)
+  local function tileAt(x, y)
+    if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return nil end
+    if byte(m.valid + y * MAP_SIZE + x) == 0 then return nil end
+    return core.readInteger(m.rows + 12 * y) + x
+  end
+
+  -- A wall-family tile that counts (not a stockpile, tower or gatehouse): its flags and its
+  -- height before damage.
+  local function piece(tms, x, y)
+    local tile = tileAt(x, y)
+    if tile == nil then return nil end
+    local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
+    if flags & F_WALL == 0 or flags & F_STOCKPILE ~= 0 then return nil end
+    if word(tms + TMS_BUILDINGS + 2 * tile) ~= 0 then return nil end
+    return flags, byte(tms + TMS_LIVE + tile) + byte(tms + TMS_DAMAGE + tile)
+  end
+
+  -- Which step a stairs tile is, counted from the top: climb to the neighbouring stairs one
+  -- step (16) higher until there is none.
+  local function step(tms, x, y, height)
+    local n = 1
+    for _ = 1, 8 do
+      local up
+      for _, d in ipairs(STRAIGHT) do
+        local flags, h = piece(tms, x + d[1], y + d[2])
+        if flags ~= nil and flags & F_STAIRS ~= 0 and math.abs(h - height - STAIR_STEP) <= 2 then
+          up = { x + d[1], y + d[2], h }
+          break
+        end
+      end
+      if up == nil then return n end
+      n = n + 1
+      x, y, height = up[1], up[2], up[3]
+    end
+    return n
+  end
+
   return function(tms, x, y)
-    local here = core.readInteger(m.rows + 12 * y) + x
+    local here = tileAt(x, y)
+    if here == nil then return nil end
     local base = byte(tms + TMS_BASE + here)
-    local wall, wallLow, stairs, crenel, crenelLow
-    for _, n in ipairs(NEIGHBOURS) do
-      local nx, ny = x + n[1], y + n[2]
-      if nx >= 0 and ny >= 0 and nx < MAP_SIZE and ny < MAP_SIZE
-          and byte(m.valid + ny * MAP_SIZE + nx) ~= 0 then
-        local tile = core.readInteger(m.rows + 12 * ny) + nx
-        local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
-        if flags & F_WALL ~= 0 and flags & F_STOCKPILE == 0
-            and word(tms + TMS_BUILDINGS + 2 * tile) == 0 then
-          local height = byte(tms + TMS_LIVE + tile) + byte(tms + TMS_DAMAGE + tile)
-          if flags & F_STAIRS ~= 0 then
-            local rel = height - byte(tms + TMS_BASE + tile)
-            if stairs == nil or rel > stairs then stairs = rel end
-          elseif flags & F_CRENEL ~= 0 then
-            if crenel == nil or height > crenel then
-              crenel, crenelLow = height, flags & F_LOW ~= 0
-            end
-          elseif wall == nil or height > wall then
-            wall, wallLow = height, flags & F_LOW ~= 0
-          end
+    local wall, wallLow, crenel, crenelLow
+    for _, d in ipairs(NEIGHBOURS) do
+      local flags, height = piece(tms, x + d[1], y + d[2])
+      if flags ~= nil and flags & F_STAIRS == 0 then
+        if flags & F_CRENEL ~= 0 then
+          if crenel == nil or height > crenel then crenel, crenelLow = height, flags & F_LOW ~= 0 end
+        elseif wall == nil or height > wall then
+          wall, wallLow = height, flags & F_LOW ~= 0
         end
       end
     end
     if wall ~= nil then
       return math.min(255, wall + CRENEL_ABOVE_WALL), wallLow
-    elseif stairs ~= nil then
-      local step = math.max(1, (STONE_WALL - stairs + STAIR_STEP - 1) // STAIR_STEP)
-      if step <= STAIRS_TALL_UP_TO then
-        return math.min(255, base + CRENEL_TALL), false
+    end
+    for _, ring in ipairs({ STRAIGHT, DIAGONAL_ONLY }) do
+      local best, bestHeight
+      for _, d in ipairs(ring) do
+        local flags, height = piece(tms, x + d[1], y + d[2])
+        if flags ~= nil and flags & F_STAIRS ~= 0 and (best == nil or height > bestHeight) then
+          best, bestHeight = d, height
+        end
       end
-      return math.min(255, base + CRENEL_LOW), true
-    elseif crenel ~= nil then
+      if best ~= nil then
+        if step(tms, x + best[1], y + best[2], bestHeight) <= STAIRS_TALL_UP_TO then
+          return math.min(255, base + CRENEL_TALL), false
+        end
+        return math.min(255, base + CRENEL_LOW), true
+      end
+    end
+    if crenel ~= nil then
       return crenel, crenelLow
     end
     return nil
@@ -815,12 +857,13 @@ local function makePushOff(m)
     return tile ~= nil and core.readInteger(tms + TMS_FLAGS + 4 * tile) & F_RAISED ~= 0
   end
 
-  -- A wall tile a unit can stand on: wall, not raised, not a stockpile, linked to the map.
+  -- A wall tile a unit can stand on: wall or stairs, no crenellation of any kind, not a
+  -- stockpile, linked to the map. With none in reach the unit stays where it is.
   local function safe(x, y, area)
     local tile = tileAt(x, y)
     if tile == nil then return nil end
     local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
-    if flags & F_WALL == 0 or flags & (F_RAISED | F_STOCKPILE) ~= 0 then return nil end
+    if flags & F_WALL == 0 or flags & (F_CRENEL | F_RAISED | F_STOCKPILE) ~= 0 then return nil end
     if byte(tms + TMS_LINKS + tile) == 0 then return nil end
     if area ~= nil and word(tms + TMS_AREAS + 2 * tile) ~= area then return nil end
     return tile

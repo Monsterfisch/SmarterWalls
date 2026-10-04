@@ -19,13 +19,13 @@ cren_heights: Crenellations match the wall they are on
 cren_heights_tooltip: |
   A crenellation is built a little taller than the tallest wall beside it, so it fits walls
   on hills and low walls. Other crenellations next to it only count when it touches nothing
-  else. Next to stairs, the top three steps get tall crenellations and the lower steps low
-  ones.
+  else. Next to stairs, the step right beside it decides: the top three steps get tall
+  crenellations, step 4 and lower low ones.
 walkable: Troops can walk over crenellations
 walkable_tooltip: |
   Troops can walk over the raised parts of crenellations, so they no longer have to go the
   long way round. They cannot stay there: anyone who stops on one is moved to the nearest
-  wall tile. Ladders, siege towers and assassins can get onto every part of a crenellation
+  wall tile - never onto another crenellation; with only those nearby they stay put. Ladders, siege towers and assassins can get onto every part of a crenellation
   too.
   Everyone in a multiplayer game needs the same setting.
 ladder_wait: Seconds troops may wait on a crenellation for a ladder

@@ -398,6 +398,14 @@ def suite(ext, config):
         check(tag + ' J forgets the raised tile', (H.u16(u + 0xF0), H.u16(u + 0xF2), H.u16(u + 0x2DC),
                                                    H.u16(u + 0x2DE)), (250, 251, 250, 251))
         check(tag + ' J not sent anywhere', sent, [])
+        # only crenellations in reach: it stays
+        for x in range(248, 253):
+            H.put32(FLAGS + 4 * tile(x, 251), 0x300)
+        place_unit(0, 0, (250, 250))
+        H.run(tick_site, until=tick_site + 5, regs=regs)
+        check(tag + ' J never onto a crenellation', moved, [])
+        for x in range(248, 253):
+            H.put32(FLAGS + 4 * tile(x, 251), 0x100)
         # walking over it, and waiting for a ladder down: time first, then on to the goal
         for label, move_state, climb in (('walking', 2, 0), ('ladder', 0, 3)):
             place_unit(move_state, climb, (240, 252))
@@ -561,10 +569,17 @@ def suite(ext, config):
     check(tag + ' O crenellations ignored next to a wall',
           crenel_at(300, 300, [((300, 301), 0x100, 98), ((301, 300), 0x300, 140)]), want(106, False, (106, False, 0x300)))
     check(tag + ' O only crenellations', crenel_at(300, 300, [((300, 301), 0x300, 100)]), want(100, False, (106, False, 0x300)))
-    check(tag + ' O stairs step 2', crenel_at(300, 300, [((300, 301), 0x900, 66)]), want(106, False, (106, False, 0x300)))
-    check(tag + ' O stairs step 3', crenel_at(300, 300, [((300, 301), 0x900, 50)]), want(106, False, (106, False, 0x300)))
-    check(tag + ' O stairs step 4', crenel_at(300, 300, [((300, 301), 0x900, 34)]), want(76, True, (106, False, 0x300)))
-    check(tag + ' O stairs step 5', crenel_at(300, 300, [((300, 301), 0x900, 18)]), want(76, True, (106, False, 0x300)))
+    # a whole staircase down from a wall, crenellations beside each step
+    stair = [((50, 60), 0x100, 98)] + [((51 + i, 60), 0x900, 82 - 16 * i) for i in range(5)]
+    for i, (h, low) in enumerate(((106, False), (106, False), (106, False), (76, True), (76, True))):
+        x = 51 + i
+        got = crenel_at(x, 59, stair)
+        if i == 0:
+            h, low = 106, False             # also beside the wall itself (diagonally)
+        check(tag + ' O beside stairs step %d' % (i + 1), got, want(h, low, (106, False, 0x300)))
+    # the same on a hill: steps are counted, not guessed from the height
+    hill = [((50, 60), 0x100, 160)] + [((51 + i, 60), 0x900, 144 - 16 * i) for i in range(5)]
+    check(tag + ' O step 4 on a hill', crenel_at(54, 59, hill), want(76, True, (106, False, 0x300)))
 
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
