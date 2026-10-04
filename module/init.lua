@@ -49,10 +49,11 @@
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
      beside it; next to stairs only, by the step directly beside it - tall for steps 1-3,
      low from 4 on; next to crenellations only, as tall as they are. Repairing a crenellation uses the same rule.
-  7. Assassins are left exactly as the game has them: they climb onto plain wall and
-     crenellation tiles. (1.0.5-1.0.9 let their search climb onto raised parts and diagonally;
-     the step that carries a climb out and the walk back from the goal refuse both, and they
-     stood at the foot of the wall.)
+  7. Assassins. With 5 on they climb onto raised crenellation parts too - the route search and
+     the step that carries the climb out are opened together (1.0.5-1.0.9 opened the search
+     alone and assassins stood at the foot of the wall) - so an outer row that is raised all
+     along (a diagonal crenellation) no longer keeps them off. Diagonal climbs stay as the game
+     has them: its walk back from the goal refuses them.
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
   stairs only in straight steps (the game's stairs never step diagonally) and around every
   wall, since the game ends stairs at the first wall they meet. Each route step also lowers
@@ -182,6 +183,17 @@ local FREE_TILE_NAVIGATE = 0x67                                 -- call canNavig
 local FREE_TILE_TYPES = { 0x21A, { 0x66, 0x83, 0xB8 } }         -- cmp word [eax+type], 0x43
 local SIEGE_BLOCKED = 0x4A5014B1
 local U_OWNER = 0x96
+
+-- Assassins climb onto a wall only onto a tile without any of 0x4A5014B1, which includes a
+-- crenellation's raised part. The rule is applied three times: the route search
+-- (pathFindingWithBuildingsIncluded, four unrolled blocks), the walk back from the goal
+-- (traceAndCommitPathPlan mode 3 - no such test) and the step that carries a climb out
+-- (doMoveFromTileToTile, unit type 0x49). Search and step are opened together; one without the
+-- other plans climbs the unit then refuses (1.0.5-1.0.9).
+local AOB_ASSASSIN_SEARCH = "51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57"
+local ASSASSIN_TARGET = { 0x203, 0x307, 0x409, 0x50E }       -- test edi, 0x4A5014B1
+local ASSASSIN_TARGET_BYTES = { 0xF7, 0xC7, 0xB1, 0x14, 0x50, 0x4A, 0x0F, 0x85 }
+local AOB_ASSASSIN_STEP = "F7 C7 B1 14 50 4A 75 23"          -- test edi, 0x4A5014B1 / jne
 
 -- Spreading a group out on a wall: the pick of wall tiles (test [esi*4+flags], 0x10000100,
 -- two movsx, je skip) and its any-tile fallback (cmp ebp, 0xFA0 / jl take).
@@ -1053,6 +1065,19 @@ local function enable(self, config)
     local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
     core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
     core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+
+    -- assassins may climb onto them as well, so a crenellation of any thickness or direction
+    -- is no obstacle (the raised parts are crossable now, so they can walk on from there)
+    local search = scan(AOB_ASSASSIN_SEARCH, "the assassins' route search")
+    for _, at in ipairs(ASSASSIN_TARGET) do
+      expectBytes(search + at, ASSASSIN_TARGET_BYTES, "the assassins' climb test")
+    end
+    local climb = scan(AOB_ASSASSIN_STEP, "the assassins' climbing step")
+    local open = { core.itob(SIEGE_BLOCKED & ~F_RAISED) }
+    for _, at in ipairs(ASSASSIN_TARGET) do
+      core.writeCode(search + at + 2, open)
+    end
+    core.writeCode(climb + 2, open)
 
     local destination = scan(AOB_DESTINATION, "where a unit is given a destination")
     local steps = core.allocate(8 * #DESTINATION_STEPS, true)

@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.11
+**Version**: 1.0.12
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -41,7 +41,8 @@ low ones. Repairing a crenellation uses the same rule.
 
 Troops can walk across the raised parts of crenellations: troops coming up a ladder or a
 siege tower, assassins, and anyone else passing by. Ladders and siege towers can attach to
-them too. But nobody is ever sent to stand on one - an order, a group spreading out, an idle
+them too, and assassins can climb up onto them, so crenellations of any thickness or
+direction never keep assassins off a wall. But nobody is ever sent to stand on one - an order, a group spreading out, an idle
 unit making room or a patrol always picks the wall tile next to it instead. Anyone who still
 ends up standing on one is moved to the nearest wall tile (never onto another crenellation;
 with only those nearby they stay put). Troops waiting there for their turn on a ladder get

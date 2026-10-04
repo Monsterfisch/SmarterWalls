@@ -546,7 +546,8 @@ def suite(ext, config):
     for at in (0x2F5, 0x4FC):
         check(tag + ' N straight climbs only %X' % at, H.m.read(asearch + at + 4, 1)[0], 1)
     for at in (0x203, 0x307, 0x409, 0x50E):
-        check(tag + ' N climb target %X' % at, H.u32(asearch + at + 2), 0x4A5014B1)
+        check(tag + ' N climb target %X' % at, H.u32(asearch + at + 2),
+              0x4A1014B1 if walkable else 0x4A5014B1)
     PF = E.u32(search + 0x5B)
     LINKS = TMS + 0x38B2F0
 
@@ -560,7 +561,21 @@ def suite(ext, config):
     check(tag + ' N straight climb', assassin_route(100, 99, 100, 100), 1)
     check(tag + ' N no diagonal climb', assassin_route(101, 99, 100, 100), 0)
     H.put32(FLAGS + 4 * tile(101, 100), 0x400300)
-    check(tag + ' N never onto a raised part', assassin_route(102, 100, 101, 100), 0)
+    check(tag + ' N onto a raised part', assassin_route(102, 100, 101, 100), 1 if walkable else 0)
+
+    # the step that carries the climb out agrees with the search
+    step_fn = f('8B 44 24 14 55 33 ED 3B C5')
+    UNIT0 = (0x145CA28 if ext else 0x1387F38) + 0x614
+    H.put16(UNIT0 + 3 * 0x490 + 0x8E, 0x49)               # an assassin
+    H.put8(LINKS + tile(101, 101), 0)
+
+    def climb(dest_flags):
+        H.put32(FLAGS + 4 * tile(101, 100), dest_flags); H.put32(FLAGS + 4 * tile(101, 101), 0)
+        cpu = H.run(step_fn, stack=[3, tile(101, 101), 101, 0, 0, 0])   # north, onto (101, 100)
+        return cpu.r['eax']
+    check(tag + ' N step onto a wall', climb(0x100), 1)
+    check(tag + ' N step onto a plain crenellation', climb(0x300), 1)
+    check(tag + ' N step onto a raised part', climb(0x400300), 1 if walkable else 0)
 
     # the whole route as the game makes it: the search, then the walk back from the goal that
     # turns it into steps (traceAndCommitPathPlan, mode 3 for assassins)
@@ -573,12 +588,19 @@ def suite(ext, config):
     H.cpu.hooks[trace_fn + 0x30A] = walk_back_failed
     DIRS = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
 
-    def assassin_walk(x1, y1, x2, y2, walls, raised=()):
+    def assassin_walk(x1, y1, x2, y2, walls, raised=(), around=True):
         reset()
         H.m.write(LINKS, b'\0' * TILES)
         for x, y in walls:
             H.put32(FLAGS + 4 * tile(x, y), 0x400300 if (x, y) in raised else 0x100)
             H.put8(LIVE + tile(x, y), 98)
+        if not around:      # nothing to walk round: wall and crenellation across the whole map part
+            for x in range(80, 121):
+                for y in (99, 100):
+                    if (x, y) not in walls:
+                        H.put32(FLAGS + 4 * tile(x, y), 0x400300 if y == 99 else 0x100)
+                        H.put8(LIVE + tile(x, y), 98)
+                        walls = walls | {(x, y)}
         for y in range(80, 121):
             for x in range(80, 121):
                 bits = 0
@@ -597,6 +619,10 @@ def suite(ext, config):
     straight = {(x, 100) for x in range(95, 116)}       # tiles below 0x13A10: rows < 201
     check(tag + ' N assassin onto a straight wall', assassin_walk(96, 92, 105, 100, straight), 'steps')
     check(tag + ' N assassin over a straight wall', assassin_walk(96, 92, 105, 108, straight), 'steps')
+    raised_row = {(x, 99) for x in range(90, 121)}
+    check(tag + ' N assassin up a crenellation raised all along',
+          assassin_walk(105, 92, 105, 100, straight | raised_row, raised_row, around=False),
+          'steps' if walkable else 'no route')
     crenels = {(x, 99) for x in range(90, 121)}
     check(tag + ' N assassin over raised crenellations',
           assassin_walk(105, 92, 105, 99, straight | crenels, crenels), 'steps')

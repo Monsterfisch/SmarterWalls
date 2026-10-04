@@ -24,7 +24,8 @@ cren_heights_tooltip: |
 walkable: Troops can cross every crenellation
 walkable_tooltip: |
   Troops can walk across the raised parts of crenellations - coming up a ladder or a siege
-  tower, assassins, anyone passing - and ladders and siege towers can attach to them. Nobody
+  tower, assassins, anyone passing - and ladders, siege towers and climbing assassins can get
+  onto them, so crenellations of any thickness never keep them off the wall. Nobody
   is ever sent to stand on one: an order, a formation or an idle unit making room picks the
   wall tile beside it instead, and anyone who still stops on one is moved there.
   Everyone in a multiplayer game needs the same setting.
