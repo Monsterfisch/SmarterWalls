@@ -64,6 +64,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.diagonalStuck
+    name: smarter-walls-diagonal-stuck
+    text: '{{diagonal_stuck}}'
+    tooltip: '{{diagonal_stuck_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.stairs
     name: smarter-walls-stairs
     text: '{{stairs}}'

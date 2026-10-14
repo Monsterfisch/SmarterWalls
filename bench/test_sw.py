@@ -665,6 +665,31 @@ def suite(ext, config):
     check(tag + ' O lower step wins', crenel_at(52, 61, turn),
           want(76, True, (106, False, 0x300)))
 
+    # R. two low walls touching diagonally, ground-level stairs in the corner: links both ways
+    fixed = config.get('diagonalStuck', True)
+    reset()
+    PF_R = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x5B)
+    builder_r = f('F7 C3 00 00 40 00 0F 85 ? ? ? ?') - 0xE0
+    for (x, y), fl, h in (((60, 60), 0x100, 12), ((61, 61), 0x100, 12), ((60, 61), 0x900, 10),
+                          ((59, 59), 0x100, 12), ((62, 62), 0x100, 12)):
+        H.put32(FLAGS + 4 * tile(x, y), fl); H.put8(LIVE + tile(x, y), h)
+    for y in range(57, 65):
+        for x in range(57, 65):
+            H.run(builder_r, regs=dict(ecx=PF_R), stack=[y, tile(x, y)])
+    LINKS_R = TMS + 0x38B2F0
+    up = bool(H.m.read(LINKS_R + tile(60, 61), 1)[0] & 0x02)       # stairs -> ground, north-east
+    down = bool(H.m.read(LINKS_R + tile(61, 60), 1)[0] & 0x20)     # ground -> stairs, south-west
+    check(tag + ' R stairs to ground', up, fixed)
+    check(tag + ' R ground to stairs', down, True)
+    # tall walls: still no squeezing through, either way
+    for (x, y) in ((60, 60), (61, 61), (59, 59), (62, 62)):
+        H.put8(LIVE + tile(x, y), 98)
+    for y in range(57, 65):
+        for x in range(57, 65):
+            H.run(builder_r, regs=dict(ecx=PF_R), stack=[y, tile(x, y)])
+    check(tag + ' R tall walls: no squeeze', (bool(H.m.read(LINKS_R + tile(60, 61), 1)[0] & 0x02),
+                                              bool(H.m.read(LINKS_R + tile(61, 60), 1)[0] & 0x20)), (False, False))
+
     # E. damaged stairs and crenellations
     stairs_on = config.get('stairs', True)
     cren_on = config.get('crenellations', True)
@@ -733,7 +758,7 @@ def suite(ext, config):
 if __name__ == '__main__':
     configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False},
                {'walkableCrenellations': False}, {'diagonalSiege': False}, {'ladderWait': 2},
-               {'crenellationHeights': False}, {'stairs': False, 'crenellations': False},
+               {'crenellationHeights': False}, {'diagonalStuck': False}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

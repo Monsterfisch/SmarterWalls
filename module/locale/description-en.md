@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.12
+**Version**: 1.0.13
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -47,6 +47,13 @@ unit making room or a patrol always picks the wall tile next to it instead. Anyo
 ends up standing on one is moved to the nearest wall tile (never onto another crenellation;
 with only those nearby they stay put). Troops waiting there for their turn on a ladder get
 more time first (10 seconds, adjustable in the settings).
+
+## Fix units stuck at low diagonal walls
+
+Fixes an old bug in the game itself. Where two low walls touch diagonally and ground-level
+stairs sit in one corner between them, units trying to step from the stairs to the ground in
+the opposite corner got stuck there for good, asking for a new route every moment and
+slowing the whole game down. They now step across like anywhere else.
 
 ## Repairing stairs keeps their height
 

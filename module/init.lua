@@ -49,6 +49,13 @@
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
      beside it; next to stairs only, by the step directly beside it - tall for steps 1-3,
      low from 4 on; next to crenellations only, as tall as they are. Repairing a crenellation uses the same rule.
+  9. A game bug: two walls of walkable height touching diagonally, ground-level stairs in one
+     corner, ground in the other. The path link builder decides a diagonal squeeze between two
+     walls by two rules - from ground only when neither wall can be stepped onto, from a wall
+     or stairs tile whenever both are walls - so the ground links onto the stairs and the
+     stairs not back. The route search plans the step, the step is refused, and the unit
+     searches again every tick (stuck, and a heavy frame cost). The wall/stairs rule now also
+     keeps the diagonal when either wall is linked, so links always go both ways.
   7. Assassins. With 5 on they climb onto raised crenellation parts too - the route search and
      the step that carries the climb out are opened together (1.0.5-1.0.9 opened the search
      alone and assassins stood at the foot of the wall) - so an outer row that is raised all
@@ -69,7 +76,7 @@ local MODULE_NAME = "smarter-walls"
 
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
   crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
-  crenellationHeights = true }
+  crenellationHeights = true, diagonalStuck = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -194,6 +201,16 @@ local AOB_ASSASSIN_SEARCH = "51 53 8B 5C 24 0C 81 FB 8F 01 00 00 56 57"
 local ASSASSIN_TARGET = { 0x203, 0x307, 0x409, 0x50E }       -- test edi, 0x4A5014B1
 local ASSASSIN_TARGET_BYTES = { 0xF7, 0xC7, 0xB1, 0x14, 0x50, 0x4A, 0x0F, 0x85 }
 local AOB_ASSASSIN_STEP = "F7 C7 B1 14 50 4A 75 23"          -- test edi, 0x4A5014B1 / jne
+
+-- The link builder's diagonal rule for wall-family tiles: and byte [esp+0x13], mask - the
+-- diagonal link and the two straight neighbours beside it.
+local DIAGONAL_CUTS = {
+  { aob = "80 64 24 13 FD 85 C0 8B 7C 24 48", mask = 0xFD, sides = 0x05 },   -- north-east: N, E
+  { aob = "80 64 24 13 7F 8B 74 24 40", mask = 0x7F, sides = 0x41 },        -- north-west: N, W
+  { aob = "80 64 24 13 F7 85 C9 74 2C", mask = 0xF7, sides = 0x14 },        -- south-east: S, E
+  { aob = "80 64 24 13 DF 8A 44 24 13", mask = 0xDF, sides = 0x50 },        -- south-west: S, W
+}
+local DIAGONAL_CUT_SIZE = 5
 
 -- Spreading a group out on a wall: the pick of wall tiles (test [esi*4+flags], 0x10000100,
 -- two movsx, je skip) and its any-tile fallback (cmp ebp, 0xFA0 / jl take).
@@ -1035,7 +1052,8 @@ local function enable(self, config)
   local routing = options.anyAngle or options.flow
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
-      and not options.diagonalSiege and not options.crenellationHeights then return end
+      and not options.diagonalSiege and not options.crenellationHeights
+      and not options.diagonalStuck then return end
 
   local starts = {}
   for name, f in pairs(FUNCTIONS) do
@@ -1145,6 +1163,16 @@ local function enable(self, config)
     jumpTo(search, assemble(templates.freeTile, {
       STATE = data, GAME_SEARCH = game, DIAGONAL = diagonal,
     }), FREE_TILE_SIZE)
+  end
+
+  -- 9. Units stuck at two low walls touching diagonally (a game bug).
+  if options.diagonalStuck then
+    for _, cut in ipairs(DIAGONAL_CUTS) do
+      local at = scan(cut.aob, "the path link builder's diagonal rule")
+      jumpTo(at, assemble(templates.diagonalCut, {
+        SIDES = cut.sides, MASK = cut.mask, RESUME = at + DIAGONAL_CUT_SIZE,
+      }), DIAGONAL_CUT_SIZE)
+    end
   end
 
   -- 8. A new crenellation is as tall as the wall (or stairs) it is attached to.

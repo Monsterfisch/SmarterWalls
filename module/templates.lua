@@ -501,4 +501,19 @@ keep:
   jmp RESUME
 ]]
 
+-- The link builder, a wall, stairs or tower tile: it takes its diagonal link away when the two
+-- straight neighbours beside the diagonal are walls (and byte [esp+0x13], MASK). A ground tile
+-- does that only when it cannot step onto either of them. With two low walls touching
+-- diagonally and ground-level stairs in the corner, the ground gets a link onto the stairs but
+-- not back: the route search plans the step, the step itself is refused, and the unit asks for
+-- a new route every tick. Here the diagonal is taken away only when neither straight neighbour
+-- is linked either, as for ground.
+templates.diagonalCut = [[
+  test byte [esp + 0x13], SIDES
+  jnz keep
+  and byte [esp + 0x13], MASK
+keep:
+  jmp RESUME
+]]
+
 return templates

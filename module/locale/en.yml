@@ -40,6 +40,11 @@ diagonal_siege_tooltip: |
   tower sets its corner against the diagonal wall. Before, diagonal walls could not be
   climbed at all.
   Everyone in a multiplayer game needs the same setting.
+diagonal_stuck: Fix units stuck at low diagonal walls
+diagonal_stuck_tooltip: |
+  Fixes an old game bug: where two low walls touch diagonally with ground-level stairs in
+  one corner, units trying to step from the stairs to the ground in the other corner got
+  stuck and slowed the whole game down. Everyone in a multiplayer game needs the same setting.
 stairs: Repairing stairs keeps their height
 stairs_tooltip: |
   Building a wall over damaged stairs puts the stairs back the way they were. Before, they
