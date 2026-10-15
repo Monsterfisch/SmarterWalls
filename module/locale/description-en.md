@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.13
+**Version**: 1.0.14
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -54,6 +54,19 @@ Fixes an old bug in the game itself. Where two low walls touch diagonally and gr
 stairs sit in one corner between them, units trying to step from the stairs to the ground in
 the opposite corner got stuck there for good, asking for a new route every moment and
 slowing the whole game down. They now step across like anywhere else.
+
+## Only cross crenellations attached to walkable walls
+
+Troops can cross the raised parts of a crenellation only while it touches a wall they can
+still walk on. If the wall beside it is destroyed or damaged too badly to walk on, the raised
+parts next to it close, so nobody walks across crenellations hanging in the air. Repairing the
+wall opens them again.
+
+## Crenellations do not lead into towers
+
+Troops can no longer walk from a crenellation straight into a tower, keep or gatehouse. Only
+the wall itself or stairs lead there, so a tower is not reached by a crenellation that happens
+to touch it.
 
 ## Repairing stairs keeps their height
 

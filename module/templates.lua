@@ -516,4 +516,193 @@ keep:
   jmp RESUME
 ]]
 
+-- Does this raised crenellation part touch a walkable wall? One of its eight neighbours is a wall,
+-- stairs or crenellation tile (0x100) that is not itself a raised part or a stockpile (0x400002)
+-- and not worn down past what the game still lets units walk on (damage byte <= 0x14, the
+-- game's own test in the link builder). in: eax = tile. out: eax = 1 or 0. Keeps other registers.
+templates.attached = [[
+  push ebx
+  push ecx
+  push edx
+  push esi
+  mov esi, eax
+  movzx ecx, word [TILE_Y + esi*2]
+  shl ecx, 5
+  add ecx, TMS
+  xor ebx, ebx
+next:
+  mov eax, [ecx + ebx*4]
+  add eax, esi
+  mov edx, [FLAGS + eax*4]
+  test edx, 0x100
+  jz skip
+  test edx, 0x400002
+  jnz skip
+  cmp byte [DAMAGE + eax], 0x14
+  jle yes
+skip:
+  inc ebx
+  cmp ebx, 8
+  jb next
+  xor eax, eax
+  jmp finish
+yes:
+  mov eax, 1
+finish:
+  pop esi
+  pop edx
+  pop ecx
+  pop ebx
+  ret
+]]
+
+-- The link builder, the tile itself (ebx = flags, ecx = tile): the game gives a raised part no
+-- links; here it keeps them unless it hangs off nothing walkable.
+templates.linkSelf = [[
+  test ebx, 0x400000
+  jz plain
+  push eax
+  mov eax, ecx
+  call ATTACHED
+  test eax, eax
+  pop eax
+  jz closed
+plain:
+  jmp CONTINUE
+closed:
+  jmp NO_LINKS
+]]
+
+-- The link builder, a neighbour (eax = its flags, ecx = its tile): a raised part is no step to
+-- take (the game's own branch) unless it is attached to a walkable wall.
+templates.linkNeighbour = [[
+  test eax, 0x400000
+  jz plain
+  push eax
+  mov eax, ecx
+  call ATTACHED
+  test eax, eax
+  pop eax
+  jnz plain
+  jmp RAISED
+plain:
+  jmp WALL
+]]
+
+-- updatePathLinkagesInAllEightDirections(y, tile): the game relinks the tile and its eight
+-- neighbours. A neighbour that is a raised part also gets its own neighbours relinked, so a wall
+-- going down or being repaired next to it opens or closes the ways onto it on both sides.
+templates.relink = [[
+  push dword [esp + 8]
+  push dword [esp + 8]
+  call GAME_RELINK
+  pushad
+  mov esi, [esp + 0x28]
+  movzx edi, word [TILE_Y + esi*2]
+  shl edi, 5
+  add edi, TMS
+  xor ebp, ebp
+around:
+  mov eax, [edi + ebp*4]
+  add eax, esi
+  test dword [FLAGS + eax*4], 0x400000
+  jz further
+  push ebp
+  push edi
+  mov ebx, eax
+  movzx edi, word [TILE_Y + ebx*2]
+  shl edi, 5
+  add edi, TMS
+  xor ebp, ebp
+inner:
+  mov eax, [edi + ebp*4]
+  add eax, ebx
+  movzx ecx, word [TILE_Y + eax*2]
+  push eax
+  push ecx
+  mov ecx, PATHS
+  call BUILD_LINKS
+  inc ebp
+  cmp ebp, 8
+  jb inner
+  pop edi
+  pop ebp
+  mov dword [DIRTY_A], 1
+  mov dword [DIRTY_B], 1
+further:
+  inc ebp
+  cmp ebp, 8
+  jb around
+  popad
+  ret 8
+]]
+
+-- updatePathLinkagesInAllEightDirections, its first 7 bytes replayed.
+templates.relinkGame = [[
+  push ecx
+  mov eax, [esp + 0xC]
+  push ebx
+  push ebp
+  jmp RESUME
+]]
+
+-- The link builder's final store (al = the tile's links, [esp+0x58] = the tile): any link
+-- between a crenellation tile (flag 0x200) and a tower, keep, gatehouse or other building tile
+-- (flag 0x10000000 or a building id) is taken away, in both directions - the builder runs for
+-- both tiles - so a crenellation never leads into one, as stairs do not into a tower.
+-- Replays mov edx, [esp+0x58] / mov [edx+links], al.
+templates.towerAccess = [[
+  mov edx, [esp + 0x58]
+  test al, al
+  jz put
+  push ebx
+  push ecx
+  push esi
+  push edi
+  mov esi, edx
+  mov edi, [FLAGS + esi*4]
+  movzx ecx, word [TILE_Y + esi*2]
+  shl ecx, 5
+  add ecx, TMS
+  xor ebx, ebx
+dir:
+  bt eax, ebx
+  jnc nextdir
+  mov edx, [ecx + ebx*4]
+  add edx, esi
+  push eax
+  mov eax, [FLAGS + edx*4]
+  test edi, 0x200
+  jz curnot
+  test eax, 0x10000000
+  jnz cut
+  cmp word [BUILDINGS + edx*2], 0
+  jne cut
+curnot:
+  test eax, 0x200
+  jz keep
+  test edi, 0x10000000
+  jnz cut
+  cmp word [BUILDINGS + esi*2], 0
+  jne cut
+keep:
+  pop eax
+  jmp nextdir
+cut:
+  pop eax
+  btr eax, ebx
+nextdir:
+  inc ebx
+  cmp ebx, 8
+  jb dir
+  mov edx, esi
+  pop edi
+  pop esi
+  pop ecx
+  pop ebx
+put:
+  mov [edx + LINKS], al
+  jmp RESUME
+]]
+
 return templates

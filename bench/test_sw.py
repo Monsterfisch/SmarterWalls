@@ -361,6 +361,79 @@ def suite(ext, config):
     check(tag + ' I raised part crossable', links(m, 250) != 0, walkable)
     check(tag + ' I neighbour links to it', bool(links(tile(249, 250), 250) & 0x04), walkable)
 
+    # S. a raised part is crossable only while it touches a walkable wall
+    attached = config.get('crenellationAttached', True)
+    ring = [(x, 251) for x in range(248, 253)] + [(249, 250), (251, 250)]
+    open_after_damage = walkable and not attached          # setting off: crossable anywhere
+
+    def ring_state(flags_wall, flags_crenel, damage):
+        for x, y in ring:
+            wall = y == 251
+            H.put32(FLAGS + 4 * tile(x, y), flags_wall if wall else flags_crenel)
+            H.put8(DMG + tile(x, y), damage)
+
+    def crossable():
+        return links(m, 250) != 0
+    ring_state(0x100, 0x300, 0)
+    check(tag + ' S attached to walls', crossable(), walkable)
+    ring_state(0x100, 0x300, 20)
+    check(tag + ' S worn to the walking limit: open', crossable(), walkable)
+    ring_state(0x100, 0x300, 21)
+    check(tag + ' S worn past it: closed', crossable(), open_after_damage)
+    check(tag + ' S worn past it: nothing links onto it', bool(links(tile(249, 250), 250) & 0x04),
+          open_after_damage)
+    ring_state(0, 0, 0)
+    check(tag + ' S walls destroyed: closed', crossable(), open_after_damage)
+    ring_state(0x502, 0x502, 0)
+    check(tag + ' S a stockpile is no wall', crossable(), open_after_damage)
+    ring_state(0x400300, 0x400300, 0)    # only other raised parts around it
+    check(tag + ' S other raised parts do not hold it up', crossable(), open_after_damage)
+    ring_state(0x900, 0x300, 0)           # stairs count
+    check(tag + ' S stairs hold it', crossable(), walkable)
+    ring_state(0x100, 0x300, 0)
+    check(tag + ' S repaired: open again', crossable(), walkable)
+
+    # U. a crenellation does not lead into a tower, as stairs do not; walls still do
+    tower_on = config.get('crenellationTowers', True)
+    TYPES_U = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x21D)
+    BID_U = TMS + 0x2029B0
+    ttile = tile(260, 260)
+    for (x, y), fl in (((260, 260), 0x10000100), ((259, 260), 0x300), ((261, 260), 0x100), ((260, 261), 0x900),
+                       ((259, 259), 0), ((261, 261), 0)):
+        H.put32(FLAGS + 4 * tile(x, y), fl); H.put8(LIVE + tile(x, y), 98)
+    H.put16(BID_U + 2 * ttile, 9); H.put16(TYPES_U + 9 * 0x32C, 74)
+
+    def bits_of(x, y):
+        return links(tile(x, y), y)
+    tower_bits = bits_of(260, 260)
+    crenel_bits, wall_bits, stairs_bits = bits_of(259, 260), bits_of(261, 260), bits_of(260, 261)
+    tower_to_crenel, crenel_to_tower = bool(tower_bits & 0x40), bool(crenel_bits & 0x04)
+    tower_to_wall, wall_to_tower = bool(tower_bits & 0x04), bool(wall_bits & 0x40)
+    check(tag + ' U wall to tower', (tower_to_wall, wall_to_tower), (True, True))
+    check(tag + ' U crenellation to tower', (tower_to_crenel, crenel_to_tower),
+          (False, False) if tower_on else (True, True))
+    check(tag + ' U stairs to tower', bool(stairs_bits & 0x01) or bool(tower_bits & 0x10), False)
+    H.put16(BID_U + 2 * ttile, 0); H.put32(FLAGS + 4 * ttile, 0)
+    for x, y in ((259, 260), (261, 260), (260, 261)):
+        H.put32(FLAGS + 4 * tile(x, y), 0)
+
+    # T. a wall going down relinks the ways onto the raised part, two tiles away included
+    if walkable and attached:
+        relink_fn = f('51 8B 44 24 0C 53 55 8B 6C 24 10')
+        PFR = E.u32(f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00') + 0x5B)
+        stubbed = H.cpu.hooks.pop(relink_fn, None)
+        far = tile(249, 249)                          # two tiles from the wall row, beside the raised part
+        H.put32(FLAGS + 4 * far, 0)
+        H.put8(LINKS + far, 0x08)                      # a link south-east, onto the raised part
+        ring_state(0x100, 0x300, 40)                   # the walls are worn down
+        H.run(relink_fn, regs=dict(ecx=PFR), stack=[251, tile(250, 251)])   # as the game's damage does
+        check(tag + ' T relink reaches the far side', H.m.read(LINKS + far, 1)[0] & 0x08, 0)
+        if stubbed:
+            H.cpu.hooks[relink_fn] = stubbed
+    ring_state(0x100, 0x300, 0)
+    for x, y in ring:
+        H.put8(LIVE + tile(x, y), 98 if y == 251 else 106)
+
     # Q. nobody is sent to stand on it: the destination moves to the wall tile beside it
     dest_site = f('0F B7 86 D8 06 00 00 0F BF C8')
     for x in range(248, 253):
@@ -758,7 +831,8 @@ def suite(ext, config):
 if __name__ == '__main__':
     configs = [{}, {'anyAngle': False}, {'flow': False}, {'aroundWalls': False},
                {'walkableCrenellations': False}, {'diagonalSiege': False}, {'ladderWait': 2},
-               {'crenellationHeights': False}, {'diagonalStuck': False}, {'stairs': False, 'crenellations': False},
+               {'crenellationHeights': False}, {'diagonalStuck': False}, {'crenellationAttached': False},
+               {'crenellationTowers': False}, {'stairs': False, 'crenellations': False},
                {'anyAngle': False, 'flow': False}]
     for ext in (False, True):
         for c in configs:

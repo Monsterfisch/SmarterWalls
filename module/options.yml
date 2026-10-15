@@ -37,6 +37,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.crenellationAttached
+    name: smarter-walls-crenellation-attached
+    text: '{{cren_attached}}'
+    tooltip: '{{cren_attached_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.walkableCrenellations
     name: smarter-walls-walkable-crenellations
     text: '{{walkable}}'
@@ -68,6 +76,14 @@ options:
     name: smarter-walls-diagonal-stuck
     text: '{{diagonal_stuck}}'
     tooltip: '{{diagonal_stuck_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
+  - url: smarter-walls.crenellationTowers
+    name: smarter-walls-crenellation-towers
+    text: '{{cren_towers}}'
+    tooltip: '{{cren_towers_tooltip}}'
     display: Switch
     contents:
       type: boolean

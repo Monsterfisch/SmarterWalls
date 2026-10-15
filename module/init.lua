@@ -21,7 +21,11 @@
   4. Building a wall over a damaged crenellation repairs the crenellation. Only an intact
      crenellation is turned into wall, as before.
   5. The raised part of a crenellation (tile flag 0x400000). The game's path link builder
-     keeps those tiles out of every route in two tests; both are switched off, so troops on
+     keeps those tiles out of every route in two tests. With crenellationAttached both are
+     hooked and a raised part keeps its links only while it touches a walkable wall (a wall,
+     stairs or crenellation tile, not raised, whose damage byte is still within the game's own
+     walking limit of 0x14); one hanging off a destroyed or worn-down wall is closed again, and
+     a changed wall relinks the raised parts around it. Without it both tests are switched off, so troops on
      ladders and siege towers, assassins and everyone else may cross them (the game rebuilds
      every link on load). No unit is ever sent to stand on one: setDestinationForUnit moves a
      target on a raised part to the wall tile beside it - one place for every order, formation,
@@ -49,6 +53,10 @@
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
      beside it; next to stairs only, by the step directly beside it - tall for steps 1-3,
      low from 4 on; next to crenellations only, as tall as they are. Repairing a crenellation uses the same rule.
+  10. Crenellations and towers. The link builder links a crenellation tile like any wall tile,
+     so crenellations lead into towers, keeps and gatehouses; stairs never do into a tower. The
+     builder's final store now takes away every link between a crenellation tile (0x200) and a
+     tower, keep, gatehouse or other building tile (0x10000000 or a building id), both ways.
   9. A game bug: two walls of walkable height touching diagonally, ground-level stairs in one
      corner, ground in the other. The path link builder decides a diagonal squeeze between two
      walls by two rules - from ground only when neither wall can be stepped onto, from a wall
@@ -76,7 +84,8 @@ local MODULE_NAME = "smarter-walls"
 
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
   crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
-  crenellationHeights = true, diagonalStuck = true }
+  crenellationHeights = true, diagonalStuck = true, crenellationAttached = true,
+  crenellationTowers = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -154,6 +163,20 @@ local AOB_LINK_SELF = "F7 C3 00 00 40 00 0F 85 ? ? ? ?"           -- test ebx, 0
 local LINK_SELF_IMM = 2
 local AOB_LINK_NEIGHBOUR = "A9 00 00 40 00 74 0B 02 96 ? ? ? ?"   -- test eax, 0x400000 / je
 local LINK_NEIGHBOUR_IMM = 1
+-- ... or, with crenellationAttached, both tests are hooked and keep a raised part closed unless
+-- it touches a walkable wall. The tests are 12 and 7 bytes; the builder starts 0xE0 before the
+-- first.
+local LINK_SELF_SIZE = 12
+local LINK_NEIGHBOUR_SIZE = 7
+local LINK_BUILDER_FROM_SELF = 0xE0
+local LINK_SELF_JUMP = 8            -- the rel32 of the jne after the first test
+local LINK_NEIGHBOUR_JUMP = 6       -- the rel8 of the je after the second
+-- PathFindingState::updatePathLinkagesInAllEightDirections(y, tile), its start (7 bytes).
+local AOB_RELINK = "51 8B 44 24 0C 53 55 8B 6C 24 10"
+local RELINK_SIZE = 7
+-- placeWalls' end marks the areas for an update: mov [a], eax / mov [b], eax (eax = 1).
+local PLACE_DIRTY = { 0x533, { 0xA3 } }
+local PLACE_DIRTY_2 = { 0x538, { 0xA3 } }
 -- ... but no unit is ever sent to stand on one: setDestinationForUnit, after its first checks,
 -- movzx eax, word [esi+0x6D8] with ebp = target x, edi = target y (its start is patched by
 -- other modules; this is 0x8B in).
@@ -211,6 +234,10 @@ local DIAGONAL_CUTS = {
   { aob = "80 64 24 13 DF 8A 44 24 13", mask = 0xDF, sides = 0x50 },        -- south-west: S, W
 }
 local DIAGONAL_CUT_SIZE = 5
+
+-- The link builder's final store: mov edx, [esp+0x58] / mov [edx+links], al (10 bytes).
+local AOB_LINK_STORE = "8B 54 24 58 88 82 ? ? ? ?"
+local LINK_STORE_SIZE = 10
 
 -- Spreading a group out on a wall: the pick of wall tiles (test [esi*4+flags], 0x10000100,
 -- two movsx, je skip) and its any-tile fallback (cmp ebp, 0xFA0 / jl take).
@@ -1053,7 +1080,7 @@ local function enable(self, config)
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
       and not options.diagonalSiege and not options.crenellationHeights
-      and not options.diagonalStuck then return end
+      and not options.diagonalStuck and not options.crenellationTowers then return end
 
   local starts = {}
   for name, f in pairs(FUNCTIONS) do
@@ -1076,13 +1103,43 @@ local function enable(self, config)
   expectBytes(m.enclosed, { 0x8B, 0x44, 0x24, 0x08, 0x56, 0xC1, 0xE0, 0x05 }, "the crenellation test")
 
   m.tms = core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
+  -- the tile -> row and path finder operands of the siege tower search, read before any patch
+  -- of this module touches it
+  local freeTileSite = scan(AOB_FREE_TILE, "where a siege tower docks")
+  local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
+  local paths = readOperand(freeTileSite, FREE_TILE_PF, "the path finder")
 
   -- 5. The raised part of a crenellation: any route may cross it, nobody is sent to stand on it.
   if options.walkableCrenellations then
     local linkSelf = scan(AOB_LINK_SELF, "the path link test for crenellations")
     local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
-    core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
-    core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+    if not options.crenellationAttached then
+      core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
+      core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+    else
+      local attached = assemble(templates.attached, {
+        TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, DAMAGE = m.tms + TMS_DAMAGE,
+      })
+      jumpTo(linkSelf, assemble(templates.linkSelf, {
+        ATTACHED = attached, CONTINUE = linkSelf + LINK_SELF_SIZE,
+        NO_LINKS = linkSelf + LINK_SELF_SIZE + core.readInteger(linkSelf + LINK_SELF_JUMP),
+      }), LINK_SELF_SIZE)
+      jumpTo(neighbour, assemble(templates.linkNeighbour, {
+        ATTACHED = attached, RAISED = neighbour + LINK_NEIGHBOUR_SIZE,
+        WALL = neighbour + LINK_NEIGHBOUR_SIZE + (core.readByte(neighbour + LINK_NEIGHBOUR_JUMP) & 0xFF),
+      }), LINK_NEIGHBOUR_SIZE)
+      -- a wall going down or coming up relinks the raised parts around it too
+      local builder = linkSelf - LINK_BUILDER_FROM_SELF
+      expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
+      local relinkAt = scan(AOB_RELINK, "where the game relinks a tile")
+      local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
+      jumpTo(relinkAt, assemble(templates.relink, {
+        GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS,
+        PATHS = paths, BUILD_LINKS = builder,
+        DIRTY_A = readOperand(place, PLACE_DIRTY, "the area update flag"),
+        DIRTY_B = readOperand(place, PLACE_DIRTY_2, "the area update flag"),
+      }), RELINK_SIZE)
+    end
 
     -- assassins may climb onto them as well, so a crenellation of any thickness or direction
     -- is no obstacle (the raised parts are crossable now, so they can walk on from there)
@@ -1163,6 +1220,15 @@ local function enable(self, config)
     jumpTo(search, assemble(templates.freeTile, {
       STATE = data, GAME_SEARCH = game, DIAGONAL = diagonal,
     }), FREE_TILE_SIZE)
+  end
+
+  -- 10. A crenellation never leads into a tower, keep or gatehouse (only walls and stairs do).
+  if options.crenellationTowers then
+    local store = scan(AOB_LINK_STORE, "the path link builder's store")
+    jumpTo(store, assemble(templates.towerAccess, {
+      FLAGS = m.tms + TMS_FLAGS, BUILDINGS = m.tms + TMS_BUILDINGS, LINKS = m.tms + TMS_LINKS,
+      TILE_Y = tileY, TMS = m.tms, RESUME = store + LINK_STORE_SIZE,
+    }), LINK_STORE_SIZE)
   end
 
   -- 9. Units stuck at two low walls touching diagonally (a game bug).
