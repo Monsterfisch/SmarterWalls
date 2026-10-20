@@ -96,6 +96,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.stairsLowWalls
+    name: smarter-walls-stairs-low-walls
+    text: '{{stairs_low}}'
+    tooltip: '{{stairs_low_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.crenellations
     name: smarter-walls-crenellations
     text: '{{crenellations}}'

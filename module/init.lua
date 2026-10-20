@@ -18,6 +18,7 @@
      game reset them to wall height instead. The height before the first hit is remembered
      when stairs are damaged; for stairs damaged before the game was loaded it is worked out
      from the damage counter and the stairs next to them.
+     A low (wood) wall, mapper 0x2E, repairs damaged stairs the same way (stairsLowWalls).
   4. Building a wall over a damaged crenellation repairs the crenellation. Only an intact
      crenellation is turned into wall, as before.
   5. The raised part of a crenellation (tile flag 0x400000). The game's path link builder
@@ -85,7 +86,7 @@ local MODULE_NAME = "smarter-walls"
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
   crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
   crenellationHeights = true, diagonalStuck = true, crenellationAttached = true,
-  crenellationTowers = true }
+  crenellationTowers = true, stairsLowWalls = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -333,6 +334,7 @@ local D_UNITS_STATE = 0x84
 local D_DOCK_UNIT = 0x88       -- findFreeTileNearby's unit and wall tile, and lua's answer
 local D_DOCK_WALL = 0x8C
 local D_DOCK_RESULT = 0x90
+local D_LOW_STAIRS = 0xB0      -- 1: a low (wood) wall repairs damaged stairs too
 local D_PATIENCE = 0x94        -- 1: the unit simply stopped there; more: ladder or walking
 local D_CREN_TILE = 0x98       -- a new crenellation: tile, TileMapState, x, y; lua's height, low
 local D_CREN_TMS = 0x9C
@@ -1289,6 +1291,7 @@ local function enable(self, config)
   -- 3 and 4. Damaged stairs and crenellations.
   if restoring then
     local site = checked(place, { PLACE_RESTORE.at, PLACE_RESTORE.bytes }, "the wall repair test")
+    core.writeInteger(data + D_LOW_STAIRS, (options.stairs and options.stairsLowWalls) and 1 or 0)
     local restore = luaFunction("repairing stairs or crenellations", makeRestore(m, options))
     jumpTo(site, assemble(templates.restore, {
       STATE = data, REPAIR = restore, RECORD = record,

@@ -59,6 +59,10 @@ stairs: Repairing stairs keeps their height
 stairs_tooltip: |
   Building a wall over damaged stairs puts the stairs back the way they were. Before, they
   turned into a block as tall as a wall.
+stairs_low: Low walls repair stairs too
+stairs_low_tooltip: |
+  Building a low (wooden) wall over damaged stairs puts the stairs back the way they were,
+  just like a normal wall. Needs "Repairing stairs keeps their height".
 crenellations: Repairing crenellations keeps them
 crenellations_tooltip: |
   Building a wall over a damaged crenellation repairs the crenellation. Only an undamaged

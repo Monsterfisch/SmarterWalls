@@ -207,7 +207,14 @@ vanilla:
 -- (the game walks a one-tile wall twice; the second time must not undo the repair).
 templates.restore = [[
   cmp dx, 0x19
+  je known
+  cmp dx, 0x2E
   jne vanilla
+  cmp dword [STATE + 0xB0], 0
+  je vanilla
+  test dword [edi + esi*4 + FLAGS_OFF], 0x800
+  jz vanilla
+known:
   test dword [edi + esi*4 + FLAGS_OFF], 0xA00
   jz vanilla
   push eax

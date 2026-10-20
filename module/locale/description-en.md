@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.14
+**Version**: 1.0.15
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -72,6 +72,11 @@ to touch it.
 
 Building a wall over damaged stairs puts the stairs back at the height they had. Before,
 they turned into a block as tall as a wall.
+
+## Low walls repair stairs too
+
+Building a low wall over damaged stairs puts the stairs back at the height they had, exactly
+like a normal wall does. Low walls leave damaged crenellations alone, as before.
 
 ## Repairing crenellations keeps them
 
