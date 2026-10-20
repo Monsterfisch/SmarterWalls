@@ -44,11 +44,9 @@
      leant against them (UpdateLadderman's wall test) and siege towers and ladders sent at a
      wall may pick them (the wall/free-tile pair search); a siege tower's own wall search
      already takes any wall tile, and its links now meet links coming back.
-  6. Ladders and siege towers take on diagonal walls. Troops sent at a wall look for a free
-     tile next to it in all eight directions instead of four (a ladder already leans and
-     climbs diagonally). A siege tower only ever docked two tiles straight out from a wall
-     that runs straight past it; where the game finds no such spot, the tower docks with
-     the corner of its 3x3 against a diagonal wall, which the path links already join.
+  6. Ladders take on diagonal walls. Troops sent at a wall look for a free tile next to it in
+     all eight directions instead of four (a ladder already leans and climbs diagonally).
+     Where a siege tower docks moved to Improved Siegeengines in 1.0.16.
   8. Crenellation heights. The game makes a crenellation 0x62 above the ground, or 0x44 (and
      flag 0x10000) when its straight neighbours are only low walls - so it is 8 above a stone
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
@@ -203,15 +201,13 @@ local AOB_PAIR_TABLE = "B9 ? ? ? ? 8B 41 04 03 C7"
 local AOB_PAIR_TABLE_END = "81 F9 ? ? ? ? 7C B8"
 local PAIR_DIRECTIONS = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
   { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } }
--- UnitsState::findFreeTileNearby(unit, wallTile): where a siege tower stands to dock - two tiles
--- straight out from the wall, and only where the wall runs straight past that tile.
-local AOB_FREE_TILE = "83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00"
-local FREE_TILE_SIZE = 9
-local FREE_TILE_UNITS = { 0x10, { 0x8B, 0x85 } }                -- mov eax, [ebp+units+tile]
+-- UnitsState::findFreeTileNearby(unit, wallTile): only read here, for the tile rows and the
+-- path finder. Found past its first nine bytes, which Improved Siegeengines (where siege tower
+-- docking lives now) hooks.
+local AOB_FREE_TILE = "56 69 ED 90 04 00 00 8B 85 ? ? ? ? 0F BF 1C 45"
+local FREE_TILE_START = -9
 local FREE_TILE_Y = { 0x2A, { 0x0F, 0xBF, 0x34, 0x7D } }        -- movsx esi, [edi*2+tileY]
 local FREE_TILE_PF = { 0x5A, { 0xB9 } }                         -- mov ecx, PathFindingState
-local FREE_TILE_NAVIGATE = 0x67                                 -- call canNavigateToArea
-local FREE_TILE_TYPES = { 0x21A, { 0x66, 0x83, 0xB8 } }         -- cmp word [eax+type], 0x43
 local SIEGE_BLOCKED = 0x4A5014B1
 local U_OWNER = 0x96
 
@@ -331,9 +327,6 @@ local D_LAST = 0x78            -- the crenellation repaired last in this placeWa
 local D_STAIRS = 0x7C          -- the drag is stairs
 local D_UNIT = 0x80            -- the unit to push off a crenellation, and UnitsState
 local D_UNITS_STATE = 0x84
-local D_DOCK_UNIT = 0x88       -- findFreeTileNearby's unit and wall tile, and lua's answer
-local D_DOCK_WALL = 0x8C
-local D_DOCK_RESULT = 0x90
 local D_LOW_STAIRS = 0xB0      -- 1: a low (wood) wall repairs damaged stairs too
 local D_PATIENCE = 0x94        -- 1: the unit simply stopped there; more: ladder or walking
 local D_CREN_TILE = 0x98       -- a new crenellation: tile, TileMapState, x, y; lua's height, low
@@ -992,83 +985,6 @@ local function makePushOff(m)
 end
 
 ---------------------------------------------------------------------------------------
--- Siege towers against diagonal walls
----------------------------------------------------------------------------------------
-
--- A 3x3 siege tower docks with its corner against a diagonal wall: for the wall tile (wx, wy)
--- and a diagonal d, the wall has to run across d ((wx+dx, wy-dy) and (wx-dx, wy+dy) are wall),
--- the tower stands at (wx+2dx, wy+2dy), its 3x3 must be clear by the game's own rules, and the
--- unit must be able to get there. The nearest such spot wins.
-local DIAGONALS = { { -1, -1 }, { 1, -1 }, { 1, 1 }, { -1, 1 } }
-
-local function makeDiagonalDock(m)
-  local navigate = core.exposeCode(m.navigate, 5, 1)
-  local tms = m.tms
-
-  local function tileAt(x, y)
-    if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return nil end
-    if byte(m.valid + y * MAP_SIZE + x) == 0 then return nil end
-    return core.readInteger(m.rows + 12 * y) + x
-  end
-
-  local function isWall(x, y)
-    local tile = tileAt(x, y)
-    if tile == nil then return false end
-    local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
-    return flags & F_WALL ~= 0 and flags & F_STOCKPILE == 0
-  end
-
-  local function clear(x, y)
-    local tile = tileAt(x, y)
-    if tile == nil then return false end
-    local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
-    if flags & F_WALL ~= 0 or flags & SIEGE_BLOCKED ~= 0 then return false end
-    local building = word(tms + TMS_BUILDINGS + 2 * tile)
-    return building == 0 or word(m.buildingTypes + building * 0x32C) == 0x43
-  end
-
-  return function()
-    local unit = core.readInteger(m.data + D_DOCK_UNIT)
-    local wall = core.readInteger(m.data + D_DOCK_WALL)
-    if wall <= 0 or wall >= TILES or unit <= 0 then return end
-    local wy = word(m.tileY + 2 * wall)
-    if wy >= MAP_SIZE then return end
-    local wx = wall - core.readInteger(m.rows + 12 * wy)
-    if wx < 0 or wx >= MAP_SIZE then return end
-    local base = m.units + unit * UNIT_SIZE
-    local owner = signedWord(base + U_OWNER)
-    local from = signedWord(tms + TMS_AREAS + 2 * core.readInteger(base + U_TILE))
-    local ux, uy = signedWord(base + U_X), signedWord(base + U_Y)
-    local best, bestDistance
-    for _, d in ipairs(DIAGONALS) do
-      local dx, dy = d[1], d[2]
-      if isWall(wx + dx, wy - dy) and isWall(wx - dx, wy + dy) then
-        local cx, cy = wx + 2 * dx, wy + 2 * dy
-        local ok = true
-        for oy = -1, 1 do
-          for ox = -1, 1 do
-            if ok and not clear(cx + ox, cy + oy) then ok = false end
-          end
-        end
-        local centre = ok and tileAt(cx, cy) or nil
-        if centre ~= nil then
-          local to = signedWord(tms + TMS_AREAS + 2 * centre)
-          if navigate(m.pathFinding, owner, from, to, 0) ~= 0 then
-            local distance = (cx - ux) * (cx - ux) + (cy - uy) * (cy - uy)
-            if best == nil or distance < bestDistance then
-              best, bestDistance = centre, distance
-            end
-          end
-        end
-      end
-    end
-    if best ~= nil then
-      core.writeInteger(m.data + D_DOCK_RESULT, best)
-    end
-  end
-end
-
----------------------------------------------------------------------------------------
 -- Enable
 ---------------------------------------------------------------------------------------
 
@@ -1107,7 +1023,7 @@ local function enable(self, config)
   m.tms = core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
   -- the tile -> row and path finder operands of the siege tower search, read before any patch
   -- of this module touches it
-  local freeTileSite = scan(AOB_FREE_TILE, "where a siege tower docks")
+  local freeTileSite = scan(AOB_FREE_TILE, "the siege tower dock search") + FREE_TILE_START
   local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
   local paths = readOperand(freeTileSite, FREE_TILE_PF, "the path finder")
 
@@ -1197,7 +1113,7 @@ local function enable(self, config)
     }), UNIT_TICK_SIZE)
   end
 
-  -- 6. Ladders and siege towers take on diagonal walls.
+  -- 6. Ladders take on diagonal walls (siege tower docking is Improved Siegeengines' now).
   if options.diagonalSiege then
     local tableStart = scan(AOB_PAIR_TABLE, "the directions troops look for a wall in")
     local tableEnd = scan(AOB_PAIR_TABLE_END, "the directions troops look for a wall in")
@@ -1208,20 +1124,6 @@ local function enable(self, config)
     end
     core.writeCode(tableStart + 1, { core.itob(directions) })
     core.writeCode(tableEnd + 2, { core.itob(directions + 8 * #PAIR_DIRECTIONS) })
-
-    local search = scan(AOB_FREE_TILE, "where a siege tower docks")
-    expectBytes(search + FREE_TILE_UNITS[1], FREE_TILE_UNITS[2], "where a siege tower docks")
-    m.units = core.readInteger(search + FREE_TILE_UNITS[1] + 2) - U_TILE
-    m.tileY = readOperand(search, FREE_TILE_Y, "the tile rows")
-    m.pathFinding = readOperand(search, FREE_TILE_PF, "the path finder")
-    expectBytes(search + FREE_TILE_NAVIGATE, { 0xE8 }, "the area test")
-    m.navigate = search + FREE_TILE_NAVIGATE + 5 + core.readInteger(search + FREE_TILE_NAVIGATE + 1)
-    m.buildingTypes = readOperand(search, FREE_TILE_TYPES, "the building types")
-    local diagonal = luaFunction("docking a siege tower on a diagonal wall", makeDiagonalDock(m))
-    local game = assemble(templates.freeTileGame, { RESUME = search + FREE_TILE_SIZE })
-    jumpTo(search, assemble(templates.freeTile, {
-      STATE = data, GAME_SEARCH = game, DIAGONAL = diagonal,
-    }), FREE_TILE_SIZE)
   end
 
   -- 10. A crenellation never leads into a tower, keep or gatehouse (only walls and stairs do).

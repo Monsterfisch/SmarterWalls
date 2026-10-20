@@ -40,11 +40,12 @@ ladder_wait_tooltip: |
   Troops waiting on a raised part of a crenellation to climb down a ladder may stay there
   this long before they are moved to the nearest wall tile; they then carry on to where
   they were going. Troops that simply stop there are moved at once.
-diagonal_siege: Ladders and siege towers attack diagonal walls
+diagonal_siege: Ladders attack diagonal walls
 diagonal_siege_tooltip: |
-  Ladders and siege towers can attack walls and crenellations that run diagonally. A siege
-  tower sets its corner against the diagonal wall. Before, diagonal walls could not be
-  climbed at all.
+  Ladders can attack walls and crenellations that run diagonally; before, diagonal walls could
+  not be climbed at all. Troops sent at such a wall find a place next to it in all eight
+  directions. Where siege towers dock (diagonal walls too) is now part of Improved
+  Siegeengines.
   Everyone in a multiplayer game needs the same setting.
 diagonal_stuck: Fix units stuck at low diagonal walls
 diagonal_stuck_tooltip: |

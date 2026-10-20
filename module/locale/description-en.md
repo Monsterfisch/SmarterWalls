@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.15
+**Version**: 1.0.16
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -47,6 +47,9 @@ unit making room or a patrol always picks the wall tile next to it instead. Anyo
 ends up standing on one is moved to the nearest wall tile (never onto another crenellation;
 with only those nearby they stay put). Troops waiting there for their turn on a ladder get
 more time first (10 seconds, adjustable in the settings).
+
+Ladders can also attack walls that run diagonally. Siege towers docking at diagonal walls used
+to be part of this module too; that is in Improved Siegeengines now.
 
 ## Fix units stuck at low diagonal walls
 
