@@ -21,6 +21,22 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.flowTrees
+    name: smarter-walls-flow-trees
+    text: '{{flow_trees}}'
+    tooltip: '{{flow_trees_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
+  - url: smarter-walls.repairOnly
+    name: smarter-walls-repair-only
+    text: '{{repair_only}}'
+    tooltip: '{{repair_only_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.aroundWalls
     name: smarter-walls-around-walls
     text: '{{around_walls}}'

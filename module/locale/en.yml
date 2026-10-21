@@ -10,6 +10,14 @@ flow_tooltip: |
   When something is in the way - a building, a tree, rocks - the wall goes around it,
   hugging its shape, and carries on instead of turning red. Crenellations and stairs do the
   same; crenellations follow the wall you drag them along.
+flow_trees: Walls flow around trees
+flow_trees_tooltip: |
+  A wall goes around trees instead of building straight through them. The two ends you pick
+  stay where you put them. Needs "Walls flow around buildings".
+repair_only: Starting on a damaged wall only repairs
+repair_only_tooltip: |
+  When you start dragging a wall on a damaged wall tile, only the damaged wall tiles along the
+  drag are repaired. No new wall is built on empty ground in between or beyond.
 around_walls: Walls flow around other walls
 around_walls_tooltip: |
   A new wall or crenellation also goes around your undamaged walls, stairs and crenellations instead of

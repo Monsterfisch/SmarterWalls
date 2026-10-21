@@ -63,6 +63,9 @@
      stairs not back. The route search plans the step, the step is refused, and the unit
      searches again every tick (stuck, and a heavy frame cost). The wall/stairs rule now also
      keeps the diagonal when either wall is linked, so links always go both ways.
+  11. A wall stroke that starts on a damaged wall tile only repairs (repairOnly): the route is
+     the line's damaged wall tiles and nothing else, so no new wall is built beside the repair.
+     Walls flow round trees as well (flowTrees); the game builds straight through them.
   7. Assassins. With 5 on they climb onto raised crenellation parts too - the route search and
      the step that carries the climb out are opened together (1.0.5-1.0.9 opened the search
      alone and assassins stood at the foot of the wall) - so an outer row that is raised all
@@ -84,7 +87,7 @@ local MODULE_NAME = "smarter-walls"
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
   crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
   crenellationHeights = true, diagonalStuck = true, crenellationAttached = true,
-  crenellationTowers = true, stairsLowWalls = true }
+  crenellationTowers = true, stairsLowWalls = true, repairOnly = true, flowTrees = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -587,6 +590,10 @@ local function makeRouter(m, options)
     if flags & F_TREE ~= 0 then
       local tree = signedWord(tms + TMS_TREES + 2 * tile)
       if tree > 0 and tree < 2000 then
+        -- the game builds a wall straight through trees (and clears them); with flowTrees the
+        -- wall goes round them like round any other obstacle - but the two ends a player picks
+        -- stay as asked
+        if options.flowTrees and not isEnd then return nil end
         local kind = signedWord(m.treeTypes + tree * 0x9C) - 5
         if kind < 0 or kind > 14 or kind == 10 then return nil end
       end
@@ -674,8 +681,28 @@ local function makeRouter(m, options)
     return nil
   end
 
+  -- A wall, stairs or crenellation tile the game would repair: wear on it, no building or stockpile.
+  local function damagedWall(tms, x, y)
+    if x < 0 or y < 0 or x >= MAP_SIZE or y >= MAP_SIZE then return false end
+    if byte(m.valid + y * MAP_SIZE + x) == 0 then return false end
+    local tile = tileOf(x, y)
+    local flags = core.readInteger(tms + TMS_FLAGS + 4 * tile)
+    return flags & F_WALL ~= 0 and flags & F_STOCKPILE == 0
+      and word(tms + TMS_BUILDINGS + 2 * tile) == 0 and byte(tms + TMS_DAMAGE + tile) ~= 0
+  end
+
   local function route(r)
     local x1, y1, x2, y2 = r.x1, r.y1, r.x2, r.y2
+    -- A wall stroke that starts on a damaged wall tile only repairs: just the damaged wall
+    -- tiles along the line are part of it, nothing new is built and nothing is charged for it.
+    if options.repairOnly and (r.mapper == M_WALL or r.mapper == M_WOODWALL)
+        and damagedWall(r.tms, x1, y1) then
+      local repair = {}
+      for _, t in ipairs(options.anyAngle and straightLine(x1, y1, x2, y2) or gameLine(x1, y1, x2, y2)) do
+        if damagedWall(r.tms, t[1], t[2]) then repair[#repair + 1] = t end
+      end
+      return repair
+    end
     local line
     if r.mapper == M_STAIRS then
       line = options.anyAngle and straightLine4(x1, y1, x2, y2) or gameLine4(x1, y1, x2, y2)
@@ -994,7 +1021,7 @@ local function enable(self, config)
     options[name] = setting(config, name)
   end
   options.ladderWait = number(config, "ladderWait", 1, 60)
-  local routing = options.anyAngle or options.flow
+  local routing = options.anyAngle or options.flow or options.repairOnly
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
       and not options.diagonalSiege and not options.crenellationHeights

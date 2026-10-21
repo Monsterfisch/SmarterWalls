@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.16
+**Version**: 1.0.17
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -16,6 +16,17 @@ any angle. Before, walls could only run straight or at 45 degrees, with a bend i
 When something stands in the way of your wall - a building, a tree, rocks or anything else a
 wall cannot go on - the wall goes around it, hugging its shape, and then carries on towards
 where you let go. Before, the whole wall turned red and could not be placed.
+
+## Walls flow around trees
+
+A wall goes around trees instead of building straight through them and clearing them away.
+The two ends you pick stay exactly where you put them.
+
+## Starting on a damaged wall only repairs
+
+When you start dragging a wall on a damaged wall tile, the drag only repairs the damaged wall
+tiles along the way. Nothing new is built on empty ground between or beyond them, and you are
+only charged for the repairs.
 
 ## Walls flow around other walls
 
