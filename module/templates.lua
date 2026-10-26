@@ -414,7 +414,15 @@ skip:
 -- plain crenellation tile), so nothing - an order, a
 -- formation, an idle unit making room, a patrol, the AI - ever sends a unit to stand there.
 -- Passing over one on the way stays allowed. Replays movzx eax, word [esi+0x6D8].
+--
+-- Only a fresh route search (mode 0, [esp+0x28] here, below the function's four pushes and
+-- its 8 byte frame) is redirected. Any other mode lays the path back from a search that has
+-- already run - a tunnel dug in, for one - and that path exists only to the tile the search
+-- found: moved off it, the trace starts where the search never reached, the game refuses
+-- the path and tears the tunnel down.
 templates.destination = [[
+  cmp dword [esp + 0x28], 0
+  jne keep
   cmp ebp, 400
   jae keep
   cmp edi, 400
