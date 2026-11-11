@@ -82,6 +82,13 @@ Troops can no longer walk from a crenellation straight into a tower, keep or gat
 the wall itself or stairs lead there, so a tower is not reached by a crenellation that happens
 to touch it.
 
+## No one-way paths out of low tower tiles
+
+Some ground-level spots can carry a tower's mark - killing pits right beside a tower, for
+example. Troops could step from them onto the ground but never back. Every route that tried
+failed, and each failure made the game rebuild all paths on the whole map, many times a second.
+Now those spots only lead to towers and walls, so the way out is the same as the way in.
+
 ## Repairing stairs keeps their height
 
 Building a wall over damaged stairs puts the stairs back at the height they had. Before,

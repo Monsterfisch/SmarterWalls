@@ -87,7 +87,8 @@ local MODULE_NAME = "smarter-walls"
 local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
   crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
   crenellationHeights = true, diagonalStuck = true, crenellationAttached = true,
-  crenellationTowers = true, stairsLowWalls = true, repairOnly = true, flowTrees = true }
+  crenellationTowers = true, stairsLowWalls = true, repairOnly = true, flowTrees = true,
+  lowTowerTiles = true }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -1025,7 +1026,8 @@ local function enable(self, config)
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
       and not options.diagonalSiege and not options.crenellationHeights
-      and not options.diagonalStuck and not options.crenellationTowers then return end
+      and not options.diagonalStuck and not options.crenellationTowers
+      and not options.lowTowerTiles then return end
 
   local starts = {}
   for name, f in pairs(FUNCTIONS) do
@@ -1154,11 +1156,15 @@ local function enable(self, config)
   end
 
   -- 10. A crenellation never leads into a tower, keep or gatehouse (only walls and stairs do).
-  if options.crenellationTowers then
+  -- 11. A tower-flagged tile at ground height (killing pits beside a tower) gets no links out
+  --     to plain ground: the game never links back into it, and such one-way links made routes
+  --     fail and the game rebuild every path link on the map, many times a second.
+  if options.crenellationTowers or options.lowTowerTiles then
     local store = scan(AOB_LINK_STORE, "the path link builder's store")
     jumpTo(store, assemble(templates.towerAccess, {
       FLAGS = m.tms + TMS_FLAGS, BUILDINGS = m.tms + TMS_BUILDINGS, LINKS = m.tms + TMS_LINKS,
       TILE_Y = tileY, TMS = m.tms, RESUME = store + LINK_STORE_SIZE,
+      CRENEL = options.crenellationTowers and 1 or 0, LOW_TOWER = options.lowTowerTiles and 1 or 0,
     }), LINK_STORE_SIZE)
   end
 

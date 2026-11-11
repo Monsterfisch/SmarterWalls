@@ -76,3 +76,9 @@ crenellations: Repairing crenellations keeps them
 crenellations_tooltip: |
   Building a wall over a damaged crenellation repairs the crenellation. Only an undamaged
   crenellation is turned into wall when you build a wall over it, as before.
+low_tower_tiles: No one-way paths out of low tower tiles
+low_tower_tiles_tooltip: |
+  Some ground-level spots can carry a tower's mark, like killing pits right beside a tower.
+  Troops could walk out of them onto the ground but never back, and every route that tried made
+  the game rebuild all paths on the map - a big slowdown. Now those spots only lead to towers
+  and walls, the same way back as forward.

@@ -655,6 +655,17 @@ dir:
   add edx, esi
   push eax
   mov eax, [FLAGS + edx*4]
+; A tower-flagged tile at ground height (killing pits next to a tower) links out to plain
+; ground, but the game never links ground into a tower-flagged tile: a one-way link that makes
+; routes fail and the whole map's links be rebuilt. Only towers and walls link back into it.
+if LOW_TOWER
+  test edi, 0x10000000
+  jz lowdone
+  test eax, 0x10000100
+  jz cut
+lowdone:
+end if
+if CRENEL
   test edi, 0x200
   jz curnot
   test eax, 0x10000000
@@ -668,6 +679,7 @@ curnot:
   jnz cut
   cmp word [BUILDINGS + esi*2], 0
   jne cut
+end if
 keep:
   pop eax
   jmp nextdir

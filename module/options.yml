@@ -104,6 +104,14 @@ options:
     contents:
       type: boolean
       value: true
+  - url: smarter-walls.lowTowerTiles
+    name: smarter-walls-low-tower-tiles
+    text: '{{low_tower_tiles}}'
+    tooltip: '{{low_tower_tiles_tooltip}}'
+    display: Switch
+    contents:
+      type: boolean
+      value: true
   - url: smarter-walls.stairs
     name: smarter-walls-stairs
     text: '{{stairs}}'
