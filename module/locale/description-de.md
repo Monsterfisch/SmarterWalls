@@ -1,3 +1,3 @@
-# Bessere Mauern 1.0.20
+# Smarter Walls 1.0.20
 
-Ziehe Mauern um Hindernisse und repariere Treppen und Zinnen, ohne sie einzuebnen. Bau- und Wegregeln sind getrennt einstellbar.
+Ziehe Mauern um Hindernisse herum, repariere Treppen und Zinnen, ohne sie einzuebnen, und behebe mehrere Einbahnwege an Mauern und Türmen. Mauerplatzierung, Leiterzugang und Truppenbewegung lassen sich getrennt einstellen.

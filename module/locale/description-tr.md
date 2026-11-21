@@ -1,3 +1,3 @@
-# Daha iyi surlar 1.0.20
+# Smarter Walls 1.0.20
 
-Surları engellerin etrafından çekin, merdivenleri ve mazgalları düzleştirmeden onarın. İnşaat ve hareket ayarları ayrıdır.
+Surları engellerin etrafından çek, merdivenleri ve mazgalları düzleştirmeden onar ve surlar ile kuleler yakınındaki çeşitli tek yönlü yolları düzelt. Sur yerleştirme, merdiven erişimi ve birlik hareketi seçenekleri ayrı ayrı ayarlanabilir.

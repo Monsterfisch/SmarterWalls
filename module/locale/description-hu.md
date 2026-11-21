@@ -1,3 +1,3 @@
-# Jobb falak 1.0.20
+# Smarter Walls 1.0.20
 
-Kerüld ki az akadályokat a falakkal, és javítsd a lépcsőt és a pártázatot magasságvesztés nélkül. Az építés és mozgás külön állítható.
+Húzz falakat akadályok körül, javíts lépcsőket és lőréseket anélkül, hogy ellaposodnának, és szüntess meg több egyirányú útvonalat falak és tornyok mellett. A falelhelyezés, a létrahasználat és a csapatmozgás külön beállítható.

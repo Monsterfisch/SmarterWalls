@@ -1,3 +1,3 @@
-# Muros mejorados 1.0.20
+# Smarter Walls 1.0.20
 
-Traza muros alrededor de obstáculos y repara escaleras y almenas sin aplanarlas. La construcción y el movimiento se ajustan por separado.
+Arrastra muros alrededor de obstáculos, repara escaleras y almenas sin aplanarlas y corrige varios caminos de un solo sentido junto a muros y torres. La colocación de muros, el acceso con escaleras y el movimiento de tropas se configuran por separado.

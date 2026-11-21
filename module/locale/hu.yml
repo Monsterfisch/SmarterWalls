@@ -1,38 +1,41 @@
-any_angle: Tetszőleges szög
-any_angle_tooltip: Húzz egyenes falat bármely irányba.
-flow: Akadályok kerülése
-flow_tooltip: A fal követi az épületek és sziklák körvonalát.
-flow_trees: Fák kerülése
-flow_trees_tooltip: A fal kikerüli a fákat, a végpontok maradnak.
-repair_only: Csak javítás
-repair_only_tooltip: Sérült falról indítva csak a sérült mezők javulnak.
-around_walls: Ép falak kerülése
-around_walls_tooltip: A vonal megkerüli az ép falakat és lépcsőket, a vége hozzájuk érhet.
-cren_heights: Pártázat magassága
-cren_heights_tooltip: A szomszédos falak és lépcsőfokok adják a magasságot.
-cren_attached: Csak kapcsolódó pártázat
-cren_attached_tooltip: Az átkeléshez járható falszakasznak kell mellette lennie.
-walkable: Járható pártázat
-walkable_tooltip: A csapat átmehet a magas részen. A cél a mellette lévő falmező.
-ladder_wait: Várakozás létrára (másodperc)
-ladder_wait_tooltip: Ezután a várakozók a falra húzódnak.
-diagonal_siege: Létrák átlós falakon
-diagonal_siege_tooltip: A létrások átlós falat vagy pártázatot is megcélozhatnak.
-diagonal_stuck: Elakadás átlós falaknál
-diagonal_stuck_tooltip: Javítja a lépcső és a talaj kapcsolatát átlósan érintkező falaknál.
-cren_towers: Torony megközelítése falról vagy lépcsőről
-cren_towers_tooltip: A pártázatról nem vezet közvetlen út a tornyokba, várakba és kapukba.
-stairs: Lépcsőmagasság megtartása
-stairs_tooltip: Javításkor megmarad a sérült lépcsőfok magassága.
-stairs_low: Javítás alacsony fallal
-stairs_low_tooltip: Az alacsony fafal is helyreállítja a sérült lépcsőt.
-crenellations: Pártázat megőrzése
-crenellations_tooltip: A sérült pártázatra húzott fal megjavítja azt.
-low_tower_tiles: Egyirányú utak javítása
-low_tower_tiles_tooltip: Az alacsony toronymezek csak tornyokhoz és falakhoz kapcsolódnak.
-balance_changes: Balance Changes
-bugfixes: Bugfixes
-qol: Quality of Life
+any_angle: Falak tetszőleges szögben
+any_angle_tooltip: A húzott fal egyenes vonalban fut a kezdőponttól a végpontig, bármilyen szögben. Korábban a falak csak egyenesen vagy 45 fokban futhattak, közben töréssel.
+flow: A falak megkerülik az épületeket
+flow_tooltip: Ha valami útban van — épület, fa, szikla —, a fal körvonalát követve megkerüli és folytatódik ahelyett, hogy pirosra váltana. A lőrések és lépcsők ugyanezt teszik; a lőrések követik a falat, amely mentén húzod őket.
+flow_trees: A falak megkerülik a fákat
+flow_trees_tooltip: A fal megkerüli a fákat ahelyett, hogy egyenesen rajtuk keresztül épülne. A kiválasztott két végpont a helyén marad. Igényli a „A falak megkerülik az épületeket” beállítást.
+repair_only: Sérült falról indítva csak javít
+repair_only_tooltip: Ha egy sérült falmezőről indítod a falhúzást, csak az útvonalba eső sérült falmezők javulnak meg. A köztes vagy azon túli üres talajra nem épül új fal.
+around_walls: A falak megkerülik a többi falat
+around_walls_tooltip: Az új fal vagy lőrés a sértetlen saját falaidat, lépcsőidet és lőréseidet is megkerüli ahelyett, hogy rájuk épülne. Továbbra is indulhat vagy végződhet rajtuk a csatlakozáshoz, és a sérült falakon áthaladva megjavítja azokat. Igényli a „A falak megkerülik az épületeket” beállítást.
+cren_heights: A lőrések igazodnak a fal magasságához
+cren_heights_tooltip: |-
+  A lőrés kicsivel magasabbra épül a mellette lévő legmagasabb falnál, így illeszkedik a dombokon lévő és az alacsony falakhoz is. Más mellette lévő lőrések csak akkor számítanak, ha semmi mással nem érintkezik. Lépcső mellett a közvetlenül szomszédos fok dönt (kettőnél az alacsonyabb): a felső három fok magas lőrést kap, a negyediktől lefelé alacsonyat.
+cren_attached: Csak járható falhoz kapcsolódó lőréseken való átkelés
+cren_attached_tooltip: A csapatok csak addig kelhetnek át a lőrés megemelt részein, amíg az egy még járható falhoz csatlakozik. A lerombolt vagy súlyosan sérült fal melletti lőrés zárva marad. Igényli a „A csapatok minden lőrésen átkelhetnek” beállítást. Többjátékos módban mindenkinek azonos beállítás kell.
+walkable: A csapatok minden lőrésen átkelhetnek
+walkable_tooltip: |-
+  A csapatok átmehetnek a lőrések megemelt részein — létráról vagy ostromtoronyból érkezve, orgyilkosként vagy áthaladva —, és a létrák, ostromtornyok, mászó orgyilkosok is feljutnak rájuk, így a többsoros lőrés sem tartja őket távol a faltól. Senkit nem küldenek rajtuk állni: a parancsok, alakzatok és helyet adó egységek a mellette lévő falmezőt választják, aki mégis ott áll meg, oda lép át. Többjátékos módban mindenkinek azonos beállítás kell.
+ladder_wait: Másodpercek, ameddig csapatok lőrésen várhatnak létrára
+ladder_wait_tooltip: A létrán való lemászásra váró csapatok ennyi ideig maradhatnak a lőrés megemelt részén, mielőtt a legközelebbi falmezőre lépnek, majd onnan folytatják útjukat. Az ott csak megálló csapatok azonnal arrébb lépnek.
+diagonal_siege: A létrák átlós falakat is támadnak
+diagonal_siege_tooltip: A létrák átlósan futó falakra és lőrésekre is feltehetők; korábban az átlós falak egyáltalán nem voltak megmászhatók. Az ilyen falhoz küldött csapatok mind a nyolc irányban találnak helyet. Az ostromtornyok kikötése (átlós falakon is) már az Improved Siegeengines része. Többjátékos módban mindenkinek azonos beállítás kell.
+diagonal_stuck: Alacsony átlós falaknál elakadó egységek javítása
+diagonal_stuck_tooltip: |-
+  Kijavít egy régi játékhibát: ahol két alacsony fal átlósan találkozik és az egyik sarokban talajon lévő lépcső van, a lépcsőről a másik sarok talajára lépni próbáló egységek elakadtak és lelassították az egész játékot. Többjátékos módban mindenkinek azonos beállítás kell.
+cren_towers: A lőrések nem vezetnek közvetlenül tornyokba
+cren_towers_tooltip: A csapatok lőrésről nem léphetnek közvetlenül toronyba, vártoronyba vagy kapuházba, csak falról vagy lépcsőről, akárcsak a lépcsőknél. Többjátékos módban mindenkinek azonos beállítás kell.
+stairs: A lépcsők javítása megőrzi a magasságukat
+stairs_tooltip: Ha sérült lépcsőre húzol falat, a lépcső az eredeti formájában áll helyre. Korábban falmagasságú tömbbé alakult.
+stairs_low: Az alacsony falak is megjavítják a lépcsőket
+stairs_low_tooltip: Ha alacsony (fa) falat húzol sérült lépcsőre, az ugyanúgy visszaállítja a lépcsőt, mint a rendes fal. Igényli a „A lépcsők javítása megőrzi a magasságukat” beállítást.
+crenellations: A lőrések javítása megőrzi azokat
+crenellations_tooltip: Sérült lőrésre húzott fal megjavítja a lőrést. Csak a sértetlen lőrés alakul fallá, ha falat építesz rá, mint eddig.
+low_tower_tiles: Nincs egyirányú út az alacsony toronymezőkről
+low_tower_tiles_tooltip: Néhány talajszinti mező toronyjelölést visel, például a torony mellé tett csapdagödrök. A csapatok ki tudtak lépni róluk a talajra, de vissza soha, és minden próbálkozás az egész térkép útvonalainak újraépítését okozta — komoly lassulással. Mostantól ezek a mezők csak tornyokhoz és falakhoz vezetnek, mindkét irányban azonosan.
+balance_changes: Egyensúly-módosítások
+bugfixes: Hibajavítások
+qol: Kényelmi funkciók
 tags.bugfixes: Hibajavítások
 tags.behavior: Viselkedés
 tags.balance: Egyensúly
