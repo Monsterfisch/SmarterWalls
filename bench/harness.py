@@ -98,6 +98,13 @@ class Host:
             self.m.write(sd + 9, b'\xE9\x00\x00\x00\x72\x90')
             self.m.write(sd, bytes([0xE9,0,0,0,0x73,0x90,0x90]))   # smarter-buildings
         os.chdir(G)   # io.open('ucp/modules/...') relative to the game folder
+        self.callbacks = {}
+        registry = g[b'modules'] or lua.table()
+        maps = lua.table()
+        maps[b'registerSection'] = lambda _, name, callbacks: self.callbacks.__setitem__(name, callbacks)
+        registry[b'map-extensions'] = maps
+        g[b'modules'] = registry
+        c[b'setMemory'] = lambda a, v, n: self.m.write(a, bytes([v]) * n)
         self.mod = lua.eval(b'dofile')((MODULE + r'\init.lua').encode('mbcs'))
         self.mod[b'enable'](self.mod, self.to_lua(config or {}))
 

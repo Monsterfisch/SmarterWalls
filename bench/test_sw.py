@@ -100,12 +100,30 @@ def suite(ext, config):
     REC = record[0] if record else None
     any_angle = config.get('anyAngle', True)
     flow = config.get('flow', True)
-    routing = any_angle or flow
+    routing = any_angle or flow or config.get('repairOnly', True)
 
     # every hook the settings ask for, and none other
     patched = {a for a, _ in H.patched}
     check(tag + ' entry hooks', all(x in patched for x in (validate, preview)), routing)
     check(tag + ' placeWalls hook', place in patched, routing or config.get('stairs', True) or config.get('crenellations', True))
+
+
+    # A second world in the same process must not inherit earlier repair or route state.
+    scratch = next(a for a, size in H.allocations if size == 0x100 + 4 * 2048)
+    H.put8(REC + 31, 70)
+    H.put32(scratch + 0x38, 1)
+    counts = next((a for a, size in H.allocations if size == 4096 * 5), None)
+    if counts is not None:
+        H.put8(counts + 31, 5)
+    callbacks = H.callbacks[b'smarter-walls']
+    for callback in (b'initialize', b'deserialize'):
+        callbacks[callback]()
+        check(tag + ' stair height reset', H.m.read(REC + 31, 1), b'\0')
+        check(tag + ' drag cache reset', H.u32(scratch + 0x38), 0)
+        if counts is not None:
+            check(tag + ' ladder wait reset', H.m.read(counts + 31, 1), b'\0')
+        check(tag + ' low wall setting preserved', H.u32(scratch + 0xB0),
+              int(config.get('stairs', True) and config.get('stairsLowWalls', True)))
 
     # the map: rows of 400, every tile valid, ground at 8
     for y in range(400):
@@ -570,7 +588,7 @@ def suite(ext, config):
     pair = f('F7 C2 00 00 40 00 75 13')
     check(tag + ' K wall pair test', H.m.read(pair + 2, 4), bytes([0, 0, 0, 0]) if walkable else bytes([0, 0, 0x40, 0]))
 
-    # M. diagonal walls: troops look all round; siege towers dock with a corner
+    # M. Ladder troops look all round. Improved Siegeengines owns siege tower docking.
     diagonal = config.get('diagonalSiege', True)
     pair_start = f('B9 ? ? ? ? 8B 41 04 03 C7')
     table = H.u32(pair_start + 1)
@@ -582,7 +600,7 @@ def suite(ext, config):
     else:
         check(tag + ' M game table', table, E.u32(pair_start + 1))
     search = f('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00')
-    check(tag + ' M dock hook', H.m.read(search, 1)[0] == 0xE9, diagonal)
+    check(tag + ' M dock entry unchanged', H.m.read(search, 5), E.bytes_(search, 5))
     STATE = 0x145CA28 if ext else 0x1387F38
     nav = call(search + 0x67)
     H.stub(nav, 1, 0x10)
@@ -595,17 +613,17 @@ def suite(ext, config):
     u = STATE + 0x614 + 7 * 0x490
     H.put16(u + 0x96, 2); H.put32(u + 0xD4, tile(140, 150)); H.put16(u + 0xC4, 140); H.put16(u + 0xC6, 150)
     cpu = H.run(search, regs=dict(ecx=STATE, ebx=0x11, esi=0x22, edi=0x33, ebp=0x44), stack=[7, tile(150, 160)])
-    check(tag + ' M diagonal dock', cpu.r['eax'], tile(148, 158) if diagonal else 0)
+    check(tag + ' M diagonal dock', cpu.r['eax'], 0)
     check(tag + ' M registers', [cpu.r[r] for r in ('ebx', 'esi', 'edi', 'ebp')], [0x11, 0x22, 0x33, 0x44])
     check(tag + ' M stack', cpu.r['esp'], harness.STACK_TOP)
     # the other side when the unit is there
     H.put32(u + 0xD4, tile(160, 170)); H.put16(u + 0xC4, 160); H.put16(u + 0xC6, 170)
     cpu = H.run(search, regs=dict(ecx=STATE), stack=[7, tile(150, 160)])
-    check(tag + ' M nearest side', cpu.r['eax'], tile(152, 162) if diagonal else 0)
+    check(tag + ' M nearest side', cpu.r['eax'], 0)
     # something in the way of the 3x3
     H.put16(BID + 2 * tile(153, 163), 5)
     cpu = H.run(search, regs=dict(ecx=STATE), stack=[7, tile(150, 160)])
-    check(tag + ' M blocked side skipped', cpu.r['eax'], tile(148, 158) if diagonal else 0)
+    check(tag + ' M blocked side skipped', cpu.r['eax'], 0)
     # a straight wall is still the game's own choice
     reset()
     for x in range(140, 161):
