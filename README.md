@@ -1,5 +1,16 @@
 # Smarter Walls
 
+## UCP package
+
+Drag walls around obstacles, repair stairs and crenellations without flattening them, and correct several one-way paths near walls and towers. Wall placement, ladder access and troop movement options can be configured separately.
+
+- Package version: **1.0.20**
+- Module directory: `module/`
+- Targets: Stronghold Crusader 1.41 and Stronghold Crusader Extreme 1.41
+- Requires UCP framework 3.0.7 and frontend 1.0.2 or a compatible later version
+- Requires Map Extensions 1.x for map and save load callbacks
+
+
 A UCP3 module for Stronghold Crusader and Stronghold Crusader Extreme. Dragged walls go in a
 straight line at any angle and flow around buildings, trees and rocks instead of turning red;
 crenellations follow the wall they are dragged along. Building a wall over damaged stairs puts
