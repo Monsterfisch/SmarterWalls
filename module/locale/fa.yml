@@ -1,0 +1,38 @@
+any_angle: زاویه آزاد
+any_angle_tooltip: در هر جهت دیوار مستقیم بکشید.
+flow: دورزدن موانع
+flow_tooltip: دیوار از کنار ساختمان‌ها و صخره‌ها می‌گذرد.
+flow_trees: دورزدن درخت‌ها
+flow_trees_tooltip: دیوار درختان را دور می‌زند و دو سر مسیر ثابت می‌ماند.
+repair_only: فقط تعمیر
+repair_only_tooltip: از دیوار آسیب‌دیده شروع کنید تا تنها خانه‌های آسیب‌دیده تعمیر شوند.
+around_walls: دورزدن دیوار سالم
+around_walls_tooltip: مسیر از دیوار و پله سالم می‌گذرد و می‌تواند به دو سر آن وصل شود.
+cren_heights: ارتفاع کنگره
+cren_heights_tooltip: دیوار و پله مجاور ارتفاع را تعیین می‌کنند.
+cren_attached: فقط کنگره متصل
+cren_attached_tooltip: برای گذر، دیوار مجاور باید قابل عبور باشد.
+walkable: کنگره قابل عبور
+walkable_tooltip: نیروها از کنگره بلند می‌گذرند. مقصد فرمان خانه دیوار مجاور است.
+ladder_wait: انتظار نردبان (ثانیه)
+ladder_wait_tooltip: پس از این زمان نیروهای منتظر به خانه دیوار می‌روند.
+diagonal_siege: نردبان روی دیوار مورب
+diagonal_siege_tooltip: نردبان‌بر می‌تواند دیوار و کنگره مورب را هدف بگیرد.
+diagonal_stuck: رفع گیر در دیوار مورب
+diagonal_stuck_tooltip: اتصال پله به زمین کنار دیوارهای مورب را اصلاح می‌کند.
+cren_towers: ورود به برج از دیوار یا پله
+cren_towers_tooltip: راه مستقیم از کنگره به برج، دژ و دروازه بسته می‌شود.
+stairs: حفظ ارتفاع پله
+stairs_tooltip: تعمیر ارتفاع پله‌های آسیب‌دیده را حفظ می‌کند.
+stairs_low: تعمیر با دیوار چوبی کوتاه
+stairs_low_tooltip: دیوار چوبی کوتاه نیز پله آسیب‌دیده را بازسازی می‌کند.
+crenellations: حفظ کنگره
+crenellations_tooltip: کشیدن دیوار روی کنگره آسیب‌دیده آن را تعمیر می‌کند.
+low_tower_tiles: اصلاح مسیر یک‌طرفه برج
+low_tower_tiles_tooltip: خانه‌های پایینِ دارای علامت برج فقط به برج و دیوار وصل می‌شوند.
+balance_changes: Balance Changes
+bugfixes: Bugfixes
+qol: Quality of Life
+tags.bugfixes: رفع اشکال
+tags.behavior: رفتار
+tags.balance: تعادل

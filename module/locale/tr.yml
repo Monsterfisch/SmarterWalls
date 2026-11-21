@@ -1,0 +1,38 @@
+any_angle: Serbest açı
+any_angle_tooltip: Her yönde düz sur çekin.
+flow: Engelleri dolaş
+flow_tooltip: Sur bina ve kayaların biçimini izler.
+flow_trees: Ağaçları dolaş
+flow_trees_tooltip: Sur ağaçların etrafından geçer, uçlar aynı kalır.
+repair_only: Yalnızca onar
+repair_only_tooltip: Hasarlı surdan başlayınca yalnızca hasarlı kareler onarılır.
+around_walls: Sağlam surları dolaş
+around_walls_tooltip: Hat sağlam surları ve merdivenleri dolaşır, uçlarda birleşebilir.
+cren_heights: Mazgal yüksekliği
+cren_heights_tooltip: Yüksekliği bitişik surlar ve basamaklar belirler.
+cren_attached: Yalnızca bağlı mazgallar
+cren_attached_tooltip: Geçiş için bitişikte yürünebilir sur gerekir.
+walkable: Mazgaldan geçiş
+walkable_tooltip: Birlik geçebilir. Emir hedefi yanındaki sur karesidir.
+ladder_wait: Merdiven bekleme (saniye)
+ladder_wait_tooltip: Bu süreden sonra bekleyenler sur karesine geçer.
+diagonal_siege: Çapraz surlara merdiven
+diagonal_siege_tooltip: Merdivenciler çapraz surları ve mazgalları hedefleyebilir.
+diagonal_stuck: Çapraz surda takılma
+diagonal_stuck_tooltip: Çapraz birleşen surlarda merdiven ile zemin arasındaki bağlantıyı düzeltir.
+cren_towers: Kuleye sur veya merdivenden gir
+cren_towers_tooltip: Mazgaldan kule, kale ve kapıya doğrudan geçişi kapatır.
+stairs: Merdiven yüksekliğini koru
+stairs_tooltip: Onarım hasarlı basamakların yüksekliğini korur.
+stairs_low: Alçak surla onar
+stairs_low_tooltip: Alçak ahşap sur da hasarlı merdiveni onarabilir.
+crenellations: Onarımda mazgalı koru
+crenellations_tooltip: Hasarlı mazgalın üstüne sur çekmek mazgalı onarır.
+low_tower_tiles: Tek yönlü kule yollarını düzelt
+low_tower_tiles_tooltip: Alçak kule kareleri yalnızca kuleye ve sura bağlanır.
+balance_changes: Balance Changes
+bugfixes: Bugfixes
+qol: Quality of Life
+tags.bugfixes: Hata düzeltmeleri
+tags.behavior: Davranış
+tags.balance: Denge

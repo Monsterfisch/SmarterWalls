@@ -1,0 +1,38 @@
+any_angle: Ángulo libre
+any_angle_tooltip: Traza muros rectos en cualquier dirección.
+flow: Rodear obstáculos
+flow_tooltip: El muro sigue el contorno de edificios y rocas.
+flow_trees: Rodear árboles
+flow_trees_tooltip: El muro evita árboles sin mover los extremos.
+repair_only: Solo reparación
+repair_only_tooltip: Empieza sobre un muro dañado para reparar solo casillas dañadas.
+around_walls: Rodear muros intactos
+around_walls_tooltip: El trazado evita muros y escaleras intactos, con uniones en los extremos.
+cren_heights: Altura de almenas
+cren_heights_tooltip: La altura depende de los muros y peldaños vecinos.
+cren_attached: Solo almenas conectadas
+cren_attached_tooltip: Para cruzar debe haber un muro transitable al lado.
+walkable: Almenas transitables
+walkable_tooltip: Las tropas pueden cruzar las altas. Las órdenes apuntan al muro contiguo.
+ladder_wait: Espera de escalera (segundos)
+ladder_wait_tooltip: Al cumplirse, las tropas se mueven al muro.
+diagonal_siege: Escaleras en muros diagonales
+diagonal_siege_tooltip: Permite apuntar a muros y almenas diagonales.
+diagonal_stuck: Atascos en muros diagonales
+diagonal_stuck_tooltip: Corrige el paso entre escaleras y suelo junto a muros unidos en diagonal.
+cren_towers: Acceso a torres por muro o escalera
+cren_towers_tooltip: Bloquea el paso directo de almenas a torres, fortalezas y puertas.
+stairs: Conservar altura de escaleras
+stairs_tooltip: La reparación conserva la altura de los peldaños dañados.
+stairs_low: Reparar con muro bajo
+stairs_low_tooltip: Los muros bajos de madera también restauran escaleras dañadas.
+crenellations: Conservar almenas
+crenellations_tooltip: Trazar un muro sobre almenas dañadas las repara.
+low_tower_tiles: Corregir pasos de un solo sentido
+low_tower_tiles_tooltip: Las casillas bajas marcadas como torre solo conectan a torres y muros.
+balance_changes: Balance Changes
+bugfixes: Bugfixes
+qol: Quality of Life
+tags.bugfixes: Correcciones
+tags.behavior: Comportamiento
+tags.balance: Equilibrio

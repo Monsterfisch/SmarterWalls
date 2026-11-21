@@ -1,0 +1,38 @@
+any_angle: Tetszőleges szög
+any_angle_tooltip: Húzz egyenes falat bármely irányba.
+flow: Akadályok kerülése
+flow_tooltip: A fal követi az épületek és sziklák körvonalát.
+flow_trees: Fák kerülése
+flow_trees_tooltip: A fal kikerüli a fákat, a végpontok maradnak.
+repair_only: Csak javítás
+repair_only_tooltip: Sérült falról indítva csak a sérült mezők javulnak.
+around_walls: Ép falak kerülése
+around_walls_tooltip: A vonal megkerüli az ép falakat és lépcsőket, a vége hozzájuk érhet.
+cren_heights: Pártázat magassága
+cren_heights_tooltip: A szomszédos falak és lépcsőfokok adják a magasságot.
+cren_attached: Csak kapcsolódó pártázat
+cren_attached_tooltip: Az átkeléshez járható falszakasznak kell mellette lennie.
+walkable: Járható pártázat
+walkable_tooltip: A csapat átmehet a magas részen. A cél a mellette lévő falmező.
+ladder_wait: Várakozás létrára (másodperc)
+ladder_wait_tooltip: Ezután a várakozók a falra húzódnak.
+diagonal_siege: Létrák átlós falakon
+diagonal_siege_tooltip: A létrások átlós falat vagy pártázatot is megcélozhatnak.
+diagonal_stuck: Elakadás átlós falaknál
+diagonal_stuck_tooltip: Javítja a lépcső és a talaj kapcsolatát átlósan érintkező falaknál.
+cren_towers: Torony megközelítése falról vagy lépcsőről
+cren_towers_tooltip: A pártázatról nem vezet közvetlen út a tornyokba, várakba és kapukba.
+stairs: Lépcsőmagasság megtartása
+stairs_tooltip: Javításkor megmarad a sérült lépcsőfok magassága.
+stairs_low: Javítás alacsony fallal
+stairs_low_tooltip: Az alacsony fafal is helyreállítja a sérült lépcsőt.
+crenellations: Pártázat megőrzése
+crenellations_tooltip: A sérült pártázatra húzott fal megjavítja azt.
+low_tower_tiles: Egyirányú utak javítása
+low_tower_tiles_tooltip: Az alacsony toronymezek csak tornyokhoz és falakhoz kapcsolódnak.
+balance_changes: Balance Changes
+bugfixes: Bugfixes
+qol: Quality of Life
+tags.bugfixes: Hibajavítások
+tags.behavior: Viselkedés
+tags.balance: Egyensúly

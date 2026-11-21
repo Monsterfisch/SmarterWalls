@@ -1,0 +1,38 @@
+any_angle: Angle libre
+any_angle_tooltip: Tracez un mur droit dans n’importe quelle direction.
+flow: Contourner les obstacles
+flow_tooltip: Le tracé du mur suit la forme des bâtiments et des rochers.
+flow_trees: Contourner les arbres
+flow_trees_tooltip: Le mur évite les arbres entre les deux extrémités choisies.
+repair_only: Tracé de réparation
+repair_only_tooltip: Commencez sur un mur abîmé pour réparer seulement les cases endommagées.
+around_walls: Contourner les murs intacts
+around_walls_tooltip: Le tracé évite murs et escaliers intacts mais peut les rejoindre aux extrémités.
+cren_heights: Hauteur des créneaux
+cren_heights_tooltip: Les murs et marches voisins déterminent la hauteur.
+cren_attached: Créneaux reliés uniquement
+cren_attached_tooltip: Il faut un mur praticable adjacent pour traverser le créneau.
+walkable: Créneaux franchissables
+walkable_tooltip: Les troupes passent sur les créneaux hauts. Les ordres visent la case de mur adjacente.
+ladder_wait: Attente d’échelle (secondes)
+ladder_wait_tooltip: Après ce délai, les troupes rejoignent une case de mur.
+diagonal_siege: Échelles sur murs diagonaux
+diagonal_siege_tooltip: Les porteurs d’échelle peuvent viser murs et créneaux en diagonale.
+diagonal_stuck: Blocage aux murs diagonaux
+diagonal_stuck_tooltip: Corrige le lien entre sol et escalier près de murs bas qui se touchent en diagonale.
+cren_towers: Accès aux tours par mur ou escalier
+cren_towers_tooltip: Bloque le passage direct des créneaux aux tours, donjons et portes.
+stairs: Conserver la hauteur des escaliers
+stairs_tooltip: La réparation conserve la hauteur des marches abîmées.
+stairs_low: Réparer avec un mur bas
+stairs_low_tooltip: Les murs bas en bois peuvent aussi réparer les escaliers.
+crenellations: Conserver les créneaux
+crenellations_tooltip: Tracer un mur sur un créneau abîmé le répare.
+low_tower_tiles: Corriger les passages à sens unique
+low_tower_tiles_tooltip: Les cases basses de tour ne se relient qu’aux tours et aux murs.
+balance_changes: Modifications de l'équilibrage
+bugfixes: Corrections de bugs
+qol: Qualité de vie
+tags.bugfixes: Corrections
+tags.behavior: Comportement
+tags.balance: Équilibrage

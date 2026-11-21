@@ -1,0 +1,38 @@
+any_angle: Любой угол
+any_angle_tooltip: Проводите прямую стену в любом направлении.
+flow: Обход препятствий
+flow_tooltip: Стена огибает здания и камни.
+flow_trees: Обход деревьев
+flow_trees_tooltip: Стена огибает деревья, не меняя заданных концов.
+repair_only: Только ремонт
+repair_only_tooltip: Начните с повреждённой стены, чтобы ремонтировать лишь повреждённые клетки.
+around_walls: Обход целых стен
+around_walls_tooltip: Маршрут обходит целые стены и лестницы, позволяя соединение на концах.
+cren_heights: Высота зубцов
+cren_heights_tooltip: Высоту определяют соседние стены и ступени.
+cren_attached: Только связанные зубцы
+cren_attached_tooltip: Для прохода нужна соседняя проходимая стена.
+walkable: Хождение по зубцам
+walkable_tooltip: Бойцы проходят по высоким зубцам, но встают на соседней стене.
+ladder_wait: Ожидание лестницы (секунды)
+ladder_wait_tooltip: После паузы бойцы отходят на клетку стены.
+diagonal_siege: Лестницы на диагональных стенах
+diagonal_siege_tooltip: Лестницы можно ставить у диагональных стен и зубцов.
+diagonal_stuck: Застревание у диагональных стен
+diagonal_stuck_tooltip: Исправляет переход между землёй и лестницей у диагонально смежных стен.
+cren_towers: Вход в башню со стены или лестницы
+cren_towers_tooltip: Закрывает прямой проход с зубцов в башни, донжоны и ворота.
+stairs: Сохранить высоту лестницы
+stairs_tooltip: Ремонт сохраняет высоту повреждённых ступеней.
+stairs_low: Ремонт низкой стеной
+stairs_low_tooltip: Низкие деревянные стены тоже восстанавливают лестницы.
+crenellations: Сохранить зубцы
+crenellations_tooltip: Строительство стены поверх повреждённых зубцов ремонтирует их.
+low_tower_tiles: Убрать односторонние пути
+low_tower_tiles_tooltip: Низкие клетки башен соединяются только с башнями и стенами.
+balance_changes: Balance Changes
+bugfixes: Bugfixes
+qol: Quality of Life
+tags.bugfixes: Исправления
+tags.behavior: Поведение
+tags.balance: Баланс

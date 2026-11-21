@@ -1,0 +1,39 @@
+any_angle: Freier Winkel
+any_angle_tooltip: Ziehe eine gerade Mauer in beliebiger Richtung.
+flow: Hindernisse umgehen
+flow_tooltip: Die gezogene Mauer folgt der Form von Gebäuden und Felsen.
+flow_trees: Bäume umgehen
+flow_trees_tooltip: Der Mauerverlauf weicht Bäumen aus, die Endpunkte bleiben erhalten.
+repair_only: Reiner Reparaturzug
+repair_only_tooltip: Beginne auf einer beschädigten Mauer, um nur beschädigte Felder auszubessern.
+around_walls: Intakte Mauern umgehen
+around_walls_tooltip: Der Verlauf weicht intakten Mauern und Treppen aus. Enden dürfen anschließen.
+cren_heights: Angepasste Zinnenhöhe
+cren_heights_tooltip: Nachbarmauern und Treppenstufen bestimmen die Höhe.
+cren_attached: Nur verbundene Zinnen
+cren_attached_tooltip: Truppen benötigen zum Überqueren eine begehbare Mauer neben der Zinne.
+walkable: Begehbare Zinnen
+walkable_tooltip: Truppen dürfen über erhöhte Zinnen laufen. Ziele liegen auf dem Mauerfeld daneben.
+ladder_wait: Leiterwartezeit (Sekunden)
+ladder_wait_tooltip: Danach weichen wartende Truppen auf ein Mauerfeld aus.
+diagonal_siege: Leitern an diagonalen Mauern
+diagonal_siege_tooltip: Leiterträger dürfen schräge Mauern und Zinnen anvisieren.
+diagonal_stuck: Feststecken an diagonalen Mauern
+diagonal_stuck_tooltip: Korrigiert die Verbindung zwischen Treppen und Boden an diagonal angrenzenden
+  Mauern.
+cren_towers: Turmzugang über Mauer oder Treppe
+cren_towers_tooltip: Sperrt direkte Wege von Zinnen in Türme, Bergfriede und Torhäuser.
+stairs: Treppenhöhe erhalten
+stairs_tooltip: Beim Reparieren behalten beschädigte Treppen ihre Stufenhöhe.
+stairs_low: Mit Holzmauern reparieren
+stairs_low_tooltip: Auch niedrige Holzmauern können beschädigte Treppen wiederherstellen.
+crenellations: Zinnen beim Reparieren erhalten
+crenellations_tooltip: Ziehen einer Mauer über beschädigte Zinnen repariert sie.
+low_tower_tiles: Einbahnwege an Türmen beheben
+low_tower_tiles_tooltip: Tiefe, als Turm markierte Felder verbinden sich nur mit Türmen und Mauern.
+balance_changes: Balance Changes
+bugfixes: Bugfixes
+qol: Quality of Life
+tags.bugfixes: Fehlerkorrekturen
+tags.behavior: Verhalten
+tags.balance: Balance
