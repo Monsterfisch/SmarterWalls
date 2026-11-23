@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.20
+**Version**: 1.0.21
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -75,6 +75,10 @@ Troops can cross the raised parts of a crenellation only while it touches a wall
 still walk on. If the wall beside it is destroyed or damaged too badly to walk on, the raised
 parts next to it close, so nobody walks across crenellations hanging in the air. Repairing the
 wall opens them again.
+
+A crenellation several rows deep counts as a whole: its outer rows stay open as long as the
+rows between them and the wall do (up to 8 rows), so troops from ladders and siege towers get
+across thick crenellations too.
 
 ## Crenellations do not lead into towers
 

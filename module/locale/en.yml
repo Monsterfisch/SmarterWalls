@@ -33,8 +33,8 @@ cren_attached: Only cross crenellations attached to walkable walls
 cren_attached_tooltip: |
   Troops can cross the raised parts of a crenellation only while it touches a wall they can
   still walk on. A crenellation left hanging next to a destroyed or badly damaged wall stays
-  closed. Needs "Troops can cross every crenellation". Everyone in a multiplayer game needs
-  the same setting.
+  closed. A crenellation several rows deep (up to 8) counts as a whole. Needs "Troops can
+  cross every crenellation". Everyone in a multiplayer game needs the same setting.
 walkable: Troops can cross every crenellation
 walkable_tooltip: |
   Troops can walk across the raised parts of crenellations - coming up a ladder or a siege

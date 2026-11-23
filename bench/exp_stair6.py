@@ -13,11 +13,17 @@ tile = lambda x, y: y * 400 + x
 
 
 def build(config, scene):
+    return build_pre(config, scene, None)
+
+
+def build_pre(config, scene, prepare):
     H = T.Bench(extreme=False, config=config)
     E = H.E
     X.scene(H, [])                                   # rows, valid, neighbour table, flat ground
     for (x, y), flags, live in scene:
         H.put32(FLAGS + 4 * tile(x, y), flags); H.put8(LIVE + tile(x, y), live)
+    if prepare:
+        prepare(H)
     builder = E.find('F7 C3 00 00 40 00 0F 85 ? ? ? ?')[0] - 0xE0
     pf = E.u32(E.find('83 EC 10 53 55 8B 6C 24 1C 56 69 ED 90 04 00 00')[0] + 0x5B)
     xs = [p[0][0] for p in scene]; ys = [p[0][1] for p in scene]

@@ -26,7 +26,11 @@
      hooked and a raised part keeps its links only while it touches a walkable wall (a wall,
      stairs or crenellation tile, not raised, whose damage byte is still within the game's own
      walking limit of 0x14); one hanging off a destroyed or worn-down wall is closed again, and
-     a changed wall relinks the raised parts around it. Without it both tests are switched off, so troops on
+     a changed wall relinks the raised parts around it. In a crenellation three or more rows deep
+     every tile past the row beside the wall is raised, so a raised part also counts when up to
+     6 straight steps over raised parts lead to one that touches a walkable wall, and a changed
+     tile relinks the raised parts that far away (1.0.21; before, troops from ladders and siege
+     towers got no further than the outer rows). Without it both tests are switched off, so troops on
      ladders and siege towers, assassins and everyone else may cross them (the game rebuilds
      every link on load). No unit is ever sent to stand on one: setDestinationForUnit moves a
      target on a raised part to the wall tile beside it - one place for every order, formation,
@@ -279,6 +283,12 @@ local U_RESUME_Y = 0xF2
 local U_PLANNED_X = 0x2DC     -- its place in its group's formation
 local U_PLANNED_Y = 0x2DE
 local PUSH_RADIUS = 4
+-- A raised crenellation part is attached through up to this many straight steps over other
+-- raised parts (a crenellation up to ATTACH_DEPTH + 2 rows deep); a changed tile relinks the
+-- raised parts that far away (at most RELINK_QUEUE of them).
+local ATTACH_DEPTH = 6
+local RELINK_QUEUE = 256
+local ATTACH_QUEUE = 256
 local MAX_UNITS = 4096
 local TICKS_PER_SECOND = 40   -- at the default game speed
 local CHECK_TICKS = 16        -- each unit is looked at once in this many ticks
@@ -1068,8 +1078,15 @@ local function enable(self, config)
       core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
       core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
     else
+      local attachQueue = core.allocate(8 * ATTACH_QUEUE + 12, true)
+      local attachStamp = core.allocate(4 * TILES, true)
+      local attachCache = core.allocate(5 * TILES, true)
       local attached = assemble(templates.attached, {
         TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, DAMAGE = m.tms + TMS_DAMAGE,
+        DEPTH = ATTACH_DEPTH, AQ = attachQueue, AD = attachQueue + 4 * ATTACH_QUEUE,
+        AQ_MAX = ATTACH_QUEUE, GEN = attachQueue + 8 * ATTACH_QUEUE, STAMP = attachStamp,
+        CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
+        CACHE_STAMP = attachCache, CACHE_VAL = attachCache + 4 * TILES,
       })
       jumpTo(linkSelf, assemble(templates.linkSelf, {
         ATTACHED = attached, CONTINUE = linkSelf + LINK_SELF_SIZE,
@@ -1083,10 +1100,16 @@ local function enable(self, config)
       local builder = linkSelf - LINK_BUILDER_FROM_SELF
       expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
       local relinkAt = scan(AOB_RELINK, "where the game relinks a tile")
+      local relinkQueue = core.allocate(8 * RELINK_QUEUE + 8, true)
+      local relinkStamps = core.allocate(8 * TILES, true)
       local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
       jumpTo(relinkAt, assemble(templates.relink, {
         GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS,
-        PATHS = paths, BUILD_LINKS = builder,
+        PATHS = paths, BUILD_LINKS = builder, REACH = ATTACH_DEPTH + 1,
+        QUEUE = relinkQueue, QDIST = relinkQueue + 4 * RELINK_QUEUE, QCOUNT = relinkQueue + 8 * RELINK_QUEUE,
+        QUEUE_MAX = RELINK_QUEUE, RGEN = relinkQueue + 8 * RELINK_QUEUE + 4,
+        SEEN = relinkStamps, BUILT = relinkStamps + 4 * TILES,
+        CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
         DIRTY_A = readOperand(place, PLACE_DIRTY, "the area update flag"),
         DIRTY_B = readOperand(place, PLACE_DIRTY_2, "the area update flag"),
       }), RELINK_SIZE)
