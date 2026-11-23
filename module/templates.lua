@@ -642,8 +642,18 @@ templates.towerAccess = [[
   push ecx
   push esi
   push edi
+  push ebp
   mov esi, edx
   mov edi, [FLAGS + esi*4]
+; A docked siege tower (building type 0x45) carries the tower flag on its 3x3 and a building id,
+; but it is the way onto the wall: neither rule touches its links.
+  movzx ebp, word [BUILDINGS + esi*2]
+  test ebp, ebp
+  jz curok
+  imul ebp, ebp, 0x32C
+  cmp word [TYPES + ebp], 0x45
+  je finish
+curok:
   movzx ecx, word [TILE_Y + esi*2]
   shl ecx, 5
   add ecx, TMS
@@ -654,6 +664,13 @@ dir:
   mov edx, [ecx + ebx*4]
   add edx, esi
   push eax
+  movzx ebp, word [BUILDINGS + edx*2]
+  test ebp, ebp
+  jz nbok
+  imul ebp, ebp, 0x32C
+  cmp word [TYPES + ebp], 0x45
+  je keep
+nbok:
   mov eax, [FLAGS + edx*4]
 ; A tower-flagged tile at ground height (killing pits next to a tower) links out to plain
 ; ground, but the game never links ground into a tower-flagged tile: a one-way link that makes
@@ -690,7 +707,9 @@ nextdir:
   inc ebx
   cmp ebx, 8
   jb dir
+finish:
   mov edx, esi
+  pop ebp
   pop edi
   pop esi
   pop ecx

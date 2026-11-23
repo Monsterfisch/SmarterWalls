@@ -56,6 +56,9 @@
      so crenellations lead into towers, keeps and gatehouses; stairs never do into a tower. The
      builder's final store now takes away every link between a crenellation tile (0x200) and a
      tower, keep, gatehouse or other building tile (0x10000000 or a building id), both ways.
+     A docked siege tower (building type 0x45, flagged 0x10000000 on its 3x3) is left out of
+     this and of rule 11 (1.0.20): the game re-adds only its four straight links each tick,
+     so corner docks and its other front tiles had no way onto a crenellated wall.
   9. A game bug: two walls of walkable height touching diagonally, ground-level stairs in one
      corner, ground in the other. The path link builder decides a diagonal squeeze between two
      walls by two rules - from ground only when neither wall can be stepped onto, from a wall
@@ -212,6 +215,7 @@ local AOB_FREE_TILE = "56 69 ED 90 04 00 00 8B 85 ? ? ? ? 0F BF 1C 45"
 local FREE_TILE_START = -9
 local FREE_TILE_Y = { 0x2A, { 0x0F, 0xBF, 0x34, 0x7D } }        -- movsx esi, [edi*2+tileY]
 local FREE_TILE_PF = { 0x5A, { 0xB9 } }                         -- mov ecx, PathFindingState
+local FREE_TILE_TYPES = { 0x21A, { 0x66, 0x83, 0xB8 } }         -- cmp word [eax+buildingTypes], 0x43
 local SIEGE_BLOCKED = 0x4A5014B1
 local U_OWNER = 0x96
 
@@ -1164,6 +1168,7 @@ local function enable(self, config)
     jumpTo(store, assemble(templates.towerAccess, {
       FLAGS = m.tms + TMS_FLAGS, BUILDINGS = m.tms + TMS_BUILDINGS, LINKS = m.tms + TMS_LINKS,
       TILE_Y = tileY, TMS = m.tms, RESUME = store + LINK_STORE_SIZE,
+      TYPES = readOperand(freeTileSite, FREE_TILE_TYPES, "the building types"),
       CRENEL = options.crenellationTowers and 1 or 0, LOW_TOWER = options.lowTowerTiles and 1 or 0,
     }), LINK_STORE_SIZE)
   end
