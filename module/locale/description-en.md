@@ -1,7 +1,7 @@
 # Smarter Walls
 
 **Author**: Monsterfish
-**Version**: 1.0.18
+**Version**: 1.0.21
 
 Makes drawing walls easier and fixes how damaged stairs and crenellations are repaired.
 Every part can be switched off in the settings.
@@ -76,11 +76,16 @@ still walk on. If the wall beside it is destroyed or damaged too badly to walk o
 parts next to it close, so nobody walks across crenellations hanging in the air. Repairing the
 wall opens them again.
 
+A crenellation several rows deep counts as a whole: its outer rows stay open as long as the
+rows between them and the wall do (up to 8 rows), so troops from ladders and siege towers get
+across thick crenellations too.
+
 ## Crenellations do not lead into towers
 
 Troops can no longer walk from a crenellation straight into a tower, keep or gatehouse. Only
 the wall itself or stairs lead there, so a tower is not reached by a crenellation that happens
-to touch it.
+to touch it. A docked siege tower is not a tower here: it always leads onto the
+crenellations it touches.
 
 ## No one-way paths out of low tower tiles
 

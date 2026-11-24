@@ -504,34 +504,99 @@ keep:
 -- and not worn down past what the game still lets units walk on (damage byte <= 0x14, the
 -- game's own test in the link builder). in: eax = tile. out: eax = 1 or 0. Keeps other registers.
 templates.attached = [[
+; eax = a raised crenellation tile -> eax = 1 when it is attached: it touches a walkable wall
+; (0x100, not raised, no stockpile, damage <= 0x14), or up to DEPTH straight steps over raised
+; crenellation parts lead to one that does - in a crenellation several rows deep every tile past
+; the row beside the wall is raised. Breadth first: AQ/AD hold the tiles and their distance,
+; STAMP marks the tiles seen in this call (GEN).
   push ebx
   push ecx
   push edx
   push esi
-  mov esi, eax
-  movzx ecx, word [TILE_Y + esi*2]
-  shl ecx, 5
-  add ecx, TMS
+  push edi
+  push ebp
+  cmp dword [CACHE_ON], 0
+  je compute
+  mov edx, [CACHE_GEN]
+  cmp [CACHE_STAMP + eax*4], edx
+  jne compute
+  movzx eax, byte [CACHE_VAL + eax]
+  jmp finish
+compute:
+  inc dword [GEN]
+  mov edx, [GEN]
+  mov [STAMP + eax*4], edx
+  mov [AQ], eax
+  mov dword [AD], 0
   xor ebx, ebx
-next:
-  mov eax, [ecx + ebx*4]
+  mov ecx, 1
+item:
+  cmp ebx, ecx
+  jae isno
+  mov esi, [AQ + ebx*4]
+  movzx edi, word [TILE_Y + esi*2]
+  shl edi, 5
+  add edi, TMS
+  xor ebp, ebp
+direct:
+  mov eax, [edi + ebp*4]
   add eax, esi
   mov edx, [FLAGS + eax*4]
   test edx, 0x100
-  jz skip
+  jz dnext
   test edx, 0x400002
-  jnz skip
+  jnz dnext
   cmp byte [DAMAGE + eax], 0x14
-  jle yes
-skip:
+  jle isyes
+dnext:
+  inc ebp
+  cmp ebp, 8
+  jb direct
+  cmp dword [AD + ebx*4], DEPTH
+  jae advance
+  xor ebp, ebp
+straight:
+  mov eax, [edi + ebp*4]
+  add eax, esi
+  mov edx, [FLAGS + eax*4]
+  and edx, 0x400302
+  cmp edx, 0x400300
+  jne snext
+  cmp byte [DAMAGE + eax], 0x14
+  jg snext
+  mov edx, [GEN]
+  cmp [STAMP + eax*4], edx
+  je snext
+  mov [STAMP + eax*4], edx
+  cmp ecx, AQ_MAX
+  jae snext
+  mov [AQ + ecx*4], eax
+  mov edx, [AD + ebx*4]
+  inc edx
+  mov [AD + ecx*4], edx
+  inc ecx
+snext:
+  add ebp, 2
+  cmp ebp, 8
+  jb straight
+advance:
   inc ebx
-  cmp ebx, 8
-  jb next
+  jmp item
+isno:
   xor eax, eax
-  jmp finish
-yes:
+  jmp remember
+isyes:
   mov eax, 1
+remember:
+  cmp dword [CACHE_ON], 0
+  je finish
+  mov esi, [AQ]
+  mov edx, [CACHE_GEN]
+  mov [CACHE_STAMP + esi*4], edx
+  mov [CACHE_VAL + esi], al
 finish:
+  pop ebp
+  pop edi
   pop esi
   pop edx
   pop ecx
@@ -576,48 +641,114 @@ plain:
 -- neighbours. A neighbour that is a raised part also gets its own neighbours relinked, so a wall
 -- going down or being repaired next to it opens or closes the ways onto it on both sides.
 templates.relink = [[
+; After the game relinked a tile: every raised crenellation part reached from it in up to
+; REACH straight steps over raised parts (their attachment may hang on this tile) is collected
+; (QUEUE/QDIST, QUEUE_MAX tiles, SEEN stamps), then those tiles and their neighbours are rebuilt,
+; each once (BUILT stamps). Meanwhile the attachment test remembers its answers (CACHE_ON).
   push dword [esp + 8]
   push dword [esp + 8]
   call GAME_RELINK
   pushad
+  inc dword [RGEN]
+  mov edx, [RGEN]
   mov esi, [esp + 0x28]
+  mov [SEEN + esi*4], edx
+  xor ecx, ecx
   movzx edi, word [TILE_Y + esi*2]
   shl edi, 5
   add edi, TMS
   xor ebp, ebp
-around:
+seed:
   mov eax, [edi + ebp*4]
   add eax, esi
   test dword [FLAGS + eax*4], 0x400000
-  jz further
-  push ebp
-  push edi
-  mov ebx, eax
-  movzx edi, word [TILE_Y + ebx*2]
+  jz seednext
+  mov [SEEN + eax*4], edx
+  mov [QUEUE + ecx*4], eax
+  mov dword [QDIST + ecx*4], 1
+  inc ecx
+seednext:
+  inc ebp
+  cmp ebp, 8
+  jb seed
+  test ecx, ecx
+  jz done
+  xor ebx, ebx
+grow:
+  mov esi, [QUEUE + ebx*4]
+  cmp dword [QDIST + ebx*4], REACH
+  jae grownext
+  movzx edi, word [TILE_Y + esi*2]
   shl edi, 5
   add edi, TMS
   xor ebp, ebp
+step:
+  mov eax, [edi + ebp*4]
+  add eax, esi
+  mov edx, [FLAGS + eax*4]
+  and edx, 0x400300
+  cmp edx, 0x400300
+  jne stepnext
+  mov edx, [RGEN]
+  cmp [SEEN + eax*4], edx
+  je stepnext
+  mov [SEEN + eax*4], edx
+  cmp ecx, QUEUE_MAX
+  jae stepnext
+  mov [QUEUE + ecx*4], eax
+  mov edx, [QDIST + ebx*4]
+  inc edx
+  mov [QDIST + ecx*4], edx
+  inc ecx
+stepnext:
+  add ebp, 2
+  cmp ebp, 8
+  jb step
+grownext:
+  inc ebx
+  cmp ebx, ecx
+  jb grow
+  mov [QCOUNT], ecx
+  inc dword [CACHE_GEN]
+  mov dword [CACHE_ON], 1
+  xor ebx, ebx
+item:
+  mov esi, [QUEUE + ebx*4]
+  movzx edi, word [TILE_Y + esi*2]
+  shl edi, 5
+  add edi, TMS
+  mov eax, esi
+  call rebuild
+  xor ebp, ebp
 inner:
   mov eax, [edi + ebp*4]
-  add eax, ebx
+  add eax, esi
+  call rebuild
+  inc ebp
+  cmp ebp, 8
+  jb inner
+  inc ebx
+  cmp ebx, [QCOUNT]
+  jb item
+  mov dword [CACHE_ON], 0
+  mov dword [DIRTY_A], 1
+  mov dword [DIRTY_B], 1
+done:
+  popad
+  ret 8
+; rebuild(eax = tile) once per relink; keeps ebx/esi/edi/ebp
+rebuild:
+  mov edx, [RGEN]
+  cmp [BUILT + eax*4], edx
+  je rebuilt
+  mov [BUILT + eax*4], edx
   movzx ecx, word [TILE_Y + eax*2]
   push eax
   push ecx
   mov ecx, PATHS
   call BUILD_LINKS
-  inc ebp
-  cmp ebp, 8
-  jb inner
-  pop edi
-  pop ebp
-  mov dword [DIRTY_A], 1
-  mov dword [DIRTY_B], 1
-further:
-  inc ebp
-  cmp ebp, 8
-  jb around
-  popad
-  ret 8
+rebuilt:
+  ret
 ]]
 
 -- updatePathLinkagesInAllEightDirections, its first 7 bytes replayed.
@@ -642,8 +773,18 @@ templates.towerAccess = [[
   push ecx
   push esi
   push edi
+  push ebp
   mov esi, edx
   mov edi, [FLAGS + esi*4]
+; A docked siege tower (building type 0x45) carries the tower flag on its 3x3 and a building id,
+; but it is the way onto the wall: neither rule touches its links.
+  movzx ebp, word [BUILDINGS + esi*2]
+  test ebp, ebp
+  jz curok
+  imul ebp, ebp, 0x32C
+  cmp word [TYPES + ebp], 0x45
+  je finish
+curok:
   movzx ecx, word [TILE_Y + esi*2]
   shl ecx, 5
   add ecx, TMS
@@ -654,6 +795,13 @@ dir:
   mov edx, [ecx + ebx*4]
   add edx, esi
   push eax
+  movzx ebp, word [BUILDINGS + edx*2]
+  test ebp, ebp
+  jz nbok
+  imul ebp, ebp, 0x32C
+  cmp word [TYPES + ebp], 0x45
+  je keep
+nbok:
   mov eax, [FLAGS + edx*4]
 ; A tower-flagged tile at ground height (killing pits next to a tower) links out to plain
 ; ground, but the game never links ground into a tower-flagged tile: a one-way link that makes
@@ -690,7 +838,9 @@ nextdir:
   inc ebx
   cmp ebx, 8
   jb dir
+finish:
   mov edx, esi
+  pop ebp
   pop edi
   pop esi
   pop ecx
