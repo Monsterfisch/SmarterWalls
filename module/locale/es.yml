@@ -1,0 +1,41 @@
+any_angle: Muros en cualquier ángulo
+any_angle_tooltip: Un muro arrastrado va en línea recta desde donde empiezas hasta donde sueltas, en cualquier ángulo. Antes los muros solo podían ir rectos o a 45 grados, con un quiebro en medio.
+flow: Los muros rodean edificios
+flow_tooltip: Cuando hay algo en medio —un edificio, un árbol, rocas— el muro lo rodea pegándose a su contorno y continúa en lugar de ponerse rojo. Las almenas y escaleras hacen lo mismo; las almenas siguen el muro a lo largo del que se arrastran.
+flow_trees: Los muros rodean árboles
+flow_trees_tooltip: Un muro rodea los árboles en vez de construirse directamente a través de ellos. Los dos extremos elegidos se quedan donde los pusiste. Requiere «Los muros rodean edificios».
+repair_only: Empezar sobre un muro dañado solo repara
+repair_only_tooltip: Cuando empiezas a arrastrar un muro sobre una casilla de muro dañada, solo se reparan las casillas de muro dañadas del recorrido. No se construye muro nuevo en suelo vacío entre medias o más allá.
+around_walls: Los muros rodean otros muros
+around_walls_tooltip: Un muro o almena nuevos también rodean tus muros, escaleras y almenas intactos en lugar de pasar por encima. Aún puede empezar o terminar en uno para unirse y sigue pasando sobre muros dañados para repararlos. Requiere «Los muros rodean edificios».
+cren_heights: Las almenas se ajustan a la altura del muro
+cren_heights_tooltip: |-
+  Una almena se construye algo más alta que el muro más alto a su lado, encajando con muros en colinas y muros bajos. Otras almenas vecinas solo cuentan si no toca nada más. Junto a escaleras decide el peldaño contiguo (el más bajo si toca dos): los tres peldaños superiores reciben almenas altas, y del cuarto hacia abajo almenas bajas.
+cren_attached: Cruzar solo almenas unidas a muros transitables
+cren_attached_tooltip: Las tropas solo pueden cruzar la parte elevada de una almena mientras toque un muro por el que aún puedan caminar. Una almena aislada junto a un muro destruido o muy dañado permanece cerrada. Requiere «Las tropas pueden cruzar cualquier almena». En multijugador todos necesitan el mismo ajuste.
+walkable: Las tropas pueden cruzar cualquier almena
+walkable_tooltip: |-
+  Las tropas pueden caminar por las partes elevadas de las almenas —al subir por escaleras o torres de asedio, como asesinos o de paso— y escaleras, torres de asedio y asesinos pueden subir a ellas, así que almenas gruesas ya no impiden acceder al muro. Nadie se queda estacionado encima: órdenes, formaciones y unidades que hacen sitio eligen la casilla de muro contigua, y quien se detenga ahí se mueve a ella. En multijugador todos necesitan el mismo ajuste.
+ladder_wait: Segundos que las tropas pueden esperar escalera en una almena
+ladder_wait_tooltip: Las tropas que esperan en la parte elevada de una almena para bajar una escalera pueden quedarse ese tiempo antes de moverse a la casilla de muro más cercana y seguir su camino. Las tropas que solo se detienen ahí se mueven al instante.
+diagonal_siege: Las escaleras atacan muros diagonales
+diagonal_siege_tooltip: Las escaleras pueden atacar muros y almenas diagonales; antes los muros diagonales no podían escalarse. Las tropas enviadas contra ese muro encuentran sitio en las ocho direcciones. El acople de torres de asedio (también en muros diagonales) ahora forma parte de Improved Siegeengines. En multijugador todos necesitan el mismo ajuste.
+diagonal_stuck: Corregir unidades atascadas en muros bajos diagonales
+diagonal_stuck_tooltip: |-
+  Corrige un antiguo error del juego: donde dos muros bajos se tocan en diagonal con escaleras a ras de suelo en una esquina, las unidades que intentaban bajar al suelo en la otra esquina quedaban atascadas y ralentizaban toda la partida. En multijugador todos necesitan el mismo ajuste.
+cren_towers: Las almenas no llevan directamente a torres
+cren_towers_tooltip: Las tropas no pueden pasar directamente de una almena a una torre, fortaleza o puerta, solo desde un muro o escalera, igual que con escaleras. En multijugador todos necesitan el mismo ajuste.
+stairs: Reparar escaleras conserva su altura
+stairs_tooltip: Construir un muro sobre escaleras dañadas las devuelve a su estado original. Antes se convertían en un bloque tan alto como un muro.
+stairs_low: Los muros bajos también reparan escaleras
+stairs_low_tooltip: Construir un muro bajo (de madera) sobre escaleras dañadas las restaura igual que un muro normal. Requiere «Reparar escaleras conserva su altura».
+crenellations: Reparar almenas las conserva
+crenellations_tooltip: Construir un muro sobre una almena dañada repara la almena. Solo una almena intacta se convierte en muro al construir un muro encima, como antes.
+low_tower_tiles: Sin caminos de un solo sentido desde casillas bajas de torre
+low_tower_tiles_tooltip: Algunas casillas a ras de suelo llevan marca de torre, como fosos de pinchos pegados a una torre. Las tropas podían salir hacia el suelo pero nunca volver, y cada intento forzaba al juego a reconstruir todas las rutas del mapa con fuertes tirones. Ahora esas casillas solo conectan con torres y muros por igual en ambos sentidos.
+balance_changes: Cambios de equilibrio
+bugfixes: Correcciones
+qol: Calidad de vida
+tags.bugfixes: Correcciones
+tags.behavior: Comportamiento
+tags.balance: Equilibrio

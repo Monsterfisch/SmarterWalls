@@ -1,0 +1,7 @@
+files:
+- src: definition.yml
+- src: description.md
+- src: options.yml
+- src: init.lua
+- src: locale
+- src: templates.lua

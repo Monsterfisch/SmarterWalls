@@ -1,138 +1,165 @@
 options:
-- display: GroupBox
-  category: [Smarter Walls]
-  header: '{{group}}'
-  text: '{{group_descr}}'
-  hasHeader: true
+- url: smarter-walls.diagonalStuck
+  name: smarter-walls-diagonal-stuck
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{diagonal_stuck}}'
+  text: '{{diagonal_stuck_tooltip}}'
+  category:
+  - '{{bugfixes}}'
+- url: smarter-walls.crenellationTowers
+  name: smarter-walls-crenellation-towers
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{cren_towers}}'
+  text: '{{cren_towers_tooltip}}'
+  category:
+  - '{{bugfixes}}'
+- url: smarter-walls.lowTowerTiles
+  name: smarter-walls-low-tower-tiles
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{low_tower_tiles}}'
+  text: '{{low_tower_tiles_tooltip}}'
+  category:
+  - '{{bugfixes}}'
+- url: smarter-walls.stairs
+  name: smarter-walls-stairs
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{stairs}}'
+  text: '{{stairs_tooltip}}'
+  category:
+  - '{{bugfixes}}'
   children:
-  - url: smarter-walls.anyAngle
-    name: smarter-walls-any-angle
-    text: '{{any_angle}}'
-    tooltip: '{{any_angle_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.flow
-    name: smarter-walls-flow
-    text: '{{flow}}'
-    tooltip: '{{flow_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.flowTrees
-    name: smarter-walls-flow-trees
-    text: '{{flow_trees}}'
-    tooltip: '{{flow_trees_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.repairOnly
-    name: smarter-walls-repair-only
-    text: '{{repair_only}}'
-    tooltip: '{{repair_only_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.aroundWalls
-    name: smarter-walls-around-walls
-    text: '{{around_walls}}'
-    tooltip: '{{around_walls_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.crenellationHeights
-    name: smarter-walls-crenellation-heights
-    text: '{{cren_heights}}'
-    tooltip: '{{cren_heights_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.crenellationAttached
-    name: smarter-walls-crenellation-attached
-    text: '{{cren_attached}}'
-    tooltip: '{{cren_attached_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.walkableCrenellations
-    name: smarter-walls-walkable-crenellations
-    text: '{{walkable}}'
-    tooltip: '{{walkable_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.ladderWait
-    name: smarter-walls-ladder-wait
-    text: '{{ladder_wait}}'
-    tooltip: '{{ladder_wait_tooltip}}'
-    display: Number
-    contents:
-      type: integer
-      value: 10
-      min: 1
-      max: 60
-      step: 1
-  - url: smarter-walls.diagonalSiege
-    name: smarter-walls-diagonal-siege
-    text: '{{diagonal_siege}}'
-    tooltip: '{{diagonal_siege_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.diagonalStuck
-    name: smarter-walls-diagonal-stuck
-    text: '{{diagonal_stuck}}'
-    tooltip: '{{diagonal_stuck_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.crenellationTowers
-    name: smarter-walls-crenellation-towers
-    text: '{{cren_towers}}'
-    tooltip: '{{cren_towers_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.lowTowerTiles
-    name: smarter-walls-low-tower-tiles
-    text: '{{low_tower_tiles}}'
-    tooltip: '{{low_tower_tiles_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
-  - url: smarter-walls.stairs
-    name: smarter-walls-stairs
-    text: '{{stairs}}'
-    tooltip: '{{stairs_tooltip}}'
-    display: Switch
-    contents:
-      type: boolean
-      value: true
   - url: smarter-walls.stairsLowWalls
     name: smarter-walls-stairs-low-walls
-    text: '{{stairs_low}}'
-    tooltip: '{{stairs_low_tooltip}}'
-    display: Switch
+    display: UCP2Switch
     contents:
       type: boolean
       value: true
-  - url: smarter-walls.crenellations
-    name: smarter-walls-crenellations
-    text: '{{crenellations}}'
-    tooltip: '{{crenellations_tooltip}}'
-    display: Switch
+    header: '{{stairs_low}}'
+    text: '{{stairs_low_tooltip}}'
+- url: smarter-walls.crenellations
+  name: smarter-walls-crenellations
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{crenellations}}'
+  text: '{{crenellations_tooltip}}'
+  category:
+  - '{{bugfixes}}'
+- url: smarter-walls.anyAngle
+  name: smarter-walls-any-angle
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{any_angle}}'
+  text: '{{any_angle_tooltip}}'
+  category:
+  - '{{qol}}'
+- url: smarter-walls.flow
+  name: smarter-walls-flow
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{flow}}'
+  text: '{{flow_tooltip}}'
+  category:
+  - '{{qol}}'
+  children:
+  - url: smarter-walls.flowTrees
+    name: smarter-walls-flow-trees
+    display: UCP2Switch
     contents:
       type: boolean
       value: true
+    header: '{{flow_trees}}'
+    text: '{{flow_trees_tooltip}}'
+  - url: smarter-walls.aroundWalls
+    name: smarter-walls-around-walls
+    display: UCP2Switch
+    contents:
+      type: boolean
+      value: true
+    header: '{{around_walls}}'
+    text: '{{around_walls_tooltip}}'
+- url: smarter-walls.repairOnly
+  name: smarter-walls-repair-only
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{repair_only}}'
+  text: '{{repair_only_tooltip}}'
+  category:
+  - '{{qol}}'
+- url: smarter-walls.crenellationHeights
+  name: smarter-walls-crenellation-heights
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{cren_heights}}'
+  text: '{{cren_heights_tooltip}}'
+  category:
+  - '{{balance_changes}}'
+- url: smarter-walls.walkableCrenellations
+  name: smarter-walls-walkable-crenellations
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{walkable}}'
+  text: '{{walkable_tooltip}}'
+  category:
+  - '{{balance_changes}}'
+  children:
+  - url: smarter-walls.crenellationAttached
+    name: smarter-walls-crenellation-attached
+    display: UCP2Switch
+    contents:
+      type: boolean
+      value: true
+    header: '{{cren_attached}}'
+    text: '{{cren_attached_tooltip}}'
+  - display: GroupBox
+    hasHeader: true
+    accordion:
+      enabled: true
+    header: '{{ladder_wait}}'
+    text: '{{ladder_wait_tooltip}}'
+    children:
+    - url: smarter-walls.ladderWait
+      name: smarter-walls-ladder-wait
+      text: '{{ladder_wait}}'
+      display: Number
+      contents:
+        type: integer
+        value: 10
+        min: 1
+        max: 60
+        step: 1
+- url: smarter-walls.diagonalSiege
+  name: smarter-walls-diagonal-siege
+  display: UCP2Switch
+  contents:
+    type: boolean
+    value: true
+  header: '{{diagonal_siege}}'
+  text: '{{diagonal_siege_tooltip}}'
+  category:
+  - '{{balance_changes}}'
+meta:
+  version: 1.0.0

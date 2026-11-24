@@ -1051,6 +1051,19 @@ local function enable(self, config)
 
   local data = core.allocate(DATA_SIZE, true)
   local record = core.allocate(TILES + 16, true)
+  local counts
+  local function resetWorldState()
+    core.setMemory(data, 0, DATA_SIZE)
+    core.setMemory(record, 0, TILES + 16)
+    if counts then core.setMemory(counts, 0, MAX_UNITS * 5) end
+    core.writeInteger(data + D_LOW_STAIRS, (options.stairs and options.stairsLowWalls) and 1 or 0)
+  end
+  resetWorldState()
+  modules["map-extensions"]:registerSection(MODULE_NAME, {
+    initialize = resetWorldState,
+    deserialize = resetWorldState,
+    serialize = function() end,
+  })
   local m = {
     data = data,
     record = record,
@@ -1158,7 +1171,7 @@ local function enable(self, config)
     m.setDestination = scan(AOB_SET_DESTINATION, "the unit route search") - SET_DESTINATION_START
     local tick = scan(AOB_UNIT_TICK, "the unit update loop")
     local pushOff = luaFunction("moving a unit off a crenellation", makePushOff(m))
-    local counts = core.allocate(MAX_UNITS * 5, true)
+    counts = core.allocate(MAX_UNITS * 5, true)
     local long = math.min(255, math.max(1,
       (options.ladderWait * TICKS_PER_SECOND + CHECK_TICKS - 1) // CHECK_TICKS))
     jumpTo(tick, assemble(templates.unitTick, {
@@ -1254,7 +1267,6 @@ local function enable(self, config)
   -- 3 and 4. Damaged stairs and crenellations.
   if restoring then
     local site = checked(place, { PLACE_RESTORE.at, PLACE_RESTORE.bytes }, "the wall repair test")
-    core.writeInteger(data + D_LOW_STAIRS, (options.stairs and options.stairsLowWalls) and 1 or 0)
     local restore = luaFunction("repairing stairs or crenellations", makeRestore(m, options))
     jumpTo(site, assemble(templates.restore, {
       STATE = data, REPAIR = restore, RECORD = record,
