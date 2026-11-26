@@ -29,14 +29,11 @@
      a changed wall relinks the raised parts around it. In a crenellation three or more rows deep
      every tile past the row beside the wall is raised, so a raised part also counts when up to
      6 straight steps over raised parts lead to one that touches a walkable wall, and a changed
-     tile relinks the raised parts that far away (1.0.21; before, troops from ladders and siege
-     towers got no further than the outer rows). Without it both tests are switched off, so troops on
+     tile relinks the raised parts that far away. Without it both tests are switched off, so troops on
      ladders and siege towers, assassins and everyone else may cross them (the game rebuilds
      every link on load). No unit is ever sent to stand on one: setDestinationForUnit moves a
      target on a raised part to the wall tile beside it - one place for every order, formation,
-     idle unit and patrol (1.0.10 opened raised parts only next to ladders and siege towers;
-     the area map follows link changes only every 200 ticks, so ladders led nowhere for a while
-     and nobody crossed crenellations anywhere else). A group spreading out on a wall skips
+     idle unit and patrol. A group spreading out on a wall skips
      them too (pathFindingResultBased, then any tile). A unit that still stops on one is moved
      to the
      nearest wall tile (never another crenellation: with only those in reach it stays),
@@ -50,7 +47,7 @@
      already takes any wall tile, and its links now meet links coming back.
   6. Ladders take on diagonal walls. Troops sent at a wall look for a free tile next to it in
      all eight directions instead of four (a ladder already leans and climbs diagonally).
-     Where a siege tower docks moved to Improved Siegeengines in 1.0.16.
+     Siege tower docking belongs to Improved Siegeengines.
   8. Crenellation heights. The game makes a crenellation 0x62 above the ground, or 0x44 (and
      flag 0x10000) when its straight neighbours are only low walls - so it is 8 above a stone
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
@@ -61,7 +58,7 @@
      builder's final store now takes away every link between a crenellation tile (0x200) and a
      tower, keep, gatehouse or other building tile (0x10000000 or a building id), both ways.
      A docked siege tower (building type 0x45, flagged 0x10000000 on its 3x3) is left out of
-     this and of rule 11 (1.0.20): the game re-adds only its four straight links each tick,
+     this and of rule 11: the game re-adds only its four straight links each tick,
      so corner docks and its other front tiles had no way onto a crenellated wall.
   9. A game bug: two walls of walkable height touching diagonally, ground-level stairs in one
      corner, ground in the other. The path link builder decides a diagonal squeeze between two
@@ -74,8 +71,7 @@
      the line's damaged wall tiles and nothing else, so no new wall is built beside the repair.
      Walls flow round trees as well (flowTrees); the game builds straight through them.
   7. Assassins. With 5 on they climb onto raised crenellation parts too - the route search and
-     the step that carries the climb out are opened together (1.0.5-1.0.9 opened the search
-     alone and assassins stood at the foot of the wall) - so an outer row that is raised all
+     the step that carries the climb out are opened together - so an outer row that is raised all
      along (a diagonal crenellation) no longer keeps them off. Diagonal climbs stay as the game
      has them: its walk back from the goal refuses them.
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
@@ -258,9 +254,9 @@ local SPREAD_ANY_SIZE = 8
 -- updateUnits, a live unit about to be updated: add edx, 1 / mov [esi], edx.
 local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00"
 local UNIT_TICK_SIZE = 5
--- The game tick counter, read in updateUnits' notice-frequency test (mov edx, [ticks]).
-local AOB_TICKS = "8B 87 50 0A 00 00 8B 8F 98 09 00 00 8B 15"
-local TICKS_OPERAND = 14
+-- The game tick counter: mov ecx, [edi+0x998] / mov edx, [ticks] in updateUnits. The mask load
+-- before it is patched by other modules.
+local AOB_TICKS = "8B 8F 98 09 00 00 8B 15 I(? ? ? ?)"
 -- UnitsState::setPositionOfUnit(unit, x, y, height).
 local AOB_SET_POSITION = "53 8B 5C 24 0C 81 FB 8F 01 00 00 55 8B E9 0F 87"
 -- The tile flags (one dword per tile), the first array of TileMapState that has a global.
@@ -366,6 +362,12 @@ local function scan(pattern, purpose)
     error(MODULE_NAME .. ": could not find " .. purpose)
   end
   return address
+end
+
+local function tickCounter(feature)
+  local ok, _, ticks = pcall(utils.AOBExtract, AOB_TICKS)
+  if ok and ticks then return ticks end
+  log(WARNING, string.format("%s: game tick counter not found, %s stays off", MODULE_NAME, feature))
 end
 
 local function expectBytes(address, bytes, purpose)
@@ -1036,6 +1038,11 @@ local function enable(self, config)
     options[name] = setting(config, name)
   end
   options.ladderWait = number(config, "ladderWait", 1, 60)
+  local ticks
+  if options.walkableCrenellations then
+    ticks = tickCounter("walkableCrenellations")
+    options.walkableCrenellations = ticks ~= nil
+  end
   local routing = options.anyAngle or options.flow or options.repairOnly
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
@@ -1175,7 +1182,7 @@ local function enable(self, config)
     local long = math.min(255, math.max(1,
       (options.ladderWait * TICKS_PER_SECOND + CHECK_TICKS - 1) // CHECK_TICKS))
     jumpTo(tick, assemble(templates.unitTick, {
-      STATE = data, TICKS = core.readInteger(scan(AOB_TICKS, "the tick counter") + TICKS_OPERAND),
+      STATE = data, TICKS = ticks,
       UNITS_OFF = UNITS_FROM_STATE, TILES = TILES, FLAGS = m.tms + TMS_FLAGS, PUSH_OFF = pushOff,
       MAX_UNITS = MAX_UNITS, COUNTS = counts, LAST = counts + MAX_UNITS, LONG = long,
       RESUME = tick + UNIT_TICK_SIZE,
