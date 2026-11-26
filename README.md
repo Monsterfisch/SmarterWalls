@@ -144,3 +144,10 @@ wall is worked out on every player's machine.
 
 The bench needs Python with `lupa`, `capstone`, `pefile` and `keystone-engine`, and a 32-bit
 PowerShell for fasm.dll; it reads the executables from the game folder named in `shc.py`.
+
+## Vanilla and Recommended
+
+Every option of the module is off by default, so the module alone plays like the original
+game. Two plugins in this repository form the Smarter Walls family in the launcher:
+`smarter-walls-recommended` (offered first) switches on the recommended settings, `smarter-walls-vanilla`
+keeps everything off. Plugins that build on the module set the options they need themselves.

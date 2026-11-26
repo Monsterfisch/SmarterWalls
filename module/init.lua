@@ -91,11 +91,11 @@ local templates = require("templates")
 
 local MODULE_NAME = "smarter-walls"
 
-local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
-  crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
-  crenellationHeights = true, diagonalStuck = true, crenellationAttached = true,
-  crenellationTowers = true, stairsLowWalls = true, repairOnly = true, flowTrees = true,
-  lowTowerTiles = true }
+local DEFAULTS = { anyAngle = false, flow = false, aroundWalls = false, stairs = false,
+  crenellations = false, walkableCrenellations = false, diagonalSiege = false, ladderWait = 10,
+  crenellationHeights = false, diagonalStuck = false, crenellationAttached = false,
+  crenellationTowers = false, stairsLowWalls = false, repairOnly = false, flowTrees = false,
+  lowTowerTiles = false }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it

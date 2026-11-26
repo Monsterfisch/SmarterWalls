@@ -1,0 +1,20 @@
+name: smarter-walls-vanilla
+display-name: Smarter Walls Vanilla
+author: Monsterfish
+version: 1.0.0
+type: plugin
+game:
+- SHC==1.41
+- SHCE==1.41
+family:
+- name: smarter-walls
+  root: true
+  members:
+  - smarter-walls-recommended
+  default: smarter-walls-recommended
+meta:
+  version: 1.0.0
+dependencies:
+  framework: ^3.0.7
+  frontend: '>=1.0.17 <2.0.0'
+  smarter-walls: ^1.0.23

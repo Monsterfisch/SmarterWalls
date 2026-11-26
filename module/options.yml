@@ -4,7 +4,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{diagonal_stuck}}'
   text: '{{diagonal_stuck_tooltip}}'
   category:
@@ -14,7 +14,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{cren_towers}}'
   text: '{{cren_towers_tooltip}}'
   category:
@@ -24,7 +24,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{low_tower_tiles}}'
   text: '{{low_tower_tiles_tooltip}}'
   category:
@@ -34,7 +34,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{stairs}}'
   text: '{{stairs_tooltip}}'
   category:
@@ -45,7 +45,7 @@ options:
     display: UCP2Switch
     contents:
       type: boolean
-      value: true
+      value: false
     header: '{{stairs_low}}'
     text: '{{stairs_low_tooltip}}'
 - url: smarter-walls.crenellations
@@ -53,7 +53,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{crenellations}}'
   text: '{{crenellations_tooltip}}'
   category:
@@ -63,7 +63,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{any_angle}}'
   text: '{{any_angle_tooltip}}'
   category:
@@ -73,7 +73,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{flow}}'
   text: '{{flow_tooltip}}'
   category:
@@ -84,7 +84,7 @@ options:
     display: UCP2Switch
     contents:
       type: boolean
-      value: true
+      value: false
     header: '{{flow_trees}}'
     text: '{{flow_trees_tooltip}}'
   - url: smarter-walls.aroundWalls
@@ -92,7 +92,7 @@ options:
     display: UCP2Switch
     contents:
       type: boolean
-      value: true
+      value: false
     header: '{{around_walls}}'
     text: '{{around_walls_tooltip}}'
 - url: smarter-walls.repairOnly
@@ -100,7 +100,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{repair_only}}'
   text: '{{repair_only_tooltip}}'
   category:
@@ -110,7 +110,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{cren_heights}}'
   text: '{{cren_heights_tooltip}}'
   category:
@@ -120,7 +120,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{walkable}}'
   text: '{{walkable_tooltip}}'
   category:
@@ -131,7 +131,7 @@ options:
     display: UCP2Switch
     contents:
       type: boolean
-      value: true
+      value: false
     header: '{{cren_attached}}'
     text: '{{cren_attached_tooltip}}'
   - display: GroupBox
@@ -156,7 +156,7 @@ options:
   display: UCP2Switch
   contents:
     type: boolean
-    value: true
+    value: false
   header: '{{diagonal_siege}}'
   text: '{{diagonal_siege_tooltip}}'
   category:
