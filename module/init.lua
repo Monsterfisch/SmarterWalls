@@ -143,11 +143,11 @@ local PLACE_COUNTED = { 0x2AC, { 0x8B, 0x84, 0xB7, 0x60, 0x51, 0x16, 0x00 } }
 local PLACE_FREE = { 0x398, { 0x8B, 0x4C, 0x24, 0x44, 0x56, 0x51 } }
 -- placeWalls, a new crenellation: call hasOnlyTowerNeighborsNoWalls(tile, y), the game's whole
 -- height rule (low, +0x44 and flag 0x10000, when its straight neighbours are only wood walls
--- or low crenellations; tall, +0x62, otherwise). After the call: test eax, eax; after the
--- height: the row/column parity test that raises every other crenellation tile.
-local PLACE_CRENEL_CALL = { 0x20E, { 0xE8 } }
-local PLACE_CRENEL_AFTER = { 0x213, { 0x85, 0xC0, 0x74, 0x12 } }
-local PLACE_CRENEL_PARITY = { 0x231, { 0x8B, 0x44, 0x24, 0x20, 0x83, 0xE0, 0x01 } }
+-- or low crenellations; tall, +0x62, otherwise). The seven bytes at the parity entry
+-- can be a Map Editor Improvements redirect. Both height paths enter at that address.
+local AOB_CRENEL_HEIGHT = "E8 ? ? ? ? 85 C0 74 12 80 84 3E ? ? ? ? 44 C7 44 24 34 01 00 00 00 EB 08 80 84 3E ? ? ? ? 62 ? ? ? ? ? ? ? 74 14 F6 44 24 44 01 75 0D"
+local PLACE_CRENEL_CALL = 0x20E
+local CRENEL_PARITY_FROM_CALL = 0x23
 local CRENEL_ABOVE_WALL = 8        -- a crenellation stands this much above its wall
 local CRENEL_TALL = 0x62           -- the game's two crenellation heights above the ground
 local CRENEL_LOW = 0x44
@@ -1055,6 +1055,17 @@ local function enable(self, config)
     starts[name] = scan(f.aob, "the wall drag code (" .. name .. ")")
   end
   local validate, place = starts.validate, starts.place
+  local crenelSite
+  if options.crenellationHeights then
+    local site, problem = core.AOBScanUnique(AOB_CRENEL_HEIGHT)
+    if site == place + PLACE_CRENEL_CALL then
+      crenelSite = site
+    else
+      log(WARNING, string.format("%s: crenellation height site %s; crenellationHeights stays off",
+        MODULE_NAME, problem or "does not match placeWalls"))
+      options.crenellationHeights = false
+    end
+  end
 
   local data = core.allocate(DATA_SIZE, true)
   local record = core.allocate(TILES + 16, true)
@@ -1228,8 +1239,7 @@ local function enable(self, config)
 
   -- 8. A new crenellation is as tall as the wall (or stairs) it is attached to.
   if options.crenellationHeights then
-    local site = checked(place, PLACE_CRENEL_CALL, "the crenellation height test")
-    local towersOnly = site + 5 + core.readInteger(site + 1)
+    local towersOnly = crenelSite + 5 + core.readInteger(crenelSite + 1)
     expectBytes(towersOnly, { 0x8B, 0x44, 0x24, 0x08, 0xC1, 0xE0, 0x05 }, "the crenellation height test")
     local rule = makeCrenelHeight(m)
     local height = luaFunction("working out a crenellation's height", function()
@@ -1240,10 +1250,9 @@ local function enable(self, config)
         core.writeInteger(m.data + D_CREN_LOW, low and 1 or 0)
       end
     end)
-    jumpTo(site, assemble(templates.crenelHeight, {
+    jumpTo(crenelSite, assemble(templates.crenelHeight, {
       STATE = data, HEIGHT = height, LIVE_OFF = TMS_LIVE, TOWERS_ONLY = towersOnly,
-      AFTER_CALL = checked(place, PLACE_CRENEL_AFTER, "the crenellation height test"),
-      PARITY = checked(place, PLACE_CRENEL_PARITY, "the crenellation pattern"),
+      AFTER_CALL = crenelSite + 5, PARITY = crenelSite + CRENEL_PARITY_FROM_CALL,
     }), 5)
   end
 
