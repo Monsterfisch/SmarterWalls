@@ -13,6 +13,6 @@ tags:
 - behavior
 - balance
 dependencies:
-  framework: ^3.0.7
+  framework: ^3.0.8
   frontend: ^1.0.2
   map-extensions: ^1.0.0

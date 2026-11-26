@@ -256,7 +256,7 @@ local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 8
 local UNIT_TICK_SIZE = 5
 -- The game tick counter: mov ecx, [edi+0x998] / mov edx, [ticks] in updateUnits. The mask load
 -- before it is patched by other modules.
-local AOB_TICKS = "8B 8F 98 09 00 00 8B 15 I(? ? ? ?)"
+local AOB_TICKS = "8B 8F 98 09 00 00 8B 15 ? ? ? ?"
 -- UnitsState::setPositionOfUnit(unit, x, y, height).
 local AOB_SET_POSITION = "53 8B 5C 24 0C 81 FB 8F 01 00 00 55 8B E9 0F 87"
 -- The tile flags (one dword per tile), the first array of TileMapState that has a global.
@@ -365,9 +365,9 @@ local function scan(pattern, purpose)
 end
 
 local function tickCounter(feature)
-  local ok, _, ticks = pcall(utils.AOBExtract, AOB_TICKS)
-  if ok and ticks then return ticks end
-  log(WARNING, string.format("%s: game tick counter not found, %s stays off", MODULE_NAME, feature))
+  local site, problem = core.AOBScanUnique(AOB_TICKS)
+  if site then return core.readInteger(site + 8) end
+  log(WARNING, string.format("%s: game tick counter %s, %s stays off", MODULE_NAME, problem, feature))
 end
 
 local function expectBytes(address, bytes, purpose)
