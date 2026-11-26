@@ -148,6 +148,7 @@ local PLACE_FREE = { 0x398, { 0x8B, 0x4C, 0x24, 0x44, 0x56, 0x51 } }
 local AOB_CRENEL_HEIGHT = "E8 ? ? ? ? 85 C0 74 12 80 84 3E ? ? ? ? 44 C7 44 24 34 01 00 00 00 EB 08 80 84 3E ? ? ? ? 62 ? ? ? ? ? ? ? 74 14 F6 44 24 44 01 75 0D"
 local PLACE_CRENEL_CALL = 0x20E
 local CRENEL_PARITY_FROM_CALL = 0x23
+local TOWERS_ONLY_CODE = { 0x8B, 0x44, 0x24, 0x08, 0xC1, 0xE0, 0x05 }
 local CRENEL_ABOVE_WALL = 8        -- a crenellation stands this much above its wall
 local CRENEL_TALL = 0x62           -- the game's two crenellation heights above the ground
 local CRENEL_LOW = 0x44
@@ -1055,12 +1056,18 @@ local function enable(self, config)
     starts[name] = scan(f.aob, "the wall drag code (" .. name .. ")")
   end
   local validate, place = starts.validate, starts.place
-  local crenelSite
+  local crenelSite, towersOnly
   if options.crenellationHeights then
     local site, problem = core.AOBScanUnique(AOB_CRENEL_HEIGHT)
     if site == place + PLACE_CRENEL_CALL then
-      crenelSite = site
-    else
+      towersOnly = site + 5 + core.readInteger(site + 1)
+      if pcall(expectBytes, towersOnly, TOWERS_ONLY_CODE, "the crenellation height test") then
+        crenelSite = site
+      else
+        problem = "calls code this module does not know"
+      end
+    end
+    if not crenelSite then
       log(WARNING, string.format("%s: crenellation height site %s; crenellationHeights stays off",
         MODULE_NAME, problem or "does not match placeWalls"))
       options.crenellationHeights = false
@@ -1239,8 +1246,6 @@ local function enable(self, config)
 
   -- 8. A new crenellation is as tall as the wall (or stairs) it is attached to.
   if options.crenellationHeights then
-    local towersOnly = crenelSite + 5 + core.readInteger(crenelSite + 1)
-    expectBytes(towersOnly, { 0x8B, 0x44, 0x24, 0x08, 0xC1, 0xE0, 0x05 }, "the crenellation height test")
     local rule = makeCrenelHeight(m)
     local height = luaFunction("working out a crenellation's height", function()
       local h, low = rule(core.readInteger(m.data + D_CREN_TMS), core.readInteger(m.data + D_CREN_X),
