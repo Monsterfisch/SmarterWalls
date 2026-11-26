@@ -1,7 +1,7 @@
 name: smarter-walls-recommended
 display-name: Smarter Walls Recommended
 author: Monsterfish
-version: 1.0.0
+version: 1.0.1
 type: plugin
 game:
 - SHC==1.41
