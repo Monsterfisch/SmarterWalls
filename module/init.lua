@@ -321,6 +321,7 @@ local M_STAIRS = 0x1B
 local M_WOODWALL = 0x2E
 
 local MAP_SIZE = 400
+local MAP_TILES = 80400
 local TILES = MAP_SIZE * MAP_SIZE
 local MAX_PATH = 2048
 local MAX_AGE = 60            -- calls (two a frame) before a drag's route is checked again
@@ -1108,20 +1109,31 @@ local function enable(self, config)
   local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
   local paths = readOperand(freeTileSite, FREE_TILE_PF, "the path finder")
 
+  local linkSelf, neighbour, relinkAt
+  if options.walkableCrenellations then
+    linkSelf = core.AOBScanUnique(AOB_LINK_SELF)
+    neighbour = core.AOBScanUnique(AOB_LINK_NEIGHBOUR)
+    if options.crenellationAttached then relinkAt = core.AOBScanUnique(AOB_RELINK) end
+    if not linkSelf or not neighbour or (options.crenellationAttached and not relinkAt) then
+      log(WARNING, MODULE_NAME .. ": the path link or relink site is missing or ambiguous; walkableCrenellations stays off")
+      options.walkableCrenellations = false
+    end
+  end
+
   -- 5. The raised part of a crenellation: any route may cross it, nobody is sent to stand on it.
   if options.walkableCrenellations then
-    local linkSelf = scan(AOB_LINK_SELF, "the path link test for crenellations")
-    local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
     if not options.crenellationAttached then
       core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
       core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
     else
+      local builder = linkSelf - LINK_BUILDER_FROM_SELF
+      expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
       local attachQueue = core.allocate(8 * ATTACH_QUEUE + 12, true)
       local attachStamp = core.allocate(4 * TILES, true)
       local attachCache = core.allocate(5 * TILES, true)
       local attached = assemble(templates.attached, {
         TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, DAMAGE = m.tms + TMS_DAMAGE,
-        DEPTH = ATTACH_DEPTH, AQ = attachQueue, AD = attachQueue + 4 * ATTACH_QUEUE,
+        TILE_LIMIT = MAP_TILES, DEPTH = ATTACH_DEPTH, AQ = attachQueue, AD = attachQueue + 4 * ATTACH_QUEUE,
         AQ_MAX = ATTACH_QUEUE, GEN = attachQueue + 8 * ATTACH_QUEUE, STAMP = attachStamp,
         CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
         CACHE_STAMP = attachCache, CACHE_VAL = attachCache + 4 * TILES,
@@ -1135,14 +1147,11 @@ local function enable(self, config)
         WALL = neighbour + LINK_NEIGHBOUR_SIZE + (core.readByte(neighbour + LINK_NEIGHBOUR_JUMP) & 0xFF),
       }), LINK_NEIGHBOUR_SIZE)
       -- a wall going down or coming up relinks the raised parts around it too
-      local builder = linkSelf - LINK_BUILDER_FROM_SELF
-      expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
-      local relinkAt = scan(AOB_RELINK, "where the game relinks a tile")
       local relinkQueue = core.allocate(8 * RELINK_QUEUE + 8, true)
       local relinkStamps = core.allocate(8 * TILES, true)
       local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
       jumpTo(relinkAt, assemble(templates.relink, {
-        GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, TILE_LIMIT = 80400,
+        GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, TILE_LIMIT = MAP_TILES,
         PATHS = paths, BUILD_LINKS = builder, REACH = ATTACH_DEPTH + 1,
         QUEUE = relinkQueue, QDIST = relinkQueue + 4 * RELINK_QUEUE, QCOUNT = relinkQueue + 8 * RELINK_QUEUE,
         QUEUE_MAX = RELINK_QUEUE, RGEN = relinkQueue + 8 * RELINK_QUEUE + 4,

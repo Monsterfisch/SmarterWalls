@@ -505,6 +505,11 @@ templates.attached = [[
 ; crenellation parts lead to one that does - in a crenellation several rows deep every tile past
 ; the row beside the wall is raised. Breadth first: AQ/AD hold the tiles and their distance,
 ; STAMP marks the tiles seen in this call (GEN).
+  cmp eax, TILE_LIMIT
+  jb attached_valid
+  xor eax, eax
+  ret
+attached_valid:
   push ebx
   push ecx
   push edx
@@ -537,6 +542,8 @@ item:
 direct:
   mov eax, [edi + ebp*4]
   add eax, esi
+  cmp eax, TILE_LIMIT
+  jae dnext
   mov edx, [FLAGS + eax*4]
   test edx, 0x100
   jz dnext
@@ -554,6 +561,8 @@ dnext:
 straight:
   mov eax, [edi + ebp*4]
   add eax, esi
+  cmp eax, TILE_LIMIT
+  jae snext
   mov edx, [FLAGS + eax*4]
   and edx, 0x400302
   cmp edx, 0x400300
