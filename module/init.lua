@@ -1109,7 +1109,7 @@ local function enable(self, config)
   local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
   local paths = readOperand(freeTileSite, FREE_TILE_PF, "the path finder")
 
-  local linkSelf, neighbour, relinkAt
+  local linkSelf, neighbour, relinkAt, builder, dirtyA, dirtyB
   if options.walkableCrenellations then
     linkSelf = core.AOBScanUnique(AOB_LINK_SELF)
     neighbour = core.AOBScanUnique(AOB_LINK_NEIGHBOUR)
@@ -1117,6 +1117,17 @@ local function enable(self, config)
     if not linkSelf or not neighbour or (options.crenellationAttached and not relinkAt) then
       log(WARNING, MODULE_NAME .. ": the path link or relink site is missing or ambiguous; walkableCrenellations stays off")
       options.walkableCrenellations = false
+    elseif options.crenellationAttached then
+      local ok, problem = pcall(function()
+        builder = linkSelf - LINK_BUILDER_FROM_SELF
+        expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
+        dirtyA = readOperand(place, PLACE_DIRTY, "the area update flag")
+        dirtyB = readOperand(place, PLACE_DIRTY_2, "the area update flag")
+      end)
+      if not ok then
+        log(WARNING, tostring(problem) .. "; walkableCrenellations stays off")
+        options.walkableCrenellations = false
+      end
     end
   end
 
@@ -1126,8 +1137,6 @@ local function enable(self, config)
       core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
       core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
     else
-      local builder = linkSelf - LINK_BUILDER_FROM_SELF
-      expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
       local attachQueue = core.allocate(8 * ATTACH_QUEUE + 12, true)
       local attachStamp = core.allocate(4 * TILES, true)
       local attachCache = core.allocate(5 * TILES, true)
@@ -1157,8 +1166,7 @@ local function enable(self, config)
         QUEUE_MAX = RELINK_QUEUE, RGEN = relinkQueue + 8 * RELINK_QUEUE + 4,
         SEEN = relinkStamps, BUILT = relinkStamps + 4 * TILES,
         CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
-        DIRTY_A = readOperand(place, PLACE_DIRTY, "the area update flag"),
-        DIRTY_B = readOperand(place, PLACE_DIRTY_2, "the area update flag"),
+        DIRTY_A = dirtyA, DIRTY_B = dirtyB,
       }), RELINK_SIZE)
     end
 
