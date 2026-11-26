@@ -12,7 +12,7 @@ cren_heights: Les créneaux s'adaptent à la hauteur du mur
 cren_heights_tooltip: |-
   Un créneau est construit légèrement plus haut que le mur le plus élevé adjacent, afin de s'adapter aux murs en hauteur et aux murets. Les autres créneaux voisins ne comptent que s'il ne touche rien d'autre. Près d'un escalier, la marche directement adjacente décide (la plus basse s'il en touche deux) : les trois marches supérieures reçoivent des créneaux hauts, la quatrième et les suivantes des créneaux bas.
 cren_attached: Ne franchir que les créneaux reliés à un mur praticable
-cren_attached_tooltip: Les troupes ne peuvent franchir les parties surélevées d'un créneau que tant qu'il touche un mur encore praticable. Un créneau isolé près d'un mur détruit ou gravement endommagé reste fermé. Nécessite « Les troupes peuvent franchir chaque créneau ». Tous les joueurs en multijoueur doivent avoir le même réglage.
+cren_attached_tooltip: Les troupes ne peuvent franchir les parties surélevées d'un créneau que tant qu'il touche un mur encore praticable. Un créneau isolé près d'un mur détruit ou gravement endommagé reste fermé. Un créneau profond de plusieurs rangées (jusqu'à 8) compte comme un ensemble. Nécessite « Les troupes peuvent franchir chaque créneau ». Tous les joueurs en multijoueur doivent avoir le même réglage.
 walkable: Les troupes peuvent franchir chaque créneau
 walkable_tooltip: |-
   Les troupes peuvent traverser les parties surélevées des créneaux — en montant par une échelle ou une tour de siège, en tant qu'assassins ou de passage — et échelles, tours de siège et assassins peuvent y accéder, si bien que des créneaux épais n'empêchent plus l'accès au mur. Personne n'est envoyé y stationner : ordres, formations et unités qui s'écartent choisissent la case de mur voisine, et quiconque s'y arrête y est déplacé. Tous les joueurs en multijoueur doivent avoir le même réglage.
@@ -24,7 +24,7 @@ diagonal_stuck: Corriger les unités bloquées près des murets en diagonale
 diagonal_stuck_tooltip: |-
   Corrige un vieux bug du jeu : lorsque deux murets se touchent en diagonale avec un escalier au sol dans un angle, les unités voulant passer de l'escalier au sol dans l'angle opposé restaient bloquées et ralentissaient tout le jeu. Tous les joueurs en multijoueur doivent avoir le même réglage.
 cren_towers: Les créneaux ne mènent pas directement dans les tours
-cren_towers_tooltip: Les troupes ne peuvent pas passer directement d'un créneau dans une tour, un donjon ou une porte, mais seulement depuis un mur ou un escalier, comme pour les escaliers. Tous les joueurs en multijoueur doivent avoir le même réglage.
+cren_towers_tooltip: Les troupes ne peuvent pas passer directement d'un créneau dans une tour, un donjon ou une porte, mais seulement depuis un mur ou un escalier, comme pour les escaliers. Les tours de siège accostées mènent toujours aux créneaux. Tous les joueurs en multijoueur doivent avoir le même réglage.
 stairs: Réparer un escalier conserve sa hauteur
 stairs_tooltip: Construire un mur sur un escalier endommagé le remet dans son état d'origine. Auparavant, il se transformait en un bloc de la hauteur d'un mur.
 stairs_low: Les murets réparent aussi les escaliers

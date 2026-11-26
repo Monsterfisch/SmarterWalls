@@ -12,7 +12,7 @@ cren_heights: A lőrések igazodnak a fal magasságához
 cren_heights_tooltip: |-
   A lőrés kicsivel magasabbra épül a mellette lévő legmagasabb falnál, így illeszkedik a dombokon lévő és az alacsony falakhoz is. Más mellette lévő lőrések csak akkor számítanak, ha semmi mással nem érintkezik. Lépcső mellett a közvetlenül szomszédos fok dönt (kettőnél az alacsonyabb): a felső három fok magas lőrést kap, a negyediktől lefelé alacsonyat.
 cren_attached: Csak járható falhoz kapcsolódó lőréseken való átkelés
-cren_attached_tooltip: A csapatok csak addig kelhetnek át a lőrés megemelt részein, amíg az egy még járható falhoz csatlakozik. A lerombolt vagy súlyosan sérült fal melletti lőrés zárva marad. Igényli a „A csapatok minden lőrésen átkelhetnek” beállítást. Többjátékos módban mindenkinek azonos beállítás kell.
+cren_attached_tooltip: A csapatok csak addig kelhetnek át a lőrés megemelt részein, amíg az egy még járható falhoz csatlakozik. A lerombolt vagy súlyosan sérült fal melletti lőrés zárva marad. A több sor mély (legfeljebb 8) lőrés egyetlen egységnek számít. Igényli a „A csapatok minden lőrésen átkelhetnek” beállítást. Többjátékos módban mindenkinek azonos beállítás kell.
 walkable: A csapatok minden lőrésen átkelhetnek
 walkable_tooltip: |-
   A csapatok átmehetnek a lőrések megemelt részein — létráról vagy ostromtoronyból érkezve, orgyilkosként vagy áthaladva —, és a létrák, ostromtornyok, mászó orgyilkosok is feljutnak rájuk, így a többsoros lőrés sem tartja őket távol a faltól. Senkit nem küldenek rajtuk állni: a parancsok, alakzatok és helyet adó egységek a mellette lévő falmezőt választják, aki mégis ott áll meg, oda lép át. Többjátékos módban mindenkinek azonos beállítás kell.
@@ -24,7 +24,7 @@ diagonal_stuck: Alacsony átlós falaknál elakadó egységek javítása
 diagonal_stuck_tooltip: |-
   Kijavít egy régi játékhibát: ahol két alacsony fal átlósan találkozik és az egyik sarokban talajon lévő lépcső van, a lépcsőről a másik sarok talajára lépni próbáló egységek elakadtak és lelassították az egész játékot. Többjátékos módban mindenkinek azonos beállítás kell.
 cren_towers: A lőrések nem vezetnek közvetlenül tornyokba
-cren_towers_tooltip: A csapatok lőrésről nem léphetnek közvetlenül toronyba, vártoronyba vagy kapuházba, csak falról vagy lépcsőről, akárcsak a lépcsőknél. Többjátékos módban mindenkinek azonos beállítás kell.
+cren_towers_tooltip: A csapatok lőrésről nem léphetnek közvetlenül toronyba, vártoronyba vagy kapuházba, csak falról vagy lépcsőről, akárcsak a lépcsőknél. A kikötött ostromtornyok továbbra is lőrésekre vezetnek. Többjátékos módban mindenkinek azonos beállítás kell.
 stairs: A lépcsők javítása megőrzi a magasságukat
 stairs_tooltip: Ha sérült lépcsőre húzol falat, a lépcső az eredeti formájában áll helyre. Korábban falmagasságú tömbbé alakult.
 stairs_low: Az alacsony falak is megjavítják a lépcsőket

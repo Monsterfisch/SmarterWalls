@@ -12,7 +12,7 @@ cren_heights: Mazgallar bulundukları surun yüksekliğine uyar
 cren_heights_tooltip: |-
   Bir mazgal yanındaki en yüksek surdan biraz daha yüksek inşa edilir; böylece tepelerdeki ve alçak surlara uyar. Yanındaki diğer mazgallar yalnızca başka hiçbir şeye değmediğinde sayılır. Merdivenlerin yanında doğrudan bitişik basamak belirleyicidir (iki basamağa değiyorsa alçak olan): en üst üç basamak yüksek mazgal, dördüncü ve altındakiler alçak mazgal alır.
 cren_attached: Yalnızca yürünebilir surlara bağlı mazgallardan geç
-cren_attached_tooltip: Birlikler bir mazgalın yükseltilmiş kısımlarından yalnızca hâlâ yürünebilen bir sura değdiği sürece geçebilir. Yıkılmış veya ağır hasarlı bir surun yanında asılı kalan mazgal kapalı kalır. «Birlikler her mazgaldan geçebilir» ayarını gerektirir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
+cren_attached_tooltip: Birlikler bir mazgalın yükseltilmiş kısımlarından yalnızca hâlâ yürünebilen bir sura değdiği sürece geçebilir. Yıkılmış veya ağır hasarlı bir surun yanında asılı kalan mazgal kapalı kalır. Birkaç sıra derinliğindeki (en fazla 8) mazgal tek bütün sayılır. «Birlikler her mazgaldan geçebilir» ayarını gerektirir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
 walkable: Birlikler her mazgaldan geçebilir
 walkable_tooltip: |-
   Birlikler mazgalların yükseltilmiş kısımlarından yürüyerek geçebilir — merdivenden veya kuşatma kulesinden çıkarken, suikastçı olarak ya da geçip giderken — ve merdivenler, kuşatma kuleleri ile tırmanan suikastçılar bunlara ulaşabilir; böylece kalın mazgallar artık sura çıkışı engellemez. Kimse üstünde durmaya gönderilmez: emirler, dizilişler ve yol veren birimler yanındaki sur karesini seçer, orada duranlar da oraya taşınır. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
@@ -24,7 +24,7 @@ diagonal_stuck: Alçak çapraz surlarda takılan birimleri düzelt
 diagonal_stuck_tooltip: |-
   Eski bir oyun hatasını düzeltir: iki alçak sur çapraz temas ettiğinde ve bir köşede yer seviyesinde merdiven bulunduğunda, merdivenden diğer köşedeki zemine geçmeye çalışan birimler takılıp tüm oyunu yavaşlatıyordu. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
 cren_towers: Mazgallar doğrudan kulelere bağlanmaz
-cren_towers_tooltip: Birlikler mazgaldan doğrudan bir kuleye, iç kaleye veya kapı binasına geçemez; merdivenlerde olduğu gibi yalnızca sur veya merdivenden geçebilir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
+cren_towers_tooltip: Birlikler mazgaldan doğrudan bir kuleye, iç kaleye veya kapı binasına geçemez; merdivenlerde olduğu gibi yalnızca sur veya merdivenden geçebilir. Yanaşmış kuşatma kuleleri mazgallara çıkmaya devam eder. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
 stairs: Merdivenleri onarmak yüksekliklerini korur
 stairs_tooltip: Hasarlı merdivenlerin üzerine sur çekmek merdivenleri eski hâline getirir. Eskiden sur yüksekliğinde bir bloğa dönüşüyorlardı.
 stairs_low: Alçak surlar da merdivenleri onarır

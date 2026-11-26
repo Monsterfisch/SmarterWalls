@@ -12,7 +12,7 @@ cren_heights: Zinnen passen sich der Mauerhöhe an
 cren_heights_tooltip: |-
   Eine Zinne wird etwas höher gebaut als die höchste benachbarte Mauer, sodass sie zu Mauern auf Hügeln und zu niedrigen Mauern passt. Andere Zinnen daneben zählen nur, wenn sie sonst nichts berührt. Neben Treppen entscheidet die direkt anliegende Stufe (bei zweien die niedrigere): Die obersten drei Stufen erhalten hohe Zinnen, ab Stufe 4 abwärts niedrige.
 cren_attached: Zinnen nur an begehbaren Mauern überqueren
-cren_attached_tooltip: Truppen können die erhöhten Teile einer Zinne nur überqueren, solange diese an eine noch begehbare Mauer grenzt. Eine Zinne neben einer zerstörten oder stark beschädigten Mauer bleibt unpassierbar. Erfordert „Truppen können jede Zinne überqueren“. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
+cren_attached_tooltip: Truppen können die erhöhten Teile einer Zinne nur überqueren, solange diese an eine noch begehbare Mauer grenzt. Eine Zinne neben einer zerstörten oder stark beschädigten Mauer bleibt unpassierbar. Eine mehrere Reihen tiefe Zinne (bis zu 8) zählt als Ganzes. Erfordert „Truppen können jede Zinne überqueren“. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
 walkable: Truppen können jede Zinne überqueren
 walkable_tooltip: |-
   Truppen können über die erhöhten Teile von Zinnen hinweglaufen – beim Erklimmen über Leitern oder Belagerungstürme, als Assassinen oder beim Durchqueren –, und Leitern, Belagerungstürme sowie kletternde Assassinen erreichen sie, sodass beliebig dicke Zinnen sie nicht mehr von der Mauer fernhalten. Niemand wird dauerhaft darauf abgestellt: Befehle, Formationen und ausweichende Einheiten wählen stattdessen das angrenzende Mauerfeld, und wer dennoch dort anhält, wird dorthin versetzt. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
@@ -24,7 +24,7 @@ diagonal_stuck: Steckengebliebene Einheiten an niedrigen diagonalen Mauern beheb
 diagonal_stuck_tooltip: |-
   Behebt einen alten Spielfehler: Wo sich zwei niedrige Mauern diagonal berühren und in einer Ecke ebenerdige Treppen liegen, blieben Einheiten beim Wechsel von den Treppen zum Boden in der anderen Ecke stecken und verlangsamten das ganze Spiel. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
 cren_towers: Zinnen führen nicht direkt in Türme
-cren_towers_tooltip: Truppen können von einer Zinne nicht direkt in einen Turm, Bergfried oder ein Torhaus gehen, sondern nur von einer Mauer oder Treppe aus – genau wie bei Treppen. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
+cren_towers_tooltip: Truppen können von einer Zinne nicht direkt in einen Turm, Bergfried oder ein Torhaus gehen, sondern nur von einer Mauer oder Treppe aus – genau wie bei Treppen. Angedockte Belagerungstürme führen weiterhin auf Zinnen. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
 stairs: Reparieren von Treppen behält ihre Höhe bei
 stairs_tooltip: Das Überbauen beschädigter Treppen mit einer Mauer stellt die Treppen in ihrer ursprünglichen Form wieder her. Zuvor verwandelten sie sich in einen mauerhohen Block.
 stairs_low: Auch niedrige Mauern reparieren Treppen
