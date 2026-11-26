@@ -499,10 +499,6 @@ keep:
   jmp RESUME
 ]]
 
--- Does this raised crenellation part touch a walkable wall? One of its eight neighbours is a wall,
--- stairs or crenellation tile (0x100) that is not itself a raised part or a stockpile (0x400002)
--- and not worn down past what the game still lets units walk on (damage byte <= 0x14, the
--- game's own test in the link builder). in: eax = tile. out: eax = 1 or 0. Keeps other registers.
 templates.attached = [[
 ; eax = a raised crenellation tile -> eax = 1 when it is attached: it touches a walkable wall
 ; (0x100, not raised, no stockpile, damage <= 0x14), or up to DEPTH straight steps over raised
