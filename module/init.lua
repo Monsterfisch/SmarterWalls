@@ -1142,7 +1142,7 @@ local function enable(self, config)
       local relinkStamps = core.allocate(8 * TILES, true)
       local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
       jumpTo(relinkAt, assemble(templates.relink, {
-        GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS,
+        GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, TILE_LIMIT = 80400,
         PATHS = paths, BUILD_LINKS = builder, REACH = ATTACH_DEPTH + 1,
         QUEUE = relinkQueue, QDIST = relinkQueue + 4 * RELINK_QUEUE, QCOUNT = relinkQueue + 8 * RELINK_QUEUE,
         QUEUE_MAX = RELINK_QUEUE, RGEN = relinkQueue + 8 * RELINK_QUEUE + 4,

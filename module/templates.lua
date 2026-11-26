@@ -645,9 +645,11 @@ templates.relink = [[
   push dword [esp + 8]
   call GAME_RELINK
   pushad
+  mov esi, [esp + 0x28]
+  cmp esi, TILE_LIMIT
+  jae done
   inc dword [RGEN]
   mov edx, [RGEN]
-  mov esi, [esp + 0x28]
   mov [SEEN + esi*4], edx
   xor ecx, ecx
   movzx edi, word [TILE_Y + esi*2]
@@ -657,6 +659,8 @@ templates.relink = [[
 seed:
   mov eax, [edi + ebp*4]
   add eax, esi
+  cmp eax, TILE_LIMIT
+  jae seednext
   test dword [FLAGS + eax*4], 0x400000
   jz seednext
   mov [SEEN + eax*4], edx
@@ -681,6 +685,8 @@ grow:
 step:
   mov eax, [edi + ebp*4]
   add eax, esi
+  cmp eax, TILE_LIMIT
+  jae stepnext
   mov edx, [FLAGS + eax*4]
   and edx, 0x400300
   cmp edx, 0x400300
@@ -734,6 +740,8 @@ done:
   ret 8
 ; rebuild(eax = tile) once per relink; keeps ebx/esi/edi/ebp
 rebuild:
+  cmp eax, TILE_LIMIT
+  jae rebuilt
   mov edx, [RGEN]
   cmp [BUILT + eax*4], edx
   je rebuilt
