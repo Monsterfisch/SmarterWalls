@@ -3,16 +3,19 @@ any_angle_tooltip: A húzott fal egyenes vonalban fut a kezdőponttól a végpon
 flow: A falak megkerülik az épületeket
 flow_tooltip: Ha valami útban van — épület, fa, szikla —, a fal körvonalát követve megkerüli és folytatódik ahelyett, hogy pirosra váltana. A pártázatok és lépcsők ugyanezt teszik; a pártázatok követik a falat, amely mentén húzod őket.
 flow_trees: A falak megkerülik a fákat
-flow_trees_tooltip: A fal megkerüli a fákat ahelyett, hogy egyenesen rajtuk keresztül épülne. A kiválasztott két végpont a helyén marad. Igényli a „A falak megkerülik az épületeket” beállítást.
+flow_trees_tooltip: |-
+  A fal megkerüli a fákat ahelyett, hogy egyenesen rajtuk keresztül épülne. A kiválasztott két végpont a helyén marad. Szükséges beállítás: „A falak megkerülik az épületeket”.
 repair_only: Sérült falról indítva csak javít
 repair_only_tooltip: Ha egy sérült falmezőről indítod a falhúzást, csak az útvonalba eső sérült falmezők javulnak meg. A köztes vagy azon túli üres talajra nem épül új fal.
 around_walls: A falak megkerülik a többi falat
-around_walls_tooltip: Az új fal vagy pártázat a sértetlen saját falaidat, lépcsőidet és pártázataidat is megkerüli ahelyett, hogy rájuk épülne. Továbbra is indulhat vagy végződhet rajtuk a csatlakozáshoz, és a sérült falakon áthaladva megjavítja azokat. Igényli a „A falak megkerülik az épületeket” beállítást.
+around_walls_tooltip: |-
+  Az új fal vagy pártázat a sértetlen saját falaidat, lépcsőidet és pártázataidat is megkerüli ahelyett, hogy rájuk épülne. Továbbra is indulhat vagy végződhet rajtuk a csatlakozáshoz, és a sérült falakon áthaladva megjavítja azokat. Szükséges beállítás: „A falak megkerülik az épületeket”.
 cren_heights: A pártázatok igazodnak a fal magasságához
 cren_heights_tooltip: |-
   A pártázat kicsivel magasabbra épül a mellette lévő legmagasabb falnál, így illeszkedik a dombokon lévő és az alacsony falakhoz is. Más mellette lévő pártázatok csak akkor számítanak, ha semmi mással nem érintkezik. Lépcső mellett a közvetlenül szomszédos fok dönt (kettőnél az alacsonyabb): a felső három fok magas pártázatot kap, a negyediktől lefelé alacsonyat.
 cren_attached: Csak járható falhoz kapcsolódó pártázatokon való átkelés
-cren_attached_tooltip: A csapatok csak addig kelhetnek át a pártázat megemelt részein, amíg az egy még járható falhoz csatlakozik. A lerombolt vagy súlyosan sérült fal melletti pártázat zárva marad. A több sor mély (legfeljebb 8 soros) pártázat egyetlen egységnek számít. Igényli a „A csapatok minden pártázaton átkelhetnek” beállítást. Többjátékos módban mindenkinek azonos beállítás kell.
+cren_attached_tooltip: |-
+  A csapatok csak addig kelhetnek át a pártázat megemelt részein, amíg az egy még járható falhoz csatlakozik. A lerombolt vagy súlyosan sérült fal melletti pártázat zárva marad. A több sor mély (legfeljebb 8 soros) pártázat egyetlen egységnek számít. Szükséges beállítás: „A csapatok minden pártázaton átkelhetnek”. Többjátékos módban mindenkinek azonos beállítás kell.
 walkable: A csapatok minden pártázaton átkelhetnek
 walkable_tooltip: |-
   A csapatok átmehetnek a pártázatok megemelt részein — létráról vagy ostromtoronyból érkezve, orgyilkosként vagy áthaladva —, és a létrák, ostromtornyok, mászó orgyilkosok is feljutnak rájuk, így a többsoros pártázat sem tartja őket távol a faltól. Senkit nem küldenek rajtuk állni: a parancsok, alakzatok és helyet adó egységek a mellette lévő falmezőt választják, aki mégis ott áll meg, oda lép át. Többjátékos módban mindenkinek azonos beállítás kell.
@@ -28,7 +31,8 @@ cren_towers_tooltip: A csapatok pártázatról nem léphetnek közvetlenül toro
 stairs: A lépcsők javítása megőrzi a magasságukat
 stairs_tooltip: Ha sérült lépcsőre húzol falat, a lépcső az eredeti formájában áll helyre. Korábban falmagasságú tömbbé alakult.
 stairs_low: Az alacsony falak is megjavítják a lépcsőket
-stairs_low_tooltip: Ha alacsony (fa) falat húzol sérült lépcsőre, az ugyanúgy visszaállítja a lépcsőt, mint a rendes fal. Igényli a „A lépcsők javítása megőrzi a magasságukat” beállítást.
+stairs_low_tooltip: |-
+  Ha alacsony (fa) falat húzol sérült lépcsőre, az ugyanúgy visszaállítja a lépcsőt, mint a rendes fal. Szükséges beállítás: „A lépcsők javítása megőrzi a magasságukat”.
 crenellations: A pártázatok javítása megőrzi azokat
 crenellations_tooltip: Sérült pártázatra húzott fal megjavítja a pártázatot. Csak a sértetlen pártázat alakul fallá, ha falat építesz rá, mint eddig.
 low_tower_tiles: Nincs egyirányú út az alacsony toronymezőkről
