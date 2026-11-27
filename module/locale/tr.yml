@@ -24,7 +24,7 @@ diagonal_stuck: Alçak çapraz surlarda takılan birimleri düzelt
 diagonal_stuck_tooltip: |-
   Eski bir oyun hatasını düzeltir: iki alçak sur çapraz temas ettiğinde ve bir köşede yer seviyesinde merdiven bulunduğunda, merdivenden diğer köşedeki zemine geçmeye çalışan birimler takılıp tüm oyunu yavaşlatıyordu. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
 cren_towers: Mazgallar doğrudan kulelere bağlanmaz
-cren_towers_tooltip: Birlikler mazgaldan doğrudan bir kuleye, iç kaleye veya kapı binasına geçemez; merdivenlerde olduğu gibi yalnızca sur veya merdivenden geçebilir. Yanaşmış kuşatma kuleleri mazgallara çıkmaya devam eder. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
+cren_towers_tooltip: Birlikler mazgaldan doğrudan bir kuleye, iç kaleye veya kapı binasına geçemez; merdivenlerde olduğu gibi yalnızca sur veya merdivenden geçebilir. Yanaşmış kuşatma kulelerinden mazgallara çıkılabilir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
 stairs: Merdivenleri onarmak yüksekliklerini korur
 stairs_tooltip: Hasarlı merdivenlerin üzerine sur çekmek merdivenleri eski hâline getirir. Eskiden sur yüksekliğinde bir bloğa dönüşüyorlardı.
 stairs_low: Alçak surlar da merdivenleri onarır
