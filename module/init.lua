@@ -369,6 +369,7 @@ end
 local function tickCounter(feature)
   local site, problem = core.AOBScanUnique(AOB_TICKS)
   if site then return core.readInteger(site + 8) end
+  log(ERROR, "Walkable crenellations are off. The game tick counter could not be read.")
   log(WARNING, string.format("%s: game tick counter %s, %s stays off", MODULE_NAME, problem, feature))
 end
 
@@ -1069,6 +1070,7 @@ local function enable(self, config)
       end
     end
     if not crenelSite then
+      log(ERROR, "Custom crenellation heights are off. The height code could not be verified.")
       log(WARNING, string.format("%s: crenellation height site %s; crenellationHeights stays off",
         MODULE_NAME, problem or "does not match placeWalls"))
       options.crenellationHeights = false
@@ -1115,6 +1117,7 @@ local function enable(self, config)
     neighbour = core.AOBScanUnique(AOB_LINK_NEIGHBOUR)
     if options.crenellationAttached then relinkAt = core.AOBScanUnique(AOB_RELINK) end
     if not linkSelf or not neighbour or (options.crenellationAttached and not relinkAt) then
+      log(ERROR, "Walkable crenellations are off. The link code could not be verified.")
       log(WARNING, MODULE_NAME .. ": the path link or relink site is missing or ambiguous; walkableCrenellations stays off")
       options.walkableCrenellations = false
     elseif options.crenellationAttached then
@@ -1125,6 +1128,7 @@ local function enable(self, config)
         dirtyB = readOperand(place, PLACE_DIRTY_2, "the area update flag")
       end)
       if not ok then
+        log(ERROR, "Walkable crenellations are off. The wall routing policy could not start.")
         log(WARNING, tostring(problem) .. "; walkableCrenellations stays off")
         options.walkableCrenellations = false
       end
