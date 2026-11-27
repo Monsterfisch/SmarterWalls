@@ -16,8 +16,6 @@ cren_attached_tooltip: Les troupes ne peuvent franchir les parties surélevées 
 walkable: Les troupes peuvent franchir chaque créneau
 walkable_tooltip: |-
   Les troupes peuvent traverser les parties surélevées des créneaux — en montant par une échelle ou une tour de siège, en tant qu'assassins ou de passage — et échelles, tours de siège et assassins peuvent y accéder, si bien que des créneaux épais n'empêchent plus l'accès au mur. Personne n'est envoyé y stationner : ordres, formations et unités qui s'écartent choisissent la case de mur voisine, et quiconque s'y arrête y est déplacé. Tous les joueurs en multijoueur doivent avoir le même réglage.
-ladder_wait: Secondes d'attente autorisées sur un créneau pour une échelle
-ladder_wait_tooltip: Les troupes qui attendent sur un créneau pour descendre une échelle peuvent y rester ce délai avant d'être déplacées sur la case de mur la plus proche, puis reprendre leur route. Les troupes qui s'y arrêtent simplement sont déplacées aussitôt.
 diagonal_siege: Les échelles attaquent les murs en diagonale
 diagonal_siege_tooltip: Les échelles peuvent attaquer des murs et créneaux en diagonale, auparavant impossibles à escalader. Les troupes envoyées contre un tel mur trouvent place dans les huit directions. L'accostage des tours de siège (murs diagonaux compris) fait désormais partie d'Improved Siegeengines. Tous les joueurs en multijoueur doivent avoir le même réglage.
 diagonal_stuck: Corriger les unités bloquées près des murets en diagonale
@@ -34,7 +32,7 @@ crenellations_tooltip: Construire un mur sur un créneau endommagé répare le c
 low_tower_tiles: Supprimer les passages à sens unique des cases basses de tour
 low_tower_tiles_tooltip: Certaines cases au sol portent le marqueur d'une tour, comme des fosses à pics collées à une tour. Les troupes pouvaient en sortir vers le sol mais jamais y revenir, et chaque tentative forçait le jeu à recalculer tous les chemins de la carte, causant de forts ralentissements. Désormais ces cases ne mènent qu'aux tours et aux murs, de manière identique dans les deux sens.
 balance_changes: Modifications de l'équilibrage
-bugfixes: Corrections
+bugfixes: Corrections de bugs
 qol: Qualité de vie
 tags.bugfixes: Corrections
 tags.behavior: Comportement

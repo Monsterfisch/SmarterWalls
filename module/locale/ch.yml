@@ -16,8 +16,6 @@ cren_attached_tooltip: 部队只有在垛口紧邻仍可行走的城墙时才能
 walkable: 部队可跨越所有垛口
 walkable_tooltip: |-
   部队可以跨过垛口的凸起部分——无论是顺云梯或攻城塔登墙、刺客攀爬还是正常经过——云梯、攻城塔和刺客也能登上垛口，使多层厚垛口不再挡住登墙。不会有人被指派停留在垛口上：移动命令、阵型和让路单位会改选旁边的城墙格，停在垛口上的单位也会被移过去。多人联机时所有玩家设置必须一致。
-ladder_wait: 部队在垛口上等待云梯的秒数
-ladder_wait_tooltip: 在垛口凸起处等待下云梯的部队最多可停留这么多秒，随后会被移到最近的城墙格并继续前往目的地。单纯停在上面的部队会被立即移走。
 diagonal_siege: 云梯可架设在斜向城墙上
 diagonal_siege_tooltip: 云梯可攻击斜向延伸的城墙和垛口；此前斜向城墙完全无法攀爬。派往此类城墙的部队可在全部八个方向找到落脚点。攻城塔搭靠（含斜墙）现已移至 Improved Siegeengines。多人联机时所有玩家设置必须一致。
 diagonal_stuck: 修复单位卡在斜向矮墙处的问题
@@ -33,9 +31,9 @@ crenellations: 修复垛口时保留垛口形态
 crenellations_tooltip: 在受损垛口上拉建城墙会修复垛口；只有像原版那样在完好垛口上覆盖城墙时，才会将其变为城墙。
 low_tower_tiles: 消除低矮塔楼格的单向通道
 low_tower_tiles_tooltip: 某些地面格子（例如紧贴塔楼的陷阱坑）带有塔楼标记。部队能从那里走到地面却无法返回，每次尝试寻路都会迫使游戏重建全图路径导致严重卡顿。现在这些格子仅双向通往塔楼与城墙。
-balance_changes: 平衡性改动
+balance_changes: 平衡调整
 bugfixes: 错误修复
-qol: 体验优化
+qol: 便利性改进
 tags.bugfixes: 错误修复
 tags.behavior: 行为
 tags.balance: 平衡

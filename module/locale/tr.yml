@@ -16,8 +16,6 @@ cren_attached_tooltip: Birlikler bir mazgalın yükseltilmiş kısımlarından y
 walkable: Birlikler her mazgaldan geçebilir
 walkable_tooltip: |-
   Birlikler mazgalların yükseltilmiş kısımlarından yürüyerek geçebilir — merdivenden veya kuşatma kulesinden çıkarken, suikastçı olarak ya da geçip giderken — ve merdivenler, kuşatma kuleleri ile tırmanan suikastçılar bunlara ulaşabilir; böylece kalın mazgallar artık sura çıkışı engellemez. Kimse üstünde durmaya gönderilmez: emirler, dizilişler ve yol veren birimler yanındaki sur karesini seçer, orada duranlar da oraya taşınır. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
-ladder_wait: Birliklerin mazgalda merdiven bekleyebileceği saniye
-ladder_wait_tooltip: Bir merdivenden inmek için mazgalın yükseltilmiş kısmında bekleyen birlikler en yakın sur karesine taşınmadan önce bu kadar süre kalabilir, ardından gidecekleri yere devam ederler. Orada sadece duran birlikler hemen taşınır.
 diagonal_siege: Merdivenler çapraz surlara saldırır
 diagonal_siege_tooltip: Merdivenler çapraz uzanan surlara ve mazgallara saldırabilir; eskiden çapraz surlara hiç tırmanılamıyordu. Böyle bir sura gönderilen birlikler sekiz yönde de yanında yer bulur. Kuşatma kulelerinin yanaşması (çapraz surlar dâhil) artık Improved Siegeengines içindedir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
 diagonal_stuck: Alçak çapraz surlarda takılan birimleri düzelt
@@ -35,7 +33,7 @@ low_tower_tiles: Alçak kule karelerinden tek yönlü yolları kaldır
 low_tower_tiles_tooltip: Kule yanındaki ölüm çukurları gibi bazı zemin kareleri kule işareti taşıyabilir. Birlikler bunlardan zemine çıkabiliyor ama geri dönemiyordu; bunu deneyen her rota oyunun haritadaki tüm yolları yeniden hesaplamasına ve büyük yavaşlamaya yol açıyordu. Artık bu kareler her iki yönde aynı şekilde yalnızca kulelere ve surlara bağlanır.
 balance_changes: Denge değişiklikleri
 bugfixes: Hata düzeltmeleri
-qol: Yaşam kalitesi
+qol: Kullanım kolaylığı
 tags.bugfixes: Hata düzeltmeleri
 tags.behavior: Davranış
 tags.balance: Denge

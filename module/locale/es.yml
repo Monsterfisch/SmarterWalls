@@ -16,8 +16,6 @@ cren_attached_tooltip: Las tropas solo pueden cruzar la parte elevada de una alm
 walkable: Las tropas pueden cruzar cualquier almena
 walkable_tooltip: |-
   Las tropas pueden caminar por las partes elevadas de las almenas —al subir por escaleras o torres de asedio, como asesinos o de paso— y escaleras, torres de asedio y asesinos pueden subir a ellas, así que almenas gruesas ya no impiden acceder al muro. Nadie se queda estacionado encima: órdenes, formaciones y unidades que hacen sitio eligen la casilla de muro contigua, y quien se detenga ahí se mueve a ella. En multijugador todos necesitan el mismo ajuste.
-ladder_wait: Segundos que las tropas pueden esperar escalera en una almena
-ladder_wait_tooltip: Las tropas que esperan en la parte elevada de una almena para bajar una escalera pueden quedarse ese tiempo antes de moverse a la casilla de muro más cercana y seguir su camino. Las tropas que solo se detienen ahí se mueven al instante.
 diagonal_siege: Las escaleras atacan muros diagonales
 diagonal_siege_tooltip: Las escaleras pueden atacar muros y almenas diagonales; antes los muros diagonales no podían escalarse. Las tropas enviadas contra ese muro encuentran sitio en las ocho direcciones. El acople de torres de asedio (también en muros diagonales) ahora forma parte de Improved Siegeengines. En multijugador todos necesitan el mismo ajuste.
 diagonal_stuck: Corregir unidades atascadas en muros bajos diagonales
@@ -34,8 +32,8 @@ crenellations_tooltip: Construir un muro sobre una almena dañada repara la alme
 low_tower_tiles: Sin caminos de un solo sentido desde casillas bajas de torre
 low_tower_tiles_tooltip: Algunas casillas a ras de suelo llevan marca de torre, como fosos de pinchos pegados a una torre. Las tropas podían salir hacia el suelo pero nunca volver, y cada intento forzaba al juego a reconstruir todas las rutas del mapa con fuertes tirones. Ahora esas casillas solo conectan con torres y muros por igual en ambos sentidos.
 balance_changes: Cambios de equilibrio
-bugfixes: Correcciones
-qol: Calidad de vida
+bugfixes: Correcciones de errores
+qol: Comodidad de juego
 tags.bugfixes: Correcciones
 tags.behavior: Comportamiento
 tags.balance: Equilibrio

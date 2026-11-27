@@ -1,69 +1,33 @@
-any_angle: Walls at any angle
-any_angle_tooltip: A wall you drag goes in a straight line from where you start to where you let go, at
-  any angle. Before, walls could only run straight or at 45 degrees, with a bend in between.
-flow: Walls flow around buildings
-flow_tooltip: When something is in the way - a building, a tree, rocks - the wall goes around it, hugging
-  its shape, and carries on instead of turning red. Crenellations and stairs do the same; crenellations
-  follow the wall you drag them along.
-flow_trees: Walls flow around trees
-flow_trees_tooltip: A wall goes around trees instead of building straight through them. The two ends you
-  pick stay where you put them. Needs "Walls flow around buildings".
-repair_only: Starting on a damaged wall only repairs
-repair_only_tooltip: When you start dragging a wall on a damaged wall tile, only the damaged wall tiles
-  along the drag are repaired. No new wall is built on empty ground in between or beyond.
-around_walls: Walls flow around other walls
-around_walls_tooltip: A new wall or crenellation also goes around your undamaged walls, stairs and crenellations
-  instead of running over them. It can still start or end on one to join it, and it still goes over damaged
-  walls so it repairs them. Needs "Walls flow around buildings".
-cren_heights: Crenellations match the wall they are on
-cren_heights_tooltip: 'A crenellation is built a little taller than the tallest wall beside it, so it
-  fits walls on hills and low walls. Other crenellations next to it only count when it touches nothing
-  else. Next to stairs, the step right beside it decides (the lower one if it touches two): the top three
-  steps get tall crenellations, step 4 and lower low ones.'
-cren_attached: Only cross crenellations attached to walkable walls
-cren_attached_tooltip: |
-  Troops can cross the raised parts of a crenellation only while it touches a wall they can
-  still walk on. A crenellation left hanging next to a destroyed or badly damaged wall stays
-  closed. A crenellation several rows deep (up to 8) counts as a whole. Needs "Troops can
-  cross every crenellation". Everyone in a multiplayer game needs the same setting.
-walkable: Troops can cross every crenellation
-walkable_tooltip: 'Troops can walk across the raised parts of crenellations - coming up a ladder or a
-  siege tower, assassins, anyone passing - and ladders, siege towers and climbing assassins can get onto
-  them, so crenellations of any thickness never keep them off the wall. Nobody is ever sent to stand on
-  one: an order, a formation or an idle unit making room picks the wall tile beside it instead, and anyone
-  who still stops on one is moved there. Everyone in a multiplayer game needs the same setting.'
-ladder_wait: Seconds troops may wait on a crenellation for a ladder
-ladder_wait_tooltip: Troops waiting on a raised part of a crenellation to climb down a ladder may stay
-  there this long before they are moved to the nearest wall tile; they then carry on to where they were
-  going. Troops that simply stop there are moved at once.
-diagonal_siege: Ladders attack diagonal walls
-diagonal_siege_tooltip: Ladders can attack walls and crenellations that run diagonally; before, diagonal
-  walls could not be climbed at all. Troops sent at such a wall find a place next to it in all eight directions.
-  Where siege towers dock (diagonal walls too) is now part of Improved Siegeengines. Everyone in a multiplayer
-  game needs the same setting.
-diagonal_stuck: Fix units stuck at low diagonal walls
-diagonal_stuck_tooltip: 'Fixes an old game bug: where two low walls touch diagonally with ground-level
-  stairs in one corner, units trying to step from the stairs to the ground in the other corner got stuck
-  and slowed the whole game down. Everyone in a multiplayer game needs the same setting.'
-cren_towers: Crenellations do not lead into towers
-cren_towers_tooltip: |
-  Troops cannot walk from a crenellation straight into a tower, keep or gatehouse, only from
-  wall or stairs, as with stairs. Docked siege towers still lead onto crenellations.
-  Everyone in a multiplayer game needs the same setting.
-stairs: Repairing stairs keeps their height
-stairs_tooltip: Building a wall over damaged stairs puts the stairs back the way they were. Before, they
-  turned into a block as tall as a wall.
-stairs_low: Low walls repair stairs too
-stairs_low_tooltip: Building a low (wooden) wall over damaged stairs puts the stairs back the way they
-  were, just like a normal wall. Needs "Repairing stairs keeps their height".
-crenellations: Repairing crenellations keeps them
-crenellations_tooltip: Building a wall over a damaged crenellation repairs the crenellation. Only an undamaged
-  crenellation is turned into wall when you build a wall over it, as before.
-low_tower_tiles: No one-way paths out of low tower tiles
-low_tower_tiles_tooltip: Some ground-level spots can carry a tower's mark, like killing pits right beside
-  a tower. Troops could walk out of them onto the ground but never back, and every route that tried made
-  the game rebuild all paths on the map - a big slowdown. Now those spots only lead to towers and walls,
-  the same way back as forward.
+any_angle: Draw walls at any angle
+any_angle_tooltip: Select a wall and drag from the start tile to the end tile.
+flow: Route walls around obstacles
+flow_tooltip: Select a wall and drag from start to finish to route around obstacles.
+flow_trees: Go around trees
+flow_trees_tooltip: The route bends around trees.
+repair_only: Starting on damage repairs only
+repair_only_tooltip: Start dragging on a damaged wall tile to repair along the route without building new wall.
+around_walls: Go around friendly walls
+around_walls_tooltip: The route bends around intact friendly walls and can still join them at the ends.
+cren_heights: Match crenellation height to adjacent walls
+cren_heights_tooltip: Crenellations match their neighbors unless you set their height in the map editor.
+cren_attached: Require a walkable wall connection
+cren_attached_tooltip: Raised crenellations are walkable when they connect to a walkable wall.
+walkable: Allow troops to cross raised crenellations
+walkable_tooltip: Troops can walk across raised crenellations.
+diagonal_siege: Let ladders reach diagonal walls
+diagonal_siege_tooltip: Give laddermen the usual attack order on a diagonal wall.
+diagonal_stuck: Free units stuck at diagonal low walls
+diagonal_stuck_tooltip: Units can move past the corners of diagonal low walls.
+cren_towers: Keep troops from entering towers via crenellations
+cren_towers_tooltip: Troops need another route onto towers next to crenellations.
+stairs: Restore damaged stairs when building over them
+stairs_tooltip: Use the wall tool over damaged stairs to restore them.
+stairs_low: Also repair stairs with low walls
+stairs_low_tooltip: Draw a low wall over damaged stairs to restore them.
+crenellations: Restore damaged crenellations when building over them
+crenellations_tooltip: Use the wall tool over damaged crenellations to restore them.
+low_tower_tiles: Fix one-way paths beside towers
+low_tower_tiles_tooltip: Units can walk both ways across accessible tiles beside towers.
 balance_changes: Balance Changes
 bugfixes: Bugfixes
 qol: Quality of Life

@@ -72,7 +72,7 @@ direction never keep assassins off a wall. But nobody is ever sent to stand on o
 unit making room or a patrol always picks the wall tile next to it instead. Anyone who still
 ends up standing on one is moved to the nearest wall tile (never onto another crenellation;
 with only those nearby they stay put). Troops waiting there for their turn on a ladder get
-more time first (10 seconds, adjustable in the settings).
+more time first. Presets can set `smarter-walls.ladderWait` in seconds, with a default of 10.
 
 Ladders can also attack walls that run diagonally. Siege towers docking at diagonal walls used
 to be part of this module too; that is in Improved Siegeengines now.

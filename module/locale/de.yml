@@ -16,8 +16,6 @@ cren_attached_tooltip: Truppen können die erhöhten Teile einer Zinne nur über
 walkable: Truppen können jede Zinne überqueren
 walkable_tooltip: |-
   Truppen können über die erhöhten Teile von Zinnen hinweglaufen – beim Erklimmen über Leitern oder Belagerungstürme, als Assassinen oder beim Durchqueren –, und Leitern, Belagerungstürme sowie kletternde Assassinen erreichen sie, sodass beliebig dicke Zinnen sie nicht mehr von der Mauer fernhalten. Niemand wird dauerhaft darauf abgestellt: Befehle, Formationen und ausweichende Einheiten wählen stattdessen das angrenzende Mauerfeld, und wer dennoch dort anhält, wird dorthin versetzt. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
-ladder_wait: Sekunden, die Truppen auf Zinnen auf eine Leiter warten dürfen
-ladder_wait_tooltip: Truppen, die auf einer erhöhten Zinne warten, um eine Leiter hinabzusteigen, dürfen so lange bleiben, bevor sie auf das nächste Mauerfeld versetzt werden; danach setzen sie ihren Weg fort. Truppen, die dort einfach stehen bleiben, werden sofort versetzt.
 diagonal_siege: Leiterträger greifen diagonale Mauern an
 diagonal_siege_tooltip: Leitern können diagonal verlaufende Mauern und Zinnen angreifen; zuvor waren diagonale Mauern gar nicht erklimmbar. Truppen, die auf eine solche Mauer geschickt werden, finden in allen acht Richtungen Platz daneben. Das Andocken von Belagerungstürmen (auch an diagonalen Mauern) gehört jetzt zu Improved Siegeengines. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
 diagonal_stuck: Steckengebliebene Einheiten an niedrigen diagonalen Mauern beheben
@@ -35,7 +33,7 @@ low_tower_tiles: Keine Einbahnwege aus niedrigen Turmfeldern
 low_tower_tiles_tooltip: Manche ebenerdigen Felder tragen die Markierung eines Turms, etwa Fallgruben direkt neben einem Turm. Truppen konnten sie zum Boden hin verlassen, aber nie zurückkehren, und jeder Versuch zwang das Spiel zum Neuaufbau aller Kartenpfade – ein starkes Ruckeln. Jetzt führen diese Felder nur noch zu Türmen und Mauern, hin wie zurück identisch.
 balance_changes: Balance-Änderungen
 bugfixes: Fehlerkorrekturen
-qol: Komfortfunktionen
+qol: Komfort
 tags.bugfixes: Fehlerkorrekturen
 tags.behavior: Verhalten
 tags.balance: Balance
