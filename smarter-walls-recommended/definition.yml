@@ -13,4 +13,4 @@ meta:
 dependencies:
   framework: ^3.0.7
   frontend: '>=1.0.17 <2.0.0'
-  smarter-walls: ^1.0.25
+  smarter-walls: ^1.0.26
