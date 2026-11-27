@@ -1,36 +1,33 @@
-any_angle: Her açıda sur çekme
-any_angle_tooltip: Çektiğin bir sur başlangıçtan bıraktığın noktaya kadar her açıda düz bir çizgi izler. Eskiden surlar yalnızca düz veya ortada kırık yaparak 45 derecede çekilebiliyordu.
-flow: Surlar binaların etrafından dolaşır
-flow_tooltip: Yolda bir engel olduğunda — bina, ağaç, kayalar — sur kırmızıya dönmek yerine engelin şeklini sararak etrafından dolaşır ve devam eder. Mazgallar ve merdivenler de aynısını yapar; mazgallar boyunca çekildikleri suru izler.
-flow_trees: Surlar ağaçların etrafından dolaşır
-flow_trees_tooltip: Sur ağaçların içinden geçmek yerine etraflarından dolaşır. Seçtiğin iki uç yerlerinde kalır. «Surlar binaların etrafından dolaşır» ayarını gerektirir.
-repair_only: Hasarlı surdan başlamak yalnızca onarır
-repair_only_tooltip: Sur çekmeye hasarlı bir sur karesinden başladığında yalnızca çizgi üzerindeki hasarlı sur kareleri onarılır. Aradaki veya ilerideki boş zemine yeni sur yapılmaz.
-around_walls: Surlar diğer surların etrafından dolaşır
-around_walls_tooltip: Yeni bir sur veya mazgal, üzerinden geçmek yerine hasarsız surlarının, merdivenlerinin ve mazgallarının da etrafından dolaşır. Bağlanmak için bunların üzerinde başlayabilir veya bitebilir ve hasarlı surların üzerinden geçerek onları onarmaya devam eder. «Surlar binaların etrafından dolaşır» ayarını gerektirir.
-cren_heights: Mazgallar bulundukları surun yüksekliğine uyar
-cren_heights_tooltip: |-
-  Bir mazgal yanındaki en yüksek surdan biraz daha yüksek inşa edilir; böylece tepelerdeki ve alçak surlara uyar. Yanındaki diğer mazgallar yalnızca başka hiçbir şeye değmediğinde sayılır. Merdivenlerin yanında doğrudan bitişik basamak belirleyicidir (iki basamağa değiyorsa alçak olan): en üst üç basamak yüksek mazgal, dördüncü ve altındakiler alçak mazgal alır.
-cren_attached: Yalnızca yürünebilir surlara bağlı mazgallardan geç
-cren_attached_tooltip: Birlikler bir mazgalın yükseltilmiş kısımlarından yalnızca hâlâ yürünebilen bir sura değdiği sürece geçebilir. Yıkılmış veya ağır hasarlı bir surun yanında asılı kalan mazgal kapalı kalır. Birkaç sıra derinliğindeki (en fazla 8) mazgal tek bütün sayılır. «Birlikler her mazgaldan geçebilir» ayarını gerektirir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
-walkable: Birlikler her mazgaldan geçebilir
-walkable_tooltip: |-
-  Birlikler mazgalların yükseltilmiş kısımlarından yürüyerek geçebilir — merdivenden veya kuşatma kulesinden çıkarken, suikastçı olarak ya da geçip giderken — ve merdivenler, kuşatma kuleleri ile tırmanan suikastçılar bunlara ulaşabilir; böylece kalın mazgallar artık sura çıkışı engellemez. Kimse üstünde durmaya gönderilmez: emirler, dizilişler ve yol veren birimler yanındaki sur karesini seçer, orada duranlar da oraya taşınır. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
-diagonal_siege: Merdivenler çapraz surlara saldırır
-diagonal_siege_tooltip: Merdivenler çapraz uzanan surlara ve mazgallara saldırabilir; eskiden çapraz surlara hiç tırmanılamıyordu. Böyle bir sura gönderilen birlikler sekiz yönde de yanında yer bulur. Kuşatma kulelerinin yanaşması (çapraz surlar dâhil) artık Improved Siegeengines içindedir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
-diagonal_stuck: Alçak çapraz surlarda takılan birimleri düzelt
-diagonal_stuck_tooltip: |-
-  Eski bir oyun hatasını düzeltir: iki alçak sur çapraz temas ettiğinde ve bir köşede yer seviyesinde merdiven bulunduğunda, merdivenden diğer köşedeki zemine geçmeye çalışan birimler takılıp tüm oyunu yavaşlatıyordu. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
-cren_towers: Mazgallar doğrudan kulelere bağlanmaz
-cren_towers_tooltip: Birlikler mazgaldan doğrudan bir kuleye, iç kaleye veya kapı binasına geçemez; merdivenlerde olduğu gibi yalnızca sur veya merdivenden geçebilir. Yanaşmış kuşatma kulelerinden mazgallara çıkılabilir. Çok oyunculuda herkesin aynı ayara sahip olması gerekir.
-stairs: Merdivenleri onarmak yüksekliklerini korur
-stairs_tooltip: Hasarlı merdivenlerin üzerine sur çekmek merdivenleri eski hâline getirir. Eskiden sur yüksekliğinde bir bloğa dönüşüyorlardı.
-stairs_low: Alçak surlar da merdivenleri onarır
-stairs_low_tooltip: Hasarlı merdivenlerin üzerine alçak (ahşap) sur çekmek, normal sur gibi merdivenleri eski hâline getirir. «Merdivenleri onarmak yüksekliklerini korur» ayarını gerektirir.
-crenellations: Mazgalları onarmak onları korur
-crenellations_tooltip: Hasarlı bir mazgalın üzerine sur çekmek mazgalı onarır. Eskisi gibi yalnızca hasarsız bir mazgalın üzerine sur çekildiğinde sura dönüşür.
-low_tower_tiles: Alçak kule karelerinden tek yönlü yolları kaldır
-low_tower_tiles_tooltip: Kule yanındaki ölüm çukurları gibi bazı zemin kareleri kule işareti taşıyabilir. Birlikler bunlardan zemine çıkabiliyor ama geri dönemiyordu; bunu deneyen her rota oyunun haritadaki tüm yolları yeniden hesaplamasına ve büyük yavaşlamaya yol açıyordu. Artık bu kareler her iki yönde aynı şekilde yalnızca kulelere ve surlara bağlanır.
+any_angle: Surları her açıda çiz
+any_angle_tooltip: Bir sur seçin ve başlangıç karesinden bitiş karesine sürükleyin.
+flow: Surları engellerin etrafından geçir
+flow_tooltip: Bir sur seçin ve engellerin etrafından dolaşmak için baştan sona sürükleyin.
+flow_trees: Ağaçların etrafından dolaş
+flow_trees_tooltip: Sur rotası ağaçların etrafından kıvrılır.
+repair_only: Hasarlı yerden başlamak yalnızca onarır
+repair_only_tooltip: Yeni sur örmeden rota boyunca onarmak için sürüklemeye hasarlı bir sur karesinden başlayın.
+around_walls: Dost surların etrafından dolaş
+around_walls_tooltip: Rota sağlam dost surların etrafından kıvrılır ve uçlarda yine de onlara birleşebilir.
+cren_heights: Mazgal yüksekliğini bitişik surlarla eşleştir
+cren_heights_tooltip: Harita düzenleyicide yüksekliğini siz belirlemediyseniz mazgallar komşu surlara uyar.
+cren_attached: Yürünebilir sur bağlantısı gerektir
+cren_attached_tooltip: Yükseltilmiş mazgallar yürünebilir bir sura bağlıysa üzerinden geçilebilir.
+walkable: Birliklerin yükseltilmiş mazgallardan geçmesine izin ver
+walkable_tooltip: Birlikler yükseltilmiş mazgalların üzerinden yürüyebilir.
+diagonal_siege: Merdivenler çapraz surlara ulaşabilsin
+diagonal_siege_tooltip: Merdivencilere çapraz bir sur üzerinde normal saldırı emri verin.
+diagonal_stuck: Çapraz alçak surlarda takılan birimleri kurtar
+diagonal_stuck_tooltip: Birimler çapraz alçak surların köşelerinden geçebilir.
+cren_towers: Birliklerin mazgallardan kulelere girmesini engelle
+cren_towers_tooltip: Birliklerin mazgal yanındaki kulelere çıkmak için başka bir yola ihtiyacı olur.
+stairs: Üzerine inşa ederken hasarlı merdivenleri onar
+stairs_tooltip: Hasarlı merdivenleri onarmak için sur aracını üzerlerinden geçirin.
+stairs_low: Merdivenleri alçak surlarla da onar
+stairs_low_tooltip: Hasarlı merdivenleri onarmak için üzerlerinden alçak sur çekin.
+crenellations: Üzerine inşa ederken hasarlı mazgalları onar
+crenellations_tooltip: Hasarlı mazgalları onarmak için sur aracını üzerlerinden geçirin.
+low_tower_tiles: Kulelerin yanındaki tek yönlü geçişleri düzelt
+low_tower_tiles_tooltip: Birimler kulelerin yanındaki erişilebilir karelerden iki yönde de geçebilir.
 balance_changes: Denge değişiklikleri
 bugfixes: Hata düzeltmeleri
 qol: Kullanım kolaylığı

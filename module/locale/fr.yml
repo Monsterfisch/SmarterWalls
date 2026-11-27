@@ -1,36 +1,33 @@
-any_angle: Murs selon n'importe quel angle
-any_angle_tooltip: Un mur tracé suit une ligne droite du point de départ au point d'arrivée, quel que soit l'angle. Auparavant, les murs ne pouvaient être que droits ou à 45 degrés, avec un coude au milieu.
-flow: Les murs contournent les bâtiments
-flow_tooltip: Lorsqu'un obstacle se trouve sur le passage — bâtiment, arbre, rochers — le mur le contourne en épousant sa forme et continue au lieu de passer au rouge. Les créneaux et les escaliers font de même ; les créneaux suivent le mur le long duquel on les trace.
-flow_trees: Les murs contournent les arbres
-flow_trees_tooltip: Un mur contourne les arbres au lieu de les traverser en les détruisant. Les deux extrémités choisies restent à leur place. Nécessite « Les murs contournent les bâtiments ».
-repair_only: Commencer sur un mur endommagé ne fait que réparer
-repair_only_tooltip: Lorsque vous commencez à tracer un mur sur une case de mur endommagée, seules les cases de mur endommagées le long du tracé sont réparées. Aucun nouveau mur n'est construit sur le terrain vide entre-temps ou au-delà.
-around_walls: Les murs contournent les autres murs
-around_walls_tooltip: Un nouveau mur ou créneau contourne aussi vos murs, escaliers et créneaux intacts au lieu de passer par-dessus. Il peut toujours commencer ou finir dessus pour s'y raccorder, et passe toujours sur les murs endommagés pour les réparer. Nécessite « Les murs contournent les bâtiments ».
-cren_heights: Les créneaux s'adaptent à la hauteur du mur
-cren_heights_tooltip: |-
-  Un créneau est construit légèrement plus haut que le mur le plus élevé adjacent, afin de s'adapter aux murs en hauteur et aux murets. Les autres créneaux voisins ne comptent que s'il ne touche rien d'autre. Près d'un escalier, la marche directement adjacente décide (la plus basse s'il en touche deux) : les trois marches supérieures reçoivent des créneaux hauts, la quatrième et les suivantes des créneaux bas.
-cren_attached: Ne franchir que les créneaux reliés à un mur praticable
-cren_attached_tooltip: Les troupes ne peuvent franchir les parties surélevées d'un créneau que tant qu'il touche un mur encore praticable. Un créneau isolé près d'un mur détruit ou gravement endommagé reste fermé. Un créneau profond de plusieurs rangées (jusqu'à 8) compte comme un ensemble. Nécessite « Les troupes peuvent franchir chaque créneau ». Tous les joueurs en multijoueur doivent avoir le même réglage.
-walkable: Les troupes peuvent franchir chaque créneau
-walkable_tooltip: |-
-  Les troupes peuvent traverser les parties surélevées des créneaux — en montant par une échelle ou une tour de siège, en tant qu'assassins ou de passage — et échelles, tours de siège et assassins peuvent y accéder, si bien que des créneaux épais n'empêchent plus l'accès au mur. Personne n'est envoyé y stationner : ordres, formations et unités qui s'écartent choisissent la case de mur voisine, et quiconque s'y arrête y est déplacé. Tous les joueurs en multijoueur doivent avoir le même réglage.
-diagonal_siege: Les échelles attaquent les murs en diagonale
-diagonal_siege_tooltip: Les échelles peuvent attaquer des murs et créneaux en diagonale, auparavant impossibles à escalader. Les troupes envoyées contre un tel mur trouvent place dans les huit directions. L'accostage des tours de siège (murs diagonaux compris) fait désormais partie d'Improved Siegeengines. Tous les joueurs en multijoueur doivent avoir le même réglage.
-diagonal_stuck: Corriger les unités bloquées près des murets en diagonale
-diagonal_stuck_tooltip: |-
-  Corrige un vieux bug du jeu : lorsque deux murets se touchent en diagonale avec un escalier au sol dans un angle, les unités voulant passer de l'escalier au sol dans l'angle opposé restaient bloquées et ralentissaient tout le jeu. Tous les joueurs en multijoueur doivent avoir le même réglage.
-cren_towers: Les créneaux ne mènent pas directement dans les tours
-cren_towers_tooltip: Les troupes ne peuvent pas passer directement d'un créneau dans une tour, un donjon ou une porte, mais seulement depuis un mur ou un escalier, comme pour les escaliers. Les tours de siège accostées mènent toujours aux créneaux. Tous les joueurs en multijoueur doivent avoir le même réglage.
-stairs: Réparer un escalier conserve sa hauteur
-stairs_tooltip: Construire un mur sur un escalier endommagé le remet dans son état d'origine. Auparavant, il se transformait en un bloc de la hauteur d'un mur.
-stairs_low: Les murets réparent aussi les escaliers
-stairs_low_tooltip: Construire un muret sur un escalier endommagé le remet dans son état d'origine, comme un mur normal. Nécessite « Réparer un escalier conserve sa hauteur ».
-crenellations: Réparer un créneau le préserve
-crenellations_tooltip: Construire un mur sur un créneau endommagé répare le créneau. Seul un créneau intact est transformé en mur lorsqu'on construit un mur par-dessus, comme avant.
-low_tower_tiles: Supprimer les passages à sens unique des cases basses de tour
-low_tower_tiles_tooltip: Certaines cases au sol portent le marqueur d'une tour, comme des fosses à pics collées à une tour. Les troupes pouvaient en sortir vers le sol mais jamais y revenir, et chaque tentative forçait le jeu à recalculer tous les chemins de la carte, causant de forts ralentissements. Désormais ces cases ne mènent qu'aux tours et aux murs, de manière identique dans les deux sens.
+any_angle: Tracer les murs sous n’importe quel angle
+any_angle_tooltip: Sélectionnez un mur et faites glisser de la case de départ à la case d’arrivée.
+flow: Contourner les obstacles avec les murs
+flow_tooltip: Sélectionnez un mur et faites glisser du début à la fin pour contourner les obstacles.
+flow_trees: Contourner les arbres
+flow_trees_tooltip: Le tracé contourne les arbres.
+repair_only: Commencer sur un mur endommagé répare seulement
+repair_only_tooltip: Commencez le tracé sur une case de mur endommagée pour réparer le long du chemin sans bâtir de nouveau mur.
+around_walls: Contourner les murs alliés
+around_walls_tooltip: Le tracé contourne les murs alliés intacts tout en pouvant s’y raccorder aux extrémités.
+cren_heights: Aligner la hauteur des créneaux sur les murs voisins
+cren_heights_tooltip: Les créneaux adoptent la hauteur des murs voisins, sauf réglage manuel dans l’éditeur de cartes.
+cren_attached: Exiger un raccord à un mur praticable
+cren_attached_tooltip: Les créneaux surélevés sont praticables lorsqu’ils sont reliés à un mur praticable.
+walkable: Permettre aux troupes de franchir les créneaux surélevés
+walkable_tooltip: Les troupes peuvent traverser les créneaux surélevés.
+diagonal_siege: Permettre aux échelles d’atteindre les murs en diagonale
+diagonal_siege_tooltip: Donnez aux écheliers l’ordre d’attaque habituel sur un mur en diagonale.
+diagonal_stuck: Libérer les unités bloquées sur les murets en diagonale
+diagonal_stuck_tooltip: Les unités peuvent franchir les angles des murets en diagonale.
+cren_towers: Empêcher l’accès aux tours via les créneaux
+cren_towers_tooltip: Les troupes doivent emprunter un autre accès pour monter sur les tours voisines de créneaux.
+stairs: Réparer les escaliers endommagés en construisant dessus
+stairs_tooltip: Passez l’outil mur sur des escaliers endommagés pour les restaurer.
+stairs_low: Réparer aussi les escaliers avec les murets
+stairs_low_tooltip: Tracez un muret sur des escaliers endommagés pour les restaurer.
+crenellations: Réparer les créneaux endommagés en construisant dessus
+crenellations_tooltip: Passez l’outil mur sur des créneaux endommagés pour les restaurer.
+low_tower_tiles: Corriger les passages à sens unique près des tours
+low_tower_tiles_tooltip: Les unités peuvent circuler dans les deux sens sur les cases accessibles à côté des tours.
 balance_changes: Modifications de l'équilibrage
 bugfixes: Corrections de bugs
 qol: Qualité de vie

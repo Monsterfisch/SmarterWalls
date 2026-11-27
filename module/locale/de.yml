@@ -1,36 +1,33 @@
-any_angle: Mauern in beliebigem Winkel
-any_angle_tooltip: Eine gezogene Mauer verläuft in einer geraden Linie vom Start- bis zum Endpunkt in jedem beliebigen Winkel. Zuvor waren nur gerade oder 45-Grad-Linien mit einem Knick dazwischen möglich.
-flow: Mauern führen um Gebäude herum
-flow_tooltip: Steht etwas im Weg – ein Gebäude, ein Baum, Felsen –, legt sich die Mauer an dessen Kontur entlang herum und läuft weiter, statt rot zu werden. Zinnen und Treppen verhalten sich ebenso; Zinnen folgen der Mauer, an der sie entlanggezogen werden.
-flow_trees: Mauern führen um Bäume herum
-flow_trees_tooltip: Eine Mauer verläuft um Bäume herum, statt sie einfach zu überbauen. Die beiden gewählten Endpunkte bleiben an ihrem Platz. Erfordert „Mauern führen um Gebäude herum“.
-repair_only: Start auf beschädigter Mauer repariert nur
-repair_only_tooltip: Beginnst du das Ziehen einer Mauer auf einem beschädigten Mauerfeld, werden nur die beschädigten Mauerfelder entlang der Linie repariert. Auf freiem Boden dazwischen oder dahinter wird keine neue Mauer gebaut.
-around_walls: Mauern führen um andere Mauern herum
-around_walls_tooltip: Eine neue Mauer oder Zinne läuft auch um deine unbeschädigten Mauern, Treppen und Zinnen herum, statt über sie hinwegzubauen. Sie kann weiterhin an ihnen beginnen oder enden, um anzuschließen, und läuft weiterhin über beschädigte Mauern, um sie zu reparieren. Erfordert „Mauern führen um Gebäude herum“.
-cren_heights: Zinnen passen sich der Mauerhöhe an
-cren_heights_tooltip: |-
-  Eine Zinne wird etwas höher gebaut als die höchste benachbarte Mauer, sodass sie zu Mauern auf Hügeln und zu niedrigen Mauern passt. Andere Zinnen daneben zählen nur, wenn sie sonst nichts berührt. Neben Treppen entscheidet die direkt anliegende Stufe (bei zweien die niedrigere): Die obersten drei Stufen erhalten hohe Zinnen, ab Stufe 4 abwärts niedrige.
-cren_attached: Zinnen nur an begehbaren Mauern überqueren
-cren_attached_tooltip: Truppen können die erhöhten Teile einer Zinne nur überqueren, solange diese an eine noch begehbare Mauer grenzt. Eine Zinne neben einer zerstörten oder stark beschädigten Mauer bleibt unpassierbar. Eine mehrere Reihen tiefe Zinne (bis zu 8) zählt als Ganzes. Erfordert „Truppen können jede Zinne überqueren“. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
-walkable: Truppen können jede Zinne überqueren
-walkable_tooltip: |-
-  Truppen können über die erhöhten Teile von Zinnen hinweglaufen – beim Erklimmen über Leitern oder Belagerungstürme, als Assassinen oder beim Durchqueren –, und Leitern, Belagerungstürme sowie kletternde Assassinen erreichen sie, sodass beliebig dicke Zinnen sie nicht mehr von der Mauer fernhalten. Niemand wird dauerhaft darauf abgestellt: Befehle, Formationen und ausweichende Einheiten wählen stattdessen das angrenzende Mauerfeld, und wer dennoch dort anhält, wird dorthin versetzt. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
-diagonal_siege: Leiterträger greifen diagonale Mauern an
-diagonal_siege_tooltip: Leitern können diagonal verlaufende Mauern und Zinnen angreifen; zuvor waren diagonale Mauern gar nicht erklimmbar. Truppen, die auf eine solche Mauer geschickt werden, finden in allen acht Richtungen Platz daneben. Das Andocken von Belagerungstürmen (auch an diagonalen Mauern) gehört jetzt zu Improved Siegeengines. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
-diagonal_stuck: Steckengebliebene Einheiten an niedrigen diagonalen Mauern beheben
-diagonal_stuck_tooltip: |-
-  Behebt einen alten Spielfehler: Wo sich zwei niedrige Mauern diagonal berühren und in einer Ecke ebenerdige Treppen liegen, blieben Einheiten beim Wechsel von den Treppen zum Boden in der anderen Ecke stecken und verlangsamten das ganze Spiel. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
-cren_towers: Zinnen führen nicht direkt in Türme
-cren_towers_tooltip: Truppen können von einer Zinne nicht direkt in einen Turm, Bergfried oder ein Torhaus gehen, sondern nur von einer Mauer oder Treppe aus – genau wie bei Treppen. Angedockte Belagerungstürme führen weiterhin auf Zinnen. Im Mehrspielermodus benötigt jeder dieselbe Einstellung.
-stairs: Reparieren von Treppen behält ihre Höhe bei
-stairs_tooltip: Das Überbauen beschädigter Treppen mit einer Mauer stellt die Treppen in ihrer ursprünglichen Form wieder her. Zuvor verwandelten sie sich in einen mauerhohen Block.
-stairs_low: Auch niedrige Mauern reparieren Treppen
-stairs_low_tooltip: Das Überbauen beschädigter Treppen mit einer niedrigen Mauer stellt die Treppen wie bei einer normalen Mauer wieder her. Erfordert „Reparieren von Treppen behält ihre Höhe bei“.
-crenellations: Reparieren von Zinnen erhält diese
-crenellations_tooltip: Das Überbauen einer beschädigten Zinne mit einer Mauer repariert die Zinne. Nur eine unbeschädigte Zinne wird wie bisher zu einer Mauer, wenn man eine Mauer darüber zieht.
-low_tower_tiles: Keine Einbahnwege aus niedrigen Turmfeldern
-low_tower_tiles_tooltip: Manche ebenerdigen Felder tragen die Markierung eines Turms, etwa Fallgruben direkt neben einem Turm. Truppen konnten sie zum Boden hin verlassen, aber nie zurückkehren, und jeder Versuch zwang das Spiel zum Neuaufbau aller Kartenpfade – ein starkes Ruckeln. Jetzt führen diese Felder nur noch zu Türmen und Mauern, hin wie zurück identisch.
+any_angle: Mauern in beliebigem Winkel ziehen
+any_angle_tooltip: Wähle eine Mauer und ziehe vom Startfeld zum Zielfeld.
+flow: Mauern um Hindernisse herumführen
+flow_tooltip: Wähle eine Mauer und ziehe von Start zu Ziel, um Hindernisse zu umgehen.
+flow_trees: Bäume umgehen
+flow_trees_tooltip: Die Mauerroute biegt um Bäume herum.
+repair_only: Start auf Schaden repariert nur
+repair_only_tooltip: Beginne das Ziehen auf einem beschädigten Mauerfeld, um entlang der Route nur zu reparieren, ohne neue Mauern zu bauen.
+around_walls: Eigene Mauern umgehen
+around_walls_tooltip: Die Route biegt um intakte eigene Mauern herum und kann an den Enden dennoch anschließen.
+cren_heights: Zinnenhöhe an angrenzende Mauern anpassen
+cren_heights_tooltip: Zinnen übernehmen die Höhe benachbarter Mauern, sofern sie nicht im Karteneditor festgelegt wurde.
+cren_attached: Begehbare Mauerverbindung verlangen
+cren_attached_tooltip: Erhöhte Zinnen sind begehbar, wenn sie an eine begehbare Mauer anschließen.
+walkable: Truppen über erhöhte Zinnen gehen lassen
+walkable_tooltip: Truppen können über erhöhte Zinnen laufen.
+diagonal_siege: Leitern an diagonalen Mauern anlegen lassen
+diagonal_siege_tooltip: Gib Leiterträgern den üblichen Angriffsbefehl auf eine diagonale Mauer.
+diagonal_stuck: An diagonalen niedrigen Mauern festhängende Einheiten befreien
+diagonal_stuck_tooltip: Einheiten können an den Ecken diagonaler niedriger Mauern vorbeigehen.
+cren_towers: Truppen daran hindern, Türme über Zinnen zu betreten
+cren_towers_tooltip: Truppen brauchen einen anderen Zugang zu Türmen neben Zinnen.
+stairs: Beschädigte Treppen beim Überbauen reparieren
+stairs_tooltip: Ziehe das Mauerwerkzeug über beschädigte Treppen, um sie wiederherzustellen.
+stairs_low: Treppen auch mit niedrigen Mauern reparieren
+stairs_low_tooltip: Ziehe eine niedrige Mauer über beschädigte Treppen, um sie wiederherzustellen.
+crenellations: Beschädigte Zinnen beim Überbauen reparieren
+crenellations_tooltip: Ziehe das Mauerwerkzeug über beschädigte Zinnen, um sie wiederherzustellen.
+low_tower_tiles: Einbahn-Wege neben Türmen beheben
+low_tower_tiles_tooltip: Einheiten können begehbare Felder neben Türmen in beide Richtungen passieren.
 balance_changes: Balance-Änderungen
 bugfixes: Fehlerkorrekturen
 qol: Komfort
