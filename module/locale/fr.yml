@@ -34,3 +34,7 @@ qol: Qualité de vie
 tags.bugfixes: Corrections
 tags.behavior: Comportement
 tags.balance: Équilibrage
+cat_building_repair_qol: Construction et réparation
+cat_castle_access: Accès et défenses du château
+cat_siege_sapping: Siège et sape
+cat_walls_ladders: Murs, escaliers et échelles

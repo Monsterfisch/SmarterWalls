@@ -34,3 +34,7 @@ qol: Comodidad de juego
 tags.bugfixes: Correcciones
 tags.behavior: Comportamiento
 tags.balance: Equilibrio
+cat_building_repair_qol: Construcción y reparación
+cat_castle_access: Acceso y defensas del castillo
+cat_siege_sapping: Asedio y zapa
+cat_walls_ladders: Muros, escaleras y escalas

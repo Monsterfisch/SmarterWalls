@@ -34,3 +34,7 @@ qol: 便利性改进
 tags.bugfixes: 错误修复
 tags.behavior: 行为
 tags.balance: 平衡
+cat_building_repair_qol: 建造与修复
+cat_castle_access: 城堡通行与防御工事
+cat_siege_sapping: 攻城与挖掘
+cat_walls_ladders: 城墙、楼梯与云梯

@@ -34,3 +34,7 @@ qol: Удобство игры
 tags.bugfixes: Исправления
 tags.behavior: Поведение
 tags.balance: Баланс
+cat_building_repair_qol: Строительство и ремонт
+cat_castle_access: Доступ в замок и укрепления
+cat_siege_sapping: Осада и подкопы
+cat_walls_ladders: Стены, лестницы и штурмовые лестницы

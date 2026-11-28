@@ -34,3 +34,7 @@ qol: Kényelmi funkciók
 tags.bugfixes: Hibajavítások
 tags.behavior: Viselkedés
 tags.balance: Egyensúly
+cat_building_repair_qol: Építés és javítás
+cat_castle_access: Várbejárás és védművek
+cat_siege_sapping: Ostrom és aláaknázás
+cat_walls_ladders: Falak, lépcsők és létrák

@@ -34,3 +34,7 @@ qol: Komfort
 tags.bugfixes: Fehlerkorrekturen
 tags.behavior: Verhalten
 tags.balance: Balance
+cat_building_repair_qol: Bauen und Reparieren
+cat_castle_access: Burgzugang und Verteidigungsanlagen
+cat_siege_sapping: Belagerung und Untergraben
+cat_walls_ladders: Mauern, Treppen und Leitern

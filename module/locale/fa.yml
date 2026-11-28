@@ -34,3 +34,7 @@ qol: سهولت استفاده
 tags.bugfixes: رفع اشکال
 tags.behavior: رفتار
 tags.balance: توازن
+cat_building_repair_qol: ساخت و تعمیر
+cat_castle_access: دسترسی و استحکامات قلعه
+cat_siege_sapping: محاصره و نقب‌زنی
+cat_walls_ladders: دیوارها، پله‌ها و نردبان‌ها

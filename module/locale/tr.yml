@@ -34,3 +34,7 @@ qol: Kullanım kolaylığı
 tags.bugfixes: Hata düzeltmeleri
 tags.behavior: Davranış
 tags.balance: Denge
+cat_building_repair_qol: İnşaat ve onarım
+cat_castle_access: Kale erişimi ve savunmaları
+cat_siege_sapping: Kuşatma ve lağım
+cat_walls_ladders: Surlar, merdivenler ve kuşatma merdivenleri
