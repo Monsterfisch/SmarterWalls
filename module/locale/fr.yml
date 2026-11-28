@@ -1,0 +1,40 @@
+any_angle: Tracer les murs sous n’importe quel angle
+any_angle_tooltip: Sélectionnez un mur et faites glisser de la case de départ à la case d’arrivée.
+flow: Contourner les obstacles avec les murs
+flow_tooltip: Sélectionnez un mur et faites glisser du début à la fin pour contourner les obstacles.
+flow_trees: Contourner les arbres
+flow_trees_tooltip: Le tracé contourne les arbres.
+repair_only: Commencer sur un mur endommagé répare seulement
+repair_only_tooltip: Commencez le tracé sur une case de mur endommagée pour réparer le long du chemin sans bâtir de nouveau mur.
+around_walls: Contourner les murs alliés
+around_walls_tooltip: Le tracé contourne les murs alliés intacts tout en pouvant s’y raccorder aux extrémités.
+cren_heights: Aligner la hauteur des créneaux sur les murs voisins
+cren_heights_tooltip: Les créneaux adoptent la hauteur des murs voisins, sauf réglage manuel dans l’éditeur de cartes.
+cren_attached: Exiger un raccord à un mur praticable
+cren_attached_tooltip: Les créneaux surélevés sont praticables lorsqu’ils sont reliés à un mur praticable.
+walkable: Permettre aux troupes de franchir les créneaux surélevés
+walkable_tooltip: Les troupes peuvent traverser les créneaux surélevés.
+diagonal_siege: Permettre aux échelles d’atteindre les murs en diagonale
+diagonal_siege_tooltip: Donnez aux écheliers l’ordre d’attaque habituel sur un mur en diagonale.
+diagonal_stuck: Libérer les unités bloquées sur les murets en diagonale
+diagonal_stuck_tooltip: Les unités peuvent franchir les angles des murets en diagonale.
+cren_towers: Empêcher l’accès aux tours via les créneaux
+cren_towers_tooltip: Les troupes doivent emprunter un autre accès pour monter sur les tours voisines de créneaux.
+stairs: Réparer les escaliers endommagés en construisant dessus
+stairs_tooltip: Passez l’outil mur sur des escaliers endommagés pour les restaurer.
+stairs_low: Réparer aussi les escaliers avec les murets
+stairs_low_tooltip: Tracez un muret sur des escaliers endommagés pour les restaurer.
+crenellations: Réparer les créneaux endommagés en construisant dessus
+crenellations_tooltip: Passez l’outil mur sur des créneaux endommagés pour les restaurer.
+low_tower_tiles: Corriger les passages à sens unique près des tours
+low_tower_tiles_tooltip: Les unités peuvent circuler dans les deux sens sur les cases accessibles à côté des tours.
+balance_changes: Modifications de l'équilibrage
+bugfixes: Corrections de bugs
+qol: Qualité de vie
+tags.bugfixes: Corrections
+tags.behavior: Comportement
+tags.balance: Équilibrage
+cat_building_repair_qol: Construction et réparation
+cat_castle_access: Accès et défenses du château
+cat_siege_sapping: Siège et sape
+cat_walls_ladders: Murs, escaliers et échelles

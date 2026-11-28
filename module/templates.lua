@@ -499,16 +499,17 @@ keep:
   jmp RESUME
 ]]
 
--- Does this raised crenellation part touch a walkable wall? One of its eight neighbours is a wall,
--- stairs or crenellation tile (0x100) that is not itself a raised part or a stockpile (0x400002)
--- and not worn down past what the game still lets units walk on (damage byte <= 0x14, the
--- game's own test in the link builder). in: eax = tile. out: eax = 1 or 0. Keeps other registers.
 templates.attached = [[
 ; eax = a raised crenellation tile -> eax = 1 when it is attached: it touches a walkable wall
 ; (0x100, not raised, no stockpile, damage <= 0x14), or up to DEPTH straight steps over raised
 ; crenellation parts lead to one that does - in a crenellation several rows deep every tile past
 ; the row beside the wall is raised. Breadth first: AQ/AD hold the tiles and their distance,
 ; STAMP marks the tiles seen in this call (GEN).
+  cmp eax, TILE_LIMIT
+  jb attached_valid
+  xor eax, eax
+  ret
+attached_valid:
   push ebx
   push ecx
   push edx
@@ -541,6 +542,8 @@ item:
 direct:
   mov eax, [edi + ebp*4]
   add eax, esi
+  cmp eax, TILE_LIMIT
+  jae dnext
   mov edx, [FLAGS + eax*4]
   test edx, 0x100
   jz dnext
@@ -558,6 +561,8 @@ dnext:
 straight:
   mov eax, [edi + ebp*4]
   add eax, esi
+  cmp eax, TILE_LIMIT
+  jae snext
   mov edx, [FLAGS + eax*4]
   and edx, 0x400302
   cmp edx, 0x400300
@@ -650,11 +655,10 @@ templates.relink = [[
   call GAME_RELINK
   pushad
   mov esi, [esp + 0x28]
-  cmp esi, TILE_LIMIT                ; a tile outside the map (the game asks for some while a
-  jae done                           ; map loads): nothing to relink around it
+  cmp esi, TILE_LIMIT
+  jae done
   inc dword [RGEN]
   mov edx, [RGEN]
-  mov esi, [esp + 0x28]
   mov [SEEN + esi*4], edx
   xor ecx, ecx
   movzx edi, word [TILE_Y + esi*2]

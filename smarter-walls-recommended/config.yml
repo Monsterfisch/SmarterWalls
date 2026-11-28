@@ -1,0 +1,52 @@
+meta:
+  version: 1.0.0
+config-sparse:
+  modules:
+    smarter-walls:
+      config:
+        diagonalStuck:
+          contents:
+            suggested-value: true
+        crenellationTowers:
+          contents:
+            suggested-value: true
+        lowTowerTiles:
+          contents:
+            suggested-value: true
+        stairs:
+          contents:
+            suggested-value: true
+        stairsLowWalls:
+          contents:
+            suggested-value: true
+        crenellations:
+          contents:
+            suggested-value: true
+        anyAngle:
+          contents:
+            suggested-value: true
+        flow:
+          contents:
+            suggested-value: true
+        flowTrees:
+          contents:
+            suggested-value: true
+        aroundWalls:
+          contents:
+            suggested-value: true
+        repairOnly:
+          contents:
+            suggested-value: true
+        crenellationHeights:
+          contents:
+            suggested-value: true
+        walkableCrenellations:
+          contents:
+            suggested-value: true
+        crenellationAttached:
+          contents:
+            suggested-value: true
+        diagonalSiege:
+          contents:
+            suggested-value: true
+  plugins: {}

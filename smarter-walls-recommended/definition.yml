@@ -1,0 +1,16 @@
+name: smarter-walls-recommended
+display-name: Smarter Walls Recommended
+author: Monsterfish
+version: 1.0.1
+type: plugin
+game:
+- SHC==1.41
+- SHCE==1.41
+family:
+- name: smarter-walls
+meta:
+  version: 1.0.0
+dependencies:
+  framework: ^3.0.7
+  frontend: '>=1.0.17 <2.0.0'
+  smarter-walls: ^1.0.26

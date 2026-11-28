@@ -1,0 +1,40 @@
+any_angle: Mauern in beliebigem Winkel ziehen
+any_angle_tooltip: Wähle eine Mauer und ziehe vom Startfeld zum Zielfeld.
+flow: Mauern um Hindernisse herumführen
+flow_tooltip: Wähle eine Mauer und ziehe von Start zu Ziel, um Hindernisse zu umgehen.
+flow_trees: Bäume umgehen
+flow_trees_tooltip: Die Mauerroute biegt um Bäume herum.
+repair_only: Auf beschädigten Mauern nur reparieren
+repair_only_tooltip: Beginne das Ziehen auf einem beschädigten Mauerfeld, um entlang der Route nur zu reparieren, ohne neue Mauern zu bauen.
+around_walls: Verbündete Mauern umgehen
+around_walls_tooltip: Die Mauerlinie umgeht intakte verbündete Mauern und kann an den Enden an sie anschließen.
+cren_heights: Zinnenhöhe an angrenzende Mauern anpassen
+cren_heights_tooltip: Zinnen übernehmen die Höhe benachbarter Mauern, sofern sie nicht im Karteneditor festgelegt wurde.
+cren_attached: Begehbare Mauerverbindung verlangen
+cren_attached_tooltip: Erhöhte Zinnen sind begehbar, wenn sie an eine begehbare Mauer anschließen.
+walkable: Truppen über erhöhte Zinnen gehen lassen
+walkable_tooltip: Truppen können über erhöhte Zinnen laufen.
+diagonal_siege: Leitern an diagonalen Mauern anlegen lassen
+diagonal_siege_tooltip: Gib Leiterträgern den üblichen Angriffsbefehl auf eine diagonale Mauer.
+diagonal_stuck: Feststecken an niedrigen Diagonalmauern beheben
+diagonal_stuck_tooltip: Einheiten können an den Ecken diagonaler niedriger Mauern vorbeigehen.
+cren_towers: Truppen daran hindern, Türme über Zinnen zu betreten
+cren_towers_tooltip: Truppen brauchen einen anderen Zugang zu Türmen neben Zinnen.
+stairs: Beschädigte Treppen beim Überbauen reparieren
+stairs_tooltip: Ziehe das Mauerwerkzeug über beschädigte Treppen, um sie wiederherzustellen.
+stairs_low: Treppen auch mit niedrigen Mauern reparieren
+stairs_low_tooltip: Ziehe eine niedrige Mauer über beschädigte Treppen, um sie wiederherzustellen.
+crenellations: Beschädigte Zinnen beim Überbauen reparieren
+crenellations_tooltip: Ziehe das Mauerwerkzeug über beschädigte Zinnen, um sie wiederherzustellen.
+low_tower_tiles: Einbahnpassagen neben Türmen beheben
+low_tower_tiles_tooltip: Einheiten können begehbare Felder neben Türmen in beide Richtungen passieren.
+balance_changes: Balance-Änderungen
+bugfixes: Fehlerkorrekturen
+qol: Komfort
+tags.bugfixes: Fehlerkorrekturen
+tags.behavior: Verhalten
+tags.balance: Balance
+cat_building_repair_qol: Bauen und Reparieren
+cat_castle_access: Burgzugang und Verteidigungsanlagen
+cat_siege_sapping: Belagerung und Untergraben
+cat_walls_ladders: Mauern, Treppen und Leitern

@@ -1,0 +1,40 @@
+any_angle: Trazar murallas en cualquier ángulo
+any_angle_tooltip: Selecciona una muralla y arrastra desde la casilla inicial hasta la final.
+flow: Rodea obstáculos al trazar murallas
+flow_tooltip: Selecciona una muralla y arrastra de principio a fin para rodear obstáculos.
+flow_trees: Rodear árboles
+flow_trees_tooltip: El trazado rodea los árboles.
+repair_only: Empezar sobre daños solo repara
+repair_only_tooltip: Empieza a arrastrar en una casilla de muralla dañada para reparar el tramo sin construir muralla nueva.
+around_walls: Rodear murallas aliadas
+around_walls_tooltip: El trazado rodea murallas aliadas intactas y puede unirse a ellas en los extremos.
+cren_heights: Igualar la altura de almenas con las murallas contiguas
+cren_heights_tooltip: Las almenas igualan a sus vecinas salvo que fijes su altura en el editor de mapas.
+cren_attached: Exigir conexión con una muralla transitable
+cren_attached_tooltip: Las almenas elevadas son transitables cuando conectan con una muralla transitable.
+walkable: Permitir que las tropas crucen almenas elevadas
+walkable_tooltip: Las tropas pueden caminar por encima de las almenas elevadas.
+diagonal_siege: Permitir que las escaleras alcancen murallas diagonales
+diagonal_siege_tooltip: Da a los escaladores la orden habitual de ataque sobre una muralla diagonal.
+diagonal_stuck: Liberar unidades atascadas en muros bajos diagonales
+diagonal_stuck_tooltip: Las unidades pueden sortear las esquinas de los muros bajos diagonales.
+cren_towers: Impedir entrar en torres a través de almenas
+cren_towers_tooltip: Las tropas necesitan otra ruta para subir a torres junto a almenas.
+stairs: Restaurar escaleras dañadas al construir encima
+stairs_tooltip: Pasa la herramienta de muralla sobre escaleras dañadas para restaurarlas.
+stairs_low: Reparar escaleras también con muros bajos
+stairs_low_tooltip: Traza un muro bajo sobre escaleras dañadas para restaurarlas.
+crenellations: Restaurar almenas dañadas al construir encima
+crenellations_tooltip: Pasa la herramienta de muralla sobre almenas dañadas para restaurarlas.
+low_tower_tiles: Corregir pasos de un solo sentido junto a torres
+low_tower_tiles_tooltip: Las unidades pueden pasar en ambos sentidos por las casillas accesibles junto a torres.
+balance_changes: Cambios de equilibrio
+bugfixes: Correcciones de errores
+qol: Comodidad de juego
+tags.bugfixes: Correcciones
+tags.behavior: Comportamiento
+tags.balance: Equilibrio
+cat_building_repair_qol: Construcción y reparación
+cat_castle_access: Acceso y defensas del castillo
+cat_siege_sapping: Asedio y zapa
+cat_walls_ladders: Muros, escaleras y escalas

@@ -1,0 +1,40 @@
+any_angle: Várfalak húzása tetszőleges szögben
+any_angle_tooltip: Válassz egy falat, és húzd a kezdőmezőtől a végmezőig.
+flow: Falak elvezetése akadályok körül
+flow_tooltip: Válassz egy falat, és húzd az elejétől a végéig az akadályok kikerüléséhez.
+flow_trees: Fák kikerülése
+flow_trees_tooltip: Az útvonal megkerüli a fákat.
+repair_only: Sérült részről indítva csak javít
+repair_only_tooltip: Kezdd a húzást egy sérült falmezőn, hogy új fal építése nélkül csak az útvonal mentén javíts.
+around_walls: Saját falak kikerülése
+around_walls_tooltip: Az útvonal megkerüli az ép saját falakat, de a végeken csatlakozhat hozzájuk.
+cren_heights: Pártázat magasságának igazítása a szomszédos falakhoz
+cren_heights_tooltip: A pártázatok átveszik a szomszédaik magasságát, ha a térképszerkesztőben nincs megadva.
+cren_attached: Járható falkapcsolat megkövetelése
+cren_attached_tooltip: A megemelt pártázatok akkor járhatók, ha járható falhoz csatlakoznak.
+walkable: Csapatok átkelhetnek a megemelt pártázatokon
+walkable_tooltip: A csapatok átsétálhatnak a megemelt pártázatokon.
+diagonal_siege: Létrák elérhetik az átlós falakat
+diagonal_siege_tooltip: Adj a létrahordozóknak szokásos támadási parancsot egy átlós falra.
+diagonal_stuck: Átlós alacsony falaknál elakadt egységek kiszabadítása
+diagonal_stuck_tooltip: Az egységek el tudnak haladni az átlós alacsony falak sarkai mellett.
+cren_towers: Csapatok ne léphessenek tornyokba pártázaton át
+cren_towers_tooltip: A csapatoknak más útvonalra van szükségük a pártázatok melletti tornyokra.
+stairs: Sérült lépcsők javítása ráépítéssel
+stairs_tooltip: Húzd át a fal eszközt a sérült lépcsőkön a helyreállításukhoz.
+stairs_low: Lépcsők javítása alacsony fallal is
+stairs_low_tooltip: Húzz alacsony falat a sérült lépcsőkre a helyreállításukhoz.
+crenellations: Sérült pártázatok javítása ráépítéssel
+crenellations_tooltip: Húzd át a fal eszközt a sérült pártázatokon a helyreállításukhoz.
+low_tower_tiles: Egyirányú utak javítása tornyok mellett
+low_tower_tiles_tooltip: Az egységek mindkét irányban átkelhetnek a tornyok melletti járható mezőkön.
+balance_changes: Egyensúlymódosítások
+bugfixes: Hibajavítások
+qol: Kényelmi funkciók
+tags.bugfixes: Hibajavítások
+tags.behavior: Viselkedés
+tags.balance: Egyensúly
+cat_building_repair_qol: Építés és javítás
+cat_castle_access: Várbejárás és védművek
+cat_siege_sapping: Ostrom és aláaknázás
+cat_walls_ladders: Falak, lépcsők és létrák

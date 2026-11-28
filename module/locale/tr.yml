@@ -1,0 +1,40 @@
+any_angle: Surları her açıda çiz
+any_angle_tooltip: Bir sur seçin ve başlangıç karesinden bitiş karesine sürükleyin.
+flow: Surları engellerin etrafından geçir
+flow_tooltip: Bir sur seçin ve engellerin etrafından dolaşmak için baştan sona sürükleyin.
+flow_trees: Ağaçların etrafından dolaş
+flow_trees_tooltip: Sur rotası ağaçların etrafından kıvrılır.
+repair_only: Hasarlı yerden başlamak yalnızca onarır
+repair_only_tooltip: Yeni sur örmeden rota boyunca onarmak için sürüklemeye hasarlı bir sur karesinden başlayın.
+around_walls: Dost surların etrafından dolaş
+around_walls_tooltip: Rota sağlam dost surların etrafından kıvrılır ve uçlarda yine de onlara birleşebilir.
+cren_heights: Mazgal yüksekliğini bitişik surlarla eşleştir
+cren_heights_tooltip: Harita düzenleyicide yüksekliğini siz belirlemediyseniz mazgallar komşu surlara uyar.
+cren_attached: Yürünebilir sur bağlantısı gerektir
+cren_attached_tooltip: Yükseltilmiş mazgallar yürünebilir bir sura bağlıysa üzerinden geçilebilir.
+walkable: Birliklerin yükseltilmiş mazgallardan geçmesine izin ver
+walkable_tooltip: Birlikler yükseltilmiş mazgalların üzerinden yürüyebilir.
+diagonal_siege: Merdivenler çapraz surlara ulaşabilsin
+diagonal_siege_tooltip: Merdivencilere çapraz bir sur üzerinde normal saldırı emri verin.
+diagonal_stuck: Çapraz alçak surlarda takılan birimleri kurtar
+diagonal_stuck_tooltip: Birimler çapraz alçak surların köşelerinden geçebilir.
+cren_towers: Birliklerin mazgallardan kulelere girmesini engelle
+cren_towers_tooltip: Birliklerin mazgal yanındaki kulelere çıkmak için başka bir yola ihtiyacı olur.
+stairs: Üzerine inşa ederken hasarlı merdivenleri onar
+stairs_tooltip: Hasarlı merdivenleri onarmak için sur aracını üzerlerinden geçirin.
+stairs_low: Merdivenleri alçak surlarla da onar
+stairs_low_tooltip: Hasarlı merdivenleri onarmak için üzerlerinden alçak sur çekin.
+crenellations: Üzerine inşa ederken hasarlı mazgalları onar
+crenellations_tooltip: Hasarlı mazgalları onarmak için sur aracını üzerlerinden geçirin.
+low_tower_tiles: Kulelerin yanındaki tek yönlü geçişleri düzelt
+low_tower_tiles_tooltip: Birimler kulelerin yanındaki erişilebilir karelerden iki yönde de geçebilir.
+balance_changes: Denge değişiklikleri
+bugfixes: Hata düzeltmeleri
+qol: Kullanım kolaylığı
+tags.bugfixes: Hata düzeltmeleri
+tags.behavior: Davranış
+tags.balance: Denge
+cat_building_repair_qol: İnşaat ve onarım
+cat_castle_access: Kale erişimi ve savunmaları
+cat_siege_sapping: Kuşatma ve lağım
+cat_walls_ladders: Surlar, merdivenler ve kuşatma merdivenleri

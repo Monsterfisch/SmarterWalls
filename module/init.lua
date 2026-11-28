@@ -29,14 +29,11 @@
      a changed wall relinks the raised parts around it. In a crenellation three or more rows deep
      every tile past the row beside the wall is raised, so a raised part also counts when up to
      6 straight steps over raised parts lead to one that touches a walkable wall, and a changed
-     tile relinks the raised parts that far away (1.0.21; before, troops from ladders and siege
-     towers got no further than the outer rows). Without it both tests are switched off, so troops on
+     tile relinks the raised parts that far away. Without it both tests are switched off, so troops on
      ladders and siege towers, assassins and everyone else may cross them (the game rebuilds
      every link on load). No unit is ever sent to stand on one: setDestinationForUnit moves a
      target on a raised part to the wall tile beside it - one place for every order, formation,
-     idle unit and patrol (1.0.10 opened raised parts only next to ladders and siege towers;
-     the area map follows link changes only every 200 ticks, so ladders led nowhere for a while
-     and nobody crossed crenellations anywhere else). A group spreading out on a wall skips
+     idle unit and patrol. A group spreading out on a wall skips
      them too (pathFindingResultBased, then any tile). A unit that still stops on one is moved
      to the
      nearest wall tile (never another crenellation: with only those in reach it stays),
@@ -50,7 +47,7 @@
      already takes any wall tile, and its links now meet links coming back.
   6. Ladders take on diagonal walls. Troops sent at a wall look for a free tile next to it in
      all eight directions instead of four (a ladder already leans and climbs diagonally).
-     Where a siege tower docks moved to Improved Siegeengines in 1.0.16.
+     Siege tower docking belongs to Improved Siegeengines.
   8. Crenellation heights. The game makes a crenellation 0x62 above the ground, or 0x44 (and
      flag 0x10000) when its straight neighbours are only low walls - so it is 8 above a stone
      or wood wall on flat ground and wrong on any other. Here it is 8 above the tallest wall
@@ -61,7 +58,7 @@
      builder's final store now takes away every link between a crenellation tile (0x200) and a
      tower, keep, gatehouse or other building tile (0x10000000 or a building id), both ways.
      A docked siege tower (building type 0x45, flagged 0x10000000 on its 3x3) is left out of
-     this and of rule 11 (1.0.20): the game re-adds only its four straight links each tick,
+     this and of rule 11: the game re-adds only its four straight links each tick,
      so corner docks and its other front tiles had no way onto a crenellated wall.
   9. A game bug: two walls of walkable height touching diagonally, ground-level stairs in one
      corner, ground in the other. The path link builder decides a diagonal squeeze between two
@@ -74,8 +71,7 @@
      the line's damaged wall tiles and nothing else, so no new wall is built beside the repair.
      Walls flow round trees as well (flowTrees); the game builds straight through them.
   7. Assassins. With 5 on they climb onto raised crenellation parts too - the route search and
-     the step that carries the climb out are opened together (1.0.5-1.0.9 opened the search
-     alone and assassins stood at the foot of the wall) - so an outer row that is raised all
+     the step that carries the climb out are opened together - so an outer row that is raised all
      along (a diagonal crenellation) no longer keeps them off. Diagonal climbs stay as the game
      has them: its walk back from the goal refuses them.
   Stairs and crenellations are routed too: crenellations around undamaged walls like walls,
@@ -91,11 +87,11 @@ local templates = require("templates")
 
 local MODULE_NAME = "smarter-walls"
 
-local DEFAULTS = { anyAngle = true, flow = true, aroundWalls = true, stairs = true,
-  crenellations = true, walkableCrenellations = true, diagonalSiege = true, ladderWait = 10,
-  crenellationHeights = true, diagonalStuck = true, crenellationAttached = true,
-  crenellationTowers = true, stairsLowWalls = true, repairOnly = true, flowTrees = true,
-  lowTowerTiles = true }
+local DEFAULTS = { anyAngle = false, flow = false, aroundWalls = false, stairs = false,
+  crenellations = false, walkableCrenellations = false, diagonalSiege = false, ladderWait = 10,
+  crenellationHeights = false, diagonalStuck = false, crenellationAttached = false,
+  crenellationTowers = false, stairsLowWalls = false, repairOnly = false, flowTrees = false,
+  lowTowerTiles = false }
 
 ---------------------------------------------------------------------------------------
 -- What the game's code looks like where this module touches it
@@ -147,11 +143,12 @@ local PLACE_COUNTED = { 0x2AC, { 0x8B, 0x84, 0xB7, 0x60, 0x51, 0x16, 0x00 } }
 local PLACE_FREE = { 0x398, { 0x8B, 0x4C, 0x24, 0x44, 0x56, 0x51 } }
 -- placeWalls, a new crenellation: call hasOnlyTowerNeighborsNoWalls(tile, y), the game's whole
 -- height rule (low, +0x44 and flag 0x10000, when its straight neighbours are only wood walls
--- or low crenellations; tall, +0x62, otherwise). After the call: test eax, eax; after the
--- height: the row/column parity test that raises every other crenellation tile.
-local PLACE_CRENEL_CALL = { 0x20E, { 0xE8 } }
-local PLACE_CRENEL_AFTER = { 0x213, { 0x85, 0xC0, 0x74, 0x12 } }
-local PLACE_CRENEL_PARITY = { 0x231, { 0x8B, 0x44, 0x24, 0x20, 0x83, 0xE0, 0x01 } }
+-- or low crenellations; tall, +0x62, otherwise). The seven bytes at the parity entry
+-- can be a Map Editor Improvements redirect. Both height paths enter at that address.
+local AOB_CRENEL_HEIGHT = "E8 ? ? ? ? 85 C0 74 12 80 84 3E ? ? ? ? 44 C7 44 24 34 01 00 00 00 EB 08 80 84 3E ? ? ? ? 62 ? ? ? ? ? ? ? 74 14 F6 44 24 44 01 75 0D"
+local PLACE_CRENEL_CALL = 0x20E
+local CRENEL_PARITY_FROM_CALL = 0x23
+local TOWERS_ONLY_CODE = { 0x8B, 0x44, 0x24, 0x08, 0xC1, 0xE0, 0x05 }
 local CRENEL_ABOVE_WALL = 8        -- a crenellation stands this much above its wall
 local CRENEL_TALL = 0x62           -- the game's two crenellation heights above the ground
 local CRENEL_LOW = 0x44
@@ -258,9 +255,9 @@ local SPREAD_ANY_SIZE = 8
 -- updateUnits, a live unit about to be updated: add edx, 1 / mov [esi], edx.
 local AOB_UNIT_TICK = "83 C2 01 89 16 8B 15 ? ? ? ? 69 D2 90 04 00 00 33 C9 66 89 8C 32 AE 09 00 00"
 local UNIT_TICK_SIZE = 5
--- The game tick counter, read in updateUnits' notice-frequency test (mov edx, [ticks]).
-local AOB_TICKS = "8B 87 50 0A 00 00 8B 8F 98 09 00 00 8B 15"
-local TICKS_OPERAND = 14
+-- The game tick counter: mov ecx, [edi+0x998] / mov edx, [ticks] in updateUnits. The mask load
+-- before it is patched by other modules.
+local AOB_TICKS = "8B 8F 98 09 00 00 8B 15 ? ? ? ?"
 -- UnitsState::setPositionOfUnit(unit, x, y, height).
 local AOB_SET_POSITION = "53 8B 5C 24 0C 81 FB 8F 01 00 00 55 8B E9 0F 87"
 -- The tile flags (one dword per tile), the first array of TileMapState that has a global.
@@ -324,6 +321,7 @@ local M_STAIRS = 0x1B
 local M_WOODWALL = 0x2E
 
 local MAP_SIZE = 400
+local MAP_TILES = 80400
 local TILES = MAP_SIZE * MAP_SIZE
 local MAX_PATH = 2048
 local MAX_AGE = 60            -- calls (two a frame) before a drag's route is checked again
@@ -360,14 +358,6 @@ local DATA_SIZE = D_PATH + 4 * MAX_PATH
 -- Helpers
 ---------------------------------------------------------------------------------------
 
-local function scan(pattern, purpose)
-  local ok, address = pcall(core.AOBScan, pattern)
-  if not ok or address == nil then
-    error(MODULE_NAME .. ": could not find " .. purpose)
-  end
-  return address
-end
-
 local function expectBytes(address, bytes, purpose)
   for index, byte in ipairs(bytes) do
     if (core.readByte(address + index - 1) & 0xFF) ~= byte then
@@ -398,17 +388,18 @@ local function assemble(script, values)
   return core.allocateAssembly(script, used)
 end
 
-local function jumpTo(address, target, size)
+local function jumpCode(address, target, size)
   local code = { 0xE9, core.itob(core.getRelativeAddress(address, target, -5)) }
   for _ = 6, size do
     code[#code + 1] = 0x90
   end
-  core.writeCode(address, code)
+  return code
 end
 
 local function setting(config, name)
   if type(config) == "table" and config[name] ~= nil then
-    return config[name] == true
+    if type(config[name]) == "boolean" then return config[name] end
+    log(ERROR, "Smarter Walls: " .. name .. " must be on or off. Using the default.")
   end
   return DEFAULTS[name]
 end
@@ -417,13 +408,18 @@ local function byte(address)
   return core.readByte(address) & 0xFF
 end
 
--- A whole number setting, kept within low..high.
 local function number(config, name, low, high)
-  local value = DEFAULTS[name]
-  if type(config) == "table" and tonumber(config[name]) ~= nil then
-    value = math.tointeger(math.floor(tonumber(config[name]))) or value
+  if type(config) ~= "table" then return DEFAULTS[name] end
+  local value = config[name]
+  if value == nil then return DEFAULTS[name] end
+  if type(value) ~= "number" then
+    log(ERROR, "Smarter Walls: " .. name .. " must be a number. Using the default.")
+  elseif value >= low and value <= high and value % 1 == 0 then
+    return value
+  else
+    log(WARNING, "Smarter Walls: " .. name .. " is outside the allowed values. Using the default.")
   end
-  return math.max(low, math.min(high, value))
+  return DEFAULTS[name]
 end
 
 local function word(address)
@@ -1032,10 +1028,9 @@ end
 
 local function enable(self, config)
   local options = {}
-  for name in pairs(DEFAULTS) do
-    options[name] = setting(config, name)
+  for name, default in pairs(DEFAULTS) do
+    if type(default) == "boolean" then options[name] = setting(config, name) end
   end
-  options.ladderWait = number(config, "ladderWait", 1, 60)
   local routing = options.anyAngle or options.flow or options.repairOnly
   local restoring = options.stairs or options.crenellations
   if not routing and not restoring and not options.walkableCrenellations
@@ -1043,143 +1038,190 @@ local function enable(self, config)
       and not options.diagonalStuck and not options.crenellationTowers
       and not options.lowTowerTiles then return end
 
-  local starts = {}
-  for name, f in pairs(FUNCTIONS) do
-    starts[name] = scan(f.aob, "the wall drag code (" .. name .. ")")
+  local bindings = {}
+  local function scan(pattern, purpose)
+    local binding = bindings[pattern]
+    if not binding then
+      local found, address = pcall(core.AOBScan, pattern)
+      binding = {address = found and address or nil}
+      bindings[pattern] = binding
+    end
+    if not binding.address then error(purpose .. " not found", 0) end
+    return binding.address
   end
-  local validate, place = starts.validate, starts.place
+  local function install(feature, prepare)
+    local patches = {}
+    local function write(address, code)
+      patches[#patches + 1] = {address, code}
+    end
+    local function jumpTo(address, target, size)
+      write(address, jumpCode(address, target, size))
+    end
+    local ok, reason = pcall(prepare, write, jumpTo)
+    if not ok then
+      log(ERROR, feature .. " is off. " .. tostring(reason))
+      return false
+    end
+    for _, patch in ipairs(patches) do core.writeCode(patch[1], patch[2]) end
+    return true
+  end
+  local function drag(name)
+    return scan(FUNCTIONS[name].aob, "the wall drag " .. name .. " routine")
+  end
 
   local data = core.allocate(DATA_SIZE, true)
   local record = core.allocate(TILES + 16, true)
-  local m = {
-    data = data,
-    record = record,
-    valid = readOperand(validate, VALIDATE_VALID, "the map's valid tiles"),
-    rows = readOperand(validate, VALIDATE_ROWS, "the map rows"),
-    treeTypes = readOperand(validate, VALIDATE_TREES, "the tree types"),
-  }
-  expectBytes(validate + VALIDATE_ENCLOSED, { 0xE8 }, "the crenellation test")
-  m.enclosed = validate + VALIDATE_ENCLOSED + 5 + core.readInteger(validate + VALIDATE_ENCLOSED + 1)
-  -- isTileEnclosedByWalls: mov eax, [esp+8] / push esi / shl eax, 5
-  expectBytes(m.enclosed, { 0x8B, 0x44, 0x24, 0x08, 0x56, 0xC1, 0xE0, 0x05 }, "the crenellation test")
-
-  m.tms = core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
-  -- the tile -> row and path finder operands of the siege tower search, read before any patch
-  -- of this module touches it
-  local freeTileSite = scan(AOB_FREE_TILE, "the siege tower dock search") + FREE_TILE_START
-  local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
-  local paths = readOperand(freeTileSite, FREE_TILE_PF, "the path finder")
+  local counts
+  local function resetWorldState()
+    core.setMemory(data, 0, DATA_SIZE)
+    core.setMemory(record, 0, TILES + 16)
+    if counts then core.setMemory(counts, 0, MAX_UNITS * 5) end
+    core.writeInteger(data + D_LOW_STAIRS, (options.stairs and options.stairsLowWalls) and 1 or 0)
+  end
+  resetWorldState()
+  modules["map-extensions"]:registerSection(MODULE_NAME, {
+    initialize = resetWorldState,
+    deserialize = resetWorldState,
+    serialize = function() end,
+  })
+  local function mapTiles()
+    local validate = drag("validate")
+    return {
+      data = data,
+      record = record,
+      valid = readOperand(validate, VALIDATE_VALID, "the map's valid tiles"),
+      rows = readOperand(validate, VALIDATE_ROWS, "the map rows"),
+    }, validate
+  end
+  local function tileMap()
+    return core.readInteger(scan(AOB_TILE_FLAGS, "the tile flags") + TILE_FLAGS_OPERAND) - TMS_FLAGS
+  end
+  local function freeTile()
+    return scan(AOB_FREE_TILE, "the siege tower dock search") + FREE_TILE_START
+  end
 
   -- 5. The raised part of a crenellation: any route may cross it, nobody is sent to stand on it.
   if options.walkableCrenellations then
-    local linkSelf = scan(AOB_LINK_SELF, "the path link test for crenellations")
-    local neighbour = scan(AOB_LINK_NEIGHBOUR, "the path link test for crenellations")
-    if not options.crenellationAttached then
-      core.writeCode(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
-      core.writeCode(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
-    else
-      local attachQueue = core.allocate(8 * ATTACH_QUEUE + 12, true)
-      local attachStamp = core.allocate(4 * TILES, true)
-      local attachCache = core.allocate(5 * TILES, true)
-      local attached = assemble(templates.attached, {
-        TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, DAMAGE = m.tms + TMS_DAMAGE,
-        DEPTH = ATTACH_DEPTH, AQ = attachQueue, AD = attachQueue + 4 * ATTACH_QUEUE,
-        AQ_MAX = ATTACH_QUEUE, GEN = attachQueue + 8 * ATTACH_QUEUE, STAMP = attachStamp,
-        CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
-        CACHE_STAMP = attachCache, CACHE_VAL = attachCache + 4 * TILES,
-      })
-      jumpTo(linkSelf, assemble(templates.linkSelf, {
-        ATTACHED = attached, CONTINUE = linkSelf + LINK_SELF_SIZE,
-        NO_LINKS = linkSelf + LINK_SELF_SIZE + core.readInteger(linkSelf + LINK_SELF_JUMP),
-      }), LINK_SELF_SIZE)
-      jumpTo(neighbour, assemble(templates.linkNeighbour, {
-        ATTACHED = attached, RAISED = neighbour + LINK_NEIGHBOUR_SIZE,
-        WALL = neighbour + LINK_NEIGHBOUR_SIZE + (core.readByte(neighbour + LINK_NEIGHBOUR_JUMP) & 0xFF),
-      }), LINK_NEIGHBOUR_SIZE)
-      -- a wall going down or coming up relinks the raised parts around it too
-      local builder = linkSelf - LINK_BUILDER_FROM_SELF
-      expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
-      local relinkAt = scan(AOB_RELINK, "where the game relinks a tile")
-      local relinkQueue = core.allocate(8 * RELINK_QUEUE + 8, true)
-      local relinkStamps = core.allocate(8 * TILES, true)
-      local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
-      jumpTo(relinkAt, assemble(templates.relink, {
-        GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, TILE_LIMIT = 80400,
-        PATHS = paths, BUILD_LINKS = builder, REACH = ATTACH_DEPTH + 1,
-        QUEUE = relinkQueue, QDIST = relinkQueue + 4 * RELINK_QUEUE, QCOUNT = relinkQueue + 8 * RELINK_QUEUE,
-        QUEUE_MAX = RELINK_QUEUE, RGEN = relinkQueue + 8 * RELINK_QUEUE + 4,
-        SEEN = relinkStamps, BUILT = relinkStamps + 4 * TILES,
-        CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
-        DIRTY_A = readOperand(place, PLACE_DIRTY, "the area update flag"),
-        DIRTY_B = readOperand(place, PLACE_DIRTY_2, "the area update flag"),
-      }), RELINK_SIZE)
-    end
+    install("Walkable crenellations", function(write, jumpTo)
+      local ticks = core.readInteger(scan(AOB_TICKS, "the game tick counter") + 8)
+      local m = mapTiles()
+      m.tms = tileMap()
+      local linkSelf = scan(AOB_LINK_SELF, "the tile's link test")
+      local neighbour = scan(AOB_LINK_NEIGHBOUR, "the neighboring tile's link test")
+      if not options.crenellationAttached then
+        write(linkSelf + LINK_SELF_IMM, { 0, 0, 0, 0 })
+        write(neighbour + LINK_NEIGHBOUR_IMM, { 0, 0, 0, 0 })
+      else
+        local relinkAt = scan(AOB_RELINK, "the tile relink routine")
+        local builder = linkSelf - LINK_BUILDER_FROM_SELF
+        expectBytes(builder, { 0x83, 0xEC, 0x40 }, "the path link builder")
+        local place = drag("place")
+        local dirtyA = readOperand(place, PLACE_DIRTY, "the area update flag")
+        local dirtyB = readOperand(place, PLACE_DIRTY_2, "the area update flag")
+        local freeTileSite = freeTile()
+        local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
+        local paths = readOperand(freeTileSite, FREE_TILE_PF, "the path finder")
+        local attachQueue = core.allocate(8 * ATTACH_QUEUE + 12, true)
+        local attachStamp = core.allocate(4 * TILES, true)
+        local attachCache = core.allocate(5 * TILES, true)
+        local attached = assemble(templates.attached, {
+          TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, DAMAGE = m.tms + TMS_DAMAGE,
+          TILE_LIMIT = MAP_TILES, DEPTH = ATTACH_DEPTH, AQ = attachQueue, AD = attachQueue + 4 * ATTACH_QUEUE,
+          AQ_MAX = ATTACH_QUEUE, GEN = attachQueue + 8 * ATTACH_QUEUE, STAMP = attachStamp,
+          CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
+          CACHE_STAMP = attachCache, CACHE_VAL = attachCache + 4 * TILES,
+        })
+        jumpTo(linkSelf, assemble(templates.linkSelf, {
+          ATTACHED = attached, CONTINUE = linkSelf + LINK_SELF_SIZE,
+          NO_LINKS = linkSelf + LINK_SELF_SIZE + core.readInteger(linkSelf + LINK_SELF_JUMP),
+        }), LINK_SELF_SIZE)
+        jumpTo(neighbour, assemble(templates.linkNeighbour, {
+          ATTACHED = attached, RAISED = neighbour + LINK_NEIGHBOUR_SIZE,
+          WALL = neighbour + LINK_NEIGHBOUR_SIZE + (core.readByte(neighbour + LINK_NEIGHBOUR_JUMP) & 0xFF),
+        }), LINK_NEIGHBOUR_SIZE)
+        -- a wall going down or coming up relinks the raised parts around it too
+        local relinkQueue = core.allocate(8 * RELINK_QUEUE + 8, true)
+        local relinkStamps = core.allocate(8 * TILES, true)
+        local relinkGame = assemble(templates.relinkGame, { RESUME = relinkAt + RELINK_SIZE })
+        jumpTo(relinkAt, assemble(templates.relink, {
+          GAME_RELINK = relinkGame, TILE_Y = tileY, TMS = m.tms, FLAGS = m.tms + TMS_FLAGS, TILE_LIMIT = MAP_TILES,
+          PATHS = paths, BUILD_LINKS = builder, REACH = ATTACH_DEPTH + 1,
+          QUEUE = relinkQueue, QDIST = relinkQueue + 4 * RELINK_QUEUE, QCOUNT = relinkQueue + 8 * RELINK_QUEUE,
+          QUEUE_MAX = RELINK_QUEUE, RGEN = relinkQueue + 8 * RELINK_QUEUE + 4,
+          SEEN = relinkStamps, BUILT = relinkStamps + 4 * TILES,
+          CACHE_ON = attachQueue + 8 * ATTACH_QUEUE + 4, CACHE_GEN = attachQueue + 8 * ATTACH_QUEUE + 8,
+          DIRTY_A = dirtyA, DIRTY_B = dirtyB,
+        }), RELINK_SIZE)
+      end
 
-    -- assassins may climb onto them as well, so a crenellation of any thickness or direction
-    -- is no obstacle (the raised parts are crossable now, so they can walk on from there)
-    local search = scan(AOB_ASSASSIN_SEARCH, "the assassins' route search")
-    for _, at in ipairs(ASSASSIN_TARGET) do
-      expectBytes(search + at, ASSASSIN_TARGET_BYTES, "the assassins' climb test")
-    end
-    local climb = scan(AOB_ASSASSIN_STEP, "the assassins' climbing step")
-    local open = { core.itob(SIEGE_BLOCKED & ~F_RAISED) }
-    for _, at in ipairs(ASSASSIN_TARGET) do
-      core.writeCode(search + at + 2, open)
-    end
-    core.writeCode(climb + 2, open)
+      -- assassins may climb onto them as well, so a crenellation of any thickness or direction
+      -- is no obstacle (the raised parts are crossable now, so they can walk on from there)
+      local search = scan(AOB_ASSASSIN_SEARCH, "the assassins' route search")
+      for _, at in ipairs(ASSASSIN_TARGET) do
+        expectBytes(search + at, ASSASSIN_TARGET_BYTES, "the assassins' climb test")
+      end
+      local climb = scan(AOB_ASSASSIN_STEP, "the assassins' climbing step")
+      local open = { core.itob(SIEGE_BLOCKED & ~F_RAISED) }
+      for _, at in ipairs(ASSASSIN_TARGET) do
+        write(search + at + 2, open)
+      end
+      write(climb + 2, open)
 
-    local destination = scan(AOB_DESTINATION, "where a unit is given a destination")
-    local steps = core.allocate(8 * #DESTINATION_STEPS, true)
-    for i, d in ipairs(DESTINATION_STEPS) do
-      core.writeInteger(steps + 8 * (i - 1), d[1])
-      core.writeInteger(steps + 8 * (i - 1) + 4, d[2])
-    end
-    jumpTo(destination, assemble(templates.destination, {
-      ROWS = m.rows, VALID = m.valid, FLAGS = m.tms + TMS_FLAGS, LINKS = m.tms + TMS_LINKS,
-      DIRECTIONS = steps, RESUME = destination + DESTINATION_SIZE,
-    }), DESTINATION_SIZE)
+      local destination = scan(AOB_DESTINATION, "where a unit is given a destination")
+      local steps = core.allocate(8 * #DESTINATION_STEPS, true)
+      for i, d in ipairs(DESTINATION_STEPS) do
+        core.writeInteger(steps + 8 * (i - 1), d[1])
+        core.writeInteger(steps + 8 * (i - 1) + 4, d[2])
+      end
+      jumpTo(destination, assemble(templates.destination, {
+        ROWS = m.rows, VALID = m.valid, FLAGS = m.tms + TMS_FLAGS, LINKS = m.tms + TMS_LINKS,
+        DIRECTIONS = steps, RESUME = destination + DESTINATION_SIZE,
+      }), DESTINATION_SIZE)
 
-    -- a group spreading out on a wall is never given one as its place
-    local spreadWall = scan(AOB_SPREAD_WALL, "where a group spreads out on a wall")
-    local spreadAny = scan(AOB_SPREAD_ANY, "where a group spreads out")
-    jumpTo(spreadWall, assemble(templates.spreadWall, {
-      FLAGS = m.tms + TMS_FLAGS, RESUME = spreadWall + SPREAD_WALL_SIZE,
-    }), SPREAD_WALL_SIZE)
-    jumpTo(spreadAny, assemble(templates.spreadAny, {
-      FLAGS = m.tms + TMS_FLAGS, TAKE = spreadAny + SPREAD_ANY_SIZE + 0x1E,
-      NEXT = spreadAny + SPREAD_ANY_SIZE,
-    }), SPREAD_ANY_SIZE)
-    -- ladders and siege towers may set up against them too
-    core.writeCode(scan(AOB_LADDER_WALL, "where a ladder is leant against a wall") + LADDER_WALL_IMM,
-      { 0x02, 0, 0, 0 })
-    core.writeCode(scan(AOB_WALL_PAIR, "where troops are sent to a wall") + WALL_PAIR_IMM, { 0, 0, 0, 0 })
+      -- a group spreading out on a wall is never given one as its place
+      local spreadWall = scan(AOB_SPREAD_WALL, "where a group spreads out on a wall")
+      local spreadAny = scan(AOB_SPREAD_ANY, "where a group spreads out")
+      jumpTo(spreadWall, assemble(templates.spreadWall, {
+        FLAGS = m.tms + TMS_FLAGS, RESUME = spreadWall + SPREAD_WALL_SIZE,
+      }), SPREAD_WALL_SIZE)
+      jumpTo(spreadAny, assemble(templates.spreadAny, {
+        FLAGS = m.tms + TMS_FLAGS, TAKE = spreadAny + SPREAD_ANY_SIZE + 0x1E,
+        NEXT = spreadAny + SPREAD_ANY_SIZE,
+      }), SPREAD_ANY_SIZE)
+      -- ladders and siege towers may set up against them too
+      write(scan(AOB_LADDER_WALL, "where a ladder is leant against a wall") + LADDER_WALL_IMM,
+        { 0x02, 0, 0, 0 })
+      write(scan(AOB_WALL_PAIR, "where troops are sent to a wall") + WALL_PAIR_IMM, { 0, 0, 0, 0 })
 
-    m.setPosition = scan(AOB_SET_POSITION, "where a unit is put down")
-    m.setDestination = scan(AOB_SET_DESTINATION, "the unit route search") - SET_DESTINATION_START
-    local tick = scan(AOB_UNIT_TICK, "the unit update loop")
-    local pushOff = luaFunction("moving a unit off a crenellation", makePushOff(m))
-    local counts = core.allocate(MAX_UNITS * 5, true)
-    local long = math.min(255, math.max(1,
-      (options.ladderWait * TICKS_PER_SECOND + CHECK_TICKS - 1) // CHECK_TICKS))
-    jumpTo(tick, assemble(templates.unitTick, {
-      STATE = data, TICKS = core.readInteger(scan(AOB_TICKS, "the tick counter") + TICKS_OPERAND),
-      UNITS_OFF = UNITS_FROM_STATE, TILES = TILES, FLAGS = m.tms + TMS_FLAGS, PUSH_OFF = pushOff,
-      MAX_UNITS = MAX_UNITS, COUNTS = counts, LAST = counts + MAX_UNITS, LONG = long,
-      RESUME = tick + UNIT_TICK_SIZE,
-    }), UNIT_TICK_SIZE)
+      m.setPosition = scan(AOB_SET_POSITION, "where a unit is put down")
+      m.setDestination = scan(AOB_SET_DESTINATION, "the unit route search") - SET_DESTINATION_START
+      local tick = scan(AOB_UNIT_TICK, "the unit update loop")
+      local pushOff = luaFunction("moving a unit off a crenellation", makePushOff(m))
+      counts = core.allocate(MAX_UNITS * 5, true)
+      local long = math.min(255, math.max(1,
+        (number(config, "ladderWait", 1, 60) * TICKS_PER_SECOND + CHECK_TICKS - 1) // CHECK_TICKS))
+      jumpTo(tick, assemble(templates.unitTick, {
+        STATE = data, TICKS = ticks,
+        UNITS_OFF = UNITS_FROM_STATE, TILES = TILES, FLAGS = m.tms + TMS_FLAGS, PUSH_OFF = pushOff,
+        MAX_UNITS = MAX_UNITS, COUNTS = counts, LAST = counts + MAX_UNITS, LONG = long,
+        RESUME = tick + UNIT_TICK_SIZE,
+      }), UNIT_TICK_SIZE)
+    end)
   end
 
   -- 6. Ladders take on diagonal walls (siege tower docking is Improved Siegeengines' now).
   if options.diagonalSiege then
-    local tableStart = scan(AOB_PAIR_TABLE, "the directions troops look for a wall in")
-    local tableEnd = scan(AOB_PAIR_TABLE_END, "the directions troops look for a wall in")
-    local directions = core.allocate(8 * #PAIR_DIRECTIONS, true)
-    for i, d in ipairs(PAIR_DIRECTIONS) do
-      core.writeInteger(directions + 8 * (i - 1), d[1])
-      core.writeInteger(directions + 8 * (i - 1) + 4, d[2])
-    end
-    core.writeCode(tableStart + 1, { core.itob(directions) })
-    core.writeCode(tableEnd + 2, { core.itob(directions + 8 * #PAIR_DIRECTIONS) })
+    install("Diagonal ladder placement", function(write)
+      local tableStart = scan(AOB_PAIR_TABLE, "the directions troops look for a wall in")
+      local tableEnd = scan(AOB_PAIR_TABLE_END, "the directions troops look for a wall in")
+      local directions = core.allocate(8 * #PAIR_DIRECTIONS, true)
+      for i, d in ipairs(PAIR_DIRECTIONS) do
+        core.writeInteger(directions + 8 * (i - 1), d[1])
+        core.writeInteger(directions + 8 * (i - 1) + 4, d[2])
+      end
+      write(tableStart + 1, { core.itob(directions) })
+      write(tableEnd + 2, { core.itob(directions + 8 * #PAIR_DIRECTIONS) })
+    end)
   end
 
   -- 10. A crenellation never leads into a tower, keep or gatehouse (only walls and stairs do).
@@ -1187,103 +1229,126 @@ local function enable(self, config)
   --     to plain ground: the game never links back into it, and such one-way links made routes
   --     fail and the game rebuild every path link on the map, many times a second.
   if options.crenellationTowers or options.lowTowerTiles then
-    local store = scan(AOB_LINK_STORE, "the path link builder's store")
-    jumpTo(store, assemble(templates.towerAccess, {
-      FLAGS = m.tms + TMS_FLAGS, BUILDINGS = m.tms + TMS_BUILDINGS, LINKS = m.tms + TMS_LINKS,
-      TILE_Y = tileY, TMS = m.tms, RESUME = store + LINK_STORE_SIZE,
-      TYPES = readOperand(freeTileSite, FREE_TILE_TYPES, "the building types"),
-      CRENEL = options.crenellationTowers and 1 or 0, LOW_TOWER = options.lowTowerTiles and 1 or 0,
-    }), LINK_STORE_SIZE)
+    install("Tower and crenellation access", function(_, jumpTo)
+      local tms = tileMap()
+      local freeTileSite = freeTile()
+      local tileY = readOperand(freeTileSite, FREE_TILE_Y, "the tile rows")
+      local store = scan(AOB_LINK_STORE, "the path link builder's store")
+      jumpTo(store, assemble(templates.towerAccess, {
+        FLAGS = tms + TMS_FLAGS, BUILDINGS = tms + TMS_BUILDINGS, LINKS = tms + TMS_LINKS,
+        TILE_Y = tileY, TMS = tms, RESUME = store + LINK_STORE_SIZE,
+        TYPES = readOperand(freeTileSite, FREE_TILE_TYPES, "the building types"),
+        CRENEL = options.crenellationTowers and 1 or 0, LOW_TOWER = options.lowTowerTiles and 1 or 0,
+      }), LINK_STORE_SIZE)
+    end)
   end
 
   -- 9. Units stuck at two low walls touching diagonally (a game bug).
   if options.diagonalStuck then
-    for _, cut in ipairs(DIAGONAL_CUTS) do
-      local at = scan(cut.aob, "the path link builder's diagonal rule")
-      jumpTo(at, assemble(templates.diagonalCut, {
-        SIDES = cut.sides, MASK = cut.mask, RESUME = at + DIAGONAL_CUT_SIZE,
-      }), DIAGONAL_CUT_SIZE)
-    end
+    install("The diagonal wall path fix", function(_, jumpTo)
+      for _, cut in ipairs(DIAGONAL_CUTS) do
+        local at = scan(cut.aob, "the path link builder's diagonal rule")
+        jumpTo(at, assemble(templates.diagonalCut, {
+          SIDES = cut.sides, MASK = cut.mask, RESUME = at + DIAGONAL_CUT_SIZE,
+        }), DIAGONAL_CUT_SIZE)
+      end
+    end)
   end
 
   -- 8. A new crenellation is as tall as the wall (or stairs) it is attached to.
   if options.crenellationHeights then
-    local site = checked(place, PLACE_CRENEL_CALL, "the crenellation height test")
-    local towersOnly = site + 5 + core.readInteger(site + 1)
-    expectBytes(towersOnly, { 0x8B, 0x44, 0x24, 0x08, 0xC1, 0xE0, 0x05 }, "the crenellation height test")
-    local rule = makeCrenelHeight(m)
-    local height = luaFunction("working out a crenellation's height", function()
-      local h, low = rule(core.readInteger(m.data + D_CREN_TMS), core.readInteger(m.data + D_CREN_X),
-        core.readInteger(m.data + D_CREN_Y))
-      if h ~= nil and h > 0 then
-        core.writeInteger(m.data + D_CREN_HEIGHT, h)
-        core.writeInteger(m.data + D_CREN_LOW, low and 1 or 0)
+    install("Custom crenellation heights", function(_, jumpTo)
+      local m = mapTiles()
+      local crenelSite = scan(AOB_CRENEL_HEIGHT, "the crenellation height test")
+      if crenelSite ~= drag("place") + PLACE_CRENEL_CALL then
+        error("The height test is outside the expected wall placement routine.", 0)
       end
+      local towersOnly = crenelSite + 5 + core.readInteger(crenelSite + 1)
+      expectBytes(towersOnly, TOWERS_ONLY_CODE, "the crenellation height test")
+      local rule = makeCrenelHeight(m)
+      local height = luaFunction("working out a crenellation's height", function()
+        local h, low = rule(core.readInteger(m.data + D_CREN_TMS), core.readInteger(m.data + D_CREN_X),
+          core.readInteger(m.data + D_CREN_Y))
+        if h ~= nil and h > 0 then
+          core.writeInteger(m.data + D_CREN_HEIGHT, h)
+          core.writeInteger(m.data + D_CREN_LOW, low and 1 or 0)
+        end
+      end)
+      jumpTo(crenelSite, assemble(templates.crenelHeight, {
+        STATE = data, HEIGHT = height, LIVE_OFF = TMS_LIVE, TOWERS_ONLY = towersOnly,
+        AFTER_CALL = crenelSite + 5, PARITY = crenelSite + CRENEL_PARITY_FROM_CALL,
+      }), 5)
     end)
-    jumpTo(site, assemble(templates.crenelHeight, {
-      STATE = data, HEIGHT = height, LIVE_OFF = TMS_LIVE, TOWERS_ONLY = towersOnly,
-      AFTER_CALL = checked(place, PLACE_CRENEL_AFTER, "the crenellation height test"),
-      PARITY = checked(place, PLACE_CRENEL_PARITY, "the crenellation pattern"),
-    }), 5)
   end
 
   -- 1 and 2. The route of a dragged wall.
   if routing then
-    local route = luaFunction("working out a wall's route", makeRouter(m, options))
-    local prepare = assemble(templates.prepare, { STATE = data, ROUTE = route, MAX_AGE = MAX_AGE })
-    for name, f in pairs(FUNCTIONS) do
-      local start = starts[name]
-      local step = checked(start, { f.step, f.stepBytes }, "the step to the next wall tile")
-      local loop = checked(start, { f.loop, f.loopBytes }, "the wall tile loop")
-      local done = checked(start, { f.done, f.doneBytes }, "the end of the wall tile loop")
-      jumpTo(step, assemble(templates[f.template], {
-        STATE = data, ACTIVE = D_ON[name], IDX = D_IDX[name], COUNT = D_COUNT, PATH = D_PATH,
-        ROWS = m.rows, TOP = loop, DONE = done, RESUME = step + f.stepSize,
-      }), f.stepSize)
-    end
-    for name, f in pairs(FUNCTIONS) do
-      local start = starts[name]
-      local script = templates.entry:gsub("ORIGINAL", f.original)
-      jumpTo(start, assemble(script, {
-        STATE = data, ACTIVE = D_ON[name], IDX = D_IDX[name], FRESH = f.fresh, PREPARE = prepare,
-        RESUME = start + f.size,
-      }), f.size)
-    end
+    routing = install("Wall drag routing", function(_, jumpTo)
+      local m, validate = mapTiles()
+      m.treeTypes = readOperand(validate, VALIDATE_TREES, "the tree types")
+      expectBytes(validate + VALIDATE_ENCLOSED, { 0xE8 }, "the crenellation test")
+      m.enclosed = validate + VALIDATE_ENCLOSED + 5 + core.readInteger(validate + VALIDATE_ENCLOSED + 1)
+      expectBytes(m.enclosed, { 0x8B, 0x44, 0x24, 0x08, 0x56, 0xC1, 0xE0, 0x05 }, "the crenellation test")
+      local starts = {validate = validate, preview = drag("preview"), place = drag("place")}
+      local route = luaFunction("working out a wall's route", makeRouter(m, options))
+      local prepare = assemble(templates.prepare, { STATE = data, ROUTE = route, MAX_AGE = MAX_AGE })
+      for name, f in pairs(FUNCTIONS) do
+        local start = starts[name]
+        local step = checked(start, { f.step, f.stepBytes }, "the step to the next wall tile")
+        local loop = checked(start, { f.loop, f.loopBytes }, "the wall tile loop")
+        local done = checked(start, { f.done, f.doneBytes }, "the end of the wall tile loop")
+        jumpTo(step, assemble(templates[f.template], {
+          STATE = data, ACTIVE = D_ON[name], IDX = D_IDX[name], COUNT = D_COUNT, PATH = D_PATH,
+          ROWS = m.rows, TOP = loop, DONE = done, RESUME = step + f.stepSize,
+        }), f.stepSize)
+      end
+      for name, f in pairs(FUNCTIONS) do
+        local start = starts[name]
+        local script = templates.entry:gsub("ORIGINAL", f.original)
+        jumpTo(start, assemble(script, {
+          STATE = data, ACTIVE = D_ON[name], IDX = D_IDX[name], FRESH = f.fresh, PREPARE = prepare,
+          RESUME = start + f.size,
+        }), f.size)
+      end
+    end)
   end
 
   -- 3 and 4. Damaged stairs and crenellations.
   if restoring then
-    local site = checked(place, { PLACE_RESTORE.at, PLACE_RESTORE.bytes }, "the wall repair test")
-    core.writeInteger(data + D_LOW_STAIRS, (options.stairs and options.stairsLowWalls) and 1 or 0)
-    local restore = luaFunction("repairing stairs or crenellations", makeRestore(m, options))
-    jumpTo(site, assemble(templates.restore, {
-      STATE = data, REPAIR = restore, RECORD = record,
-      FLAGS_OFF = TMS_FLAGS, LIVE_OFF = TMS_LIVE, DAMAGE_OFF = TMS_DAMAGE,
-      UNDAMAGED = checked(place, PLACE_UNDAMAGED, "the wall repair test"),
-      DAMAGED = checked(place, PLACE_DAMAGED, "the wall repair test"),
-      STAIRS_BUILT = checked(place, PLACE_COUNTED, "the new wall tile code"),
-      SKIP = place + FUNCTIONS.place.step,
-      FREE_BUILT = checked(place, PLACE_FREE, "the wall path update"),
-    }), PLACE_RESTORE.size)
+    install("Stair and crenellation repair", function(_, jumpTo)
+      local m = mapTiles()
+      local place = drag("place")
+      local site = checked(place, { PLACE_RESTORE.at, PLACE_RESTORE.bytes }, "the wall repair test")
+      local restore = luaFunction("repairing stairs or crenellations", makeRestore(m, options))
+      jumpTo(site, assemble(templates.restore, {
+        STATE = data, REPAIR = restore, RECORD = record,
+        FLAGS_OFF = TMS_FLAGS, LIVE_OFF = TMS_LIVE, DAMAGE_OFF = TMS_DAMAGE,
+        UNDAMAGED = checked(place, PLACE_UNDAMAGED, "the wall repair test"),
+        DAMAGED = checked(place, PLACE_DAMAGED, "the wall repair test"),
+        STAIRS_BUILT = checked(place, PLACE_COUNTED, "the new wall tile code"),
+        SKIP = place + FUNCTIONS.place.step,
+        FREE_BUILT = checked(place, PLACE_FREE, "the wall path update"),
+      }), PLACE_RESTORE.size)
 
-    if not routing then
-      local f = FUNCTIONS.place
-      jumpTo(place, assemble(templates.placeEntry:gsub("ORIGINAL", f.original), {
-        STATE = data, RESUME = place + f.size,
-      }), f.size)
-    end
+      if not routing then
+        local f = FUNCTIONS.place
+        jumpTo(place, assemble(templates.placeEntry:gsub("ORIGINAL", f.original), {
+          STATE = data, RESUME = place + f.size,
+        }), f.size)
+      end
 
-    if options.stairs then
-      local recordSite = scan(AOB_DAMAGE_RECORD, "the wall damage code")
-      jumpTo(recordSite, assemble(templates.record, {
-        RECORD = record, FLAGS_OFF = TMS_FLAGS, LIVE_OFF = TMS_LIVE, DAMAGE_OFF = TMS_DAMAGE,
-        SCRATCH = core.readInteger(recordSite + 2), RESUME = recordSite + DAMAGE_RECORD_SIZE,
-      }), DAMAGE_RECORD_SIZE)
-      local forgetSite = scan(AOB_DAMAGE_FORGET, "the wall removal code")
-      jumpTo(forgetSite, assemble(templates.forget, {
-        RECORD = record, FLAGS_OFF = TMS_FLAGS, RESUME = forgetSite + DAMAGE_FORGET_SIZE,
-      }), DAMAGE_FORGET_SIZE)
-    end
+      if options.stairs then
+        local recordSite = scan(AOB_DAMAGE_RECORD, "the wall damage code")
+        jumpTo(recordSite, assemble(templates.record, {
+          RECORD = record, FLAGS_OFF = TMS_FLAGS, LIVE_OFF = TMS_LIVE, DAMAGE_OFF = TMS_DAMAGE,
+          SCRATCH = core.readInteger(recordSite + 2), RESUME = recordSite + DAMAGE_RECORD_SIZE,
+        }), DAMAGE_RECORD_SIZE)
+        local forgetSite = scan(AOB_DAMAGE_FORGET, "the wall removal code")
+        jumpTo(forgetSite, assemble(templates.forget, {
+          RECORD = record, FLAGS_OFF = TMS_FLAGS, RESUME = forgetSite + DAMAGE_FORGET_SIZE,
+        }), DAMAGE_FORGET_SIZE)
+      end
+    end)
   end
 end
 
