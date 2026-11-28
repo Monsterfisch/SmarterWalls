@@ -1042,11 +1042,11 @@ local function enable(self, config)
   local function scan(pattern, purpose)
     local binding = bindings[pattern]
     if not binding then
-      local address, reason = core.AOBScanUnique(pattern)
-      binding = {address = address, reason = reason}
+      local found, address = pcall(core.AOBScan, pattern)
+      binding = {address = found and address or nil}
       bindings[pattern] = binding
     end
-    if not binding.address then error(purpose .. " " .. binding.reason, 0) end
+    if not binding.address then error(purpose .. " not found", 0) end
     return binding.address
   end
   local function install(feature, prepare)
